@@ -1,0 +1,5 @@
+archives/
+*.hdf5
+*.mkv
+*log*
+*bench*
