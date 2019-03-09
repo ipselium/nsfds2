@@ -30,72 +30,77 @@ Compute viscous fluxes
 
 
 import numpy as np
-from .init import Param
-from ofdlib.fdtd import integrate
-from ofdlib.dschm import dudx3cG, dudz3cG
-from ofdlib.viscosity import cErhou, cErhov, cErhoe, cFrhov, cFrhoe, cMu
-from ofdlib.viscosity import tau11x, tau12x, tau12z, tau22z
+from ofdlib.fdtdc import integrate
+from ofdlib.dschmc import dudx3c, dudz3c, dudxz3c
+from ofdlib.vfluxc import cErhou, cErhov, cErhoe, cFrhov, cFrhoe
+from ofdlib.cutils import cmult, cdiv
 
 
-class ViscousFluxes(Param):
+class ViscousFluxes:
     """ Compute viscous flux : update rhou, rhov and rhoe only. """
 
-    def __init__(self):
+    def __init__(self, msh, fld, cfg, cff):
 
-        super(ViscousFluxes, self).__init__()
-        super(ViscousFluxes, self).init_coefficients()
+        self.msh = msh
+        self.fld = fld
+        self.cfg = cfg
+        self.cff = cff
 
-    def base(self, rho, rhou, rhov, rhoe):
+    def dispatch(self):
+        """ Dispatch domains to integrate. """
+        pass
+
+    def integrate(self):
         """
             Viscous flux integration : interior points [optimized]
         """
 
-        # Array initialization
-        tau11 = np.zeros_like(rho)
-        tau12 = np.zeros_like(rho)
-        tau22 = np.zeros_like(rho)
-        mu = np.zeros_like(rho)
-        Krhou = np.zeros((self.nbx, self.nbz))
-        Krhov = np.zeros((self.nbx, self.nbz))
-        Krhoe = np.zeros((self.nbx, self.nbz))
-        Frhou = np.zeros((self.nbx, self.nbz))
-        Frhov = np.zeros((self.nbx, self.nbz))
-        Frhoe = np.zeros((self.nbx, self.nbz))
-        Erhoe = np.zeros((self.nbx, self.nbz))
+        idx = [0, self.msh.nx]
+        idz = [0, self.msh.nz]
+
+        self.fld.Ku[:, :] = 0
+        self.fld.Kv[:, :] = 0
+        self.fld.Ke[:, :] = 0
+        self.fld.Fu[:, :] = 0
+        self.fld.Fv[:, :] = 0
+        self.fld.Fe[:, :] = 0
+        self.fld.Ee[:, :] = 0
 
         # dE/dx term
-        Erhou = rhou/rho
-        Erhov = rhov/rho
+        self.fld.Eu = cdiv(self.fld.rhou, self.fld.rho)
+        self.fld.Ev = cdiv(self.fld.rhov, self.fld.rho)
 
         # Strain tensor
-        tau11 = tau11x(self.nbx, self.nbz, tau11, Erhou, Erhov, self.one_dx)
-        tau12 = tau12x(self.nbx, self.nbz, tau12, Erhou, Erhov, self.one_dx)
-        tau12 = tau12z(self.nbx, self.nbz, tau12, Erhou, Erhov, self.one_dz)
-        tau22 = tau22z(self.nbx, self.nbz, tau22, Erhou, Erhov, self.one_dz)
+        tau11 = dudx3c(self.fld.Eu, np.zeros_like(self.fld.p), self.msh.one_dx, *idx, *idz)
+        tau22 = dudz3c(self.fld.Ev, np.zeros_like(self.fld.p), self.msh.one_dz, *idx, *idz, False)
+        tau12 = dudxz3c(self.fld.Eu, self.fld.Ev, np.zeros_like(self.fld.p), self.msh.one_dx, self.msh.dz, *idx, *idz)
 
         # Dynamic viscosity
-        mu = cMu(self.nbx, self.nbz, rho, self.nu, mu)
+        mu = cmult(self.fld.rho, self.cfg.nu)
 
         # dE/dx term
-        Erhou = cErhou(self.nbx, self.nbz, mu, Erhou, tau11, tau22)
-        Erhov = cErhov(self.nbx, self.nbz, mu, Erhov, tau12)
-        Erhoe = cErhoe(self.nbx, self.nbz, mu, Erhoe, tau11, tau12, tau22, rho, rhou, rhov)
+        self.fld.Eu = cErhou(mu, self.fld.Eu, tau11, tau22)
+        self.fld.Ev = cErhov(mu, self.fld.Ev, tau12)
+        self.fld.Ee = cErhoe(mu, self.fld.Ee, tau11, tau12, tau22, self.fld.rho, self.fld.rhou, self.fld.rhov)
 
         # dF/dz term
-        Frhou = Erhov
-        Frhov = cFrhov(self.nbx, self.nbz, mu, Frhov, tau11, tau22)
-        Frhoe = cFrhoe(self.nbx, self.nbz, mu, Frhoe, tau11, tau12, tau22, rho, rhou, rhov)
+        self.fld.Fu = self.fld.Ev
+        self.fld.Fv = cFrhov(mu, self.fld.Fv, tau11, tau22)
+        self.fld.Fe = cFrhoe(mu, self.fld.Fe, tau11, tau12, tau22, self.fld.rho, self.fld.rhou, self.fld.rhov)
 
         # viscous flux : order 2 centered scheme
-        Krhou = dudx3cG(Erhou, self.one_dx, self.nbx, self.nbz, Krhou)
-        Krhov = dudx3cG(Erhov, self.one_dx, self.nbx, self.nbz, Krhov)
-        Krhoe = dudx3cG(Erhoe, self.one_dx, self.nbx, self.nbz, Krhoe)
+        idx = [1, self.msh.nx-1]
+        idz = [1, self.msh.nz-1]
 
-        Krhou = dudz3cG(Frhou, self.one_dz, self.nbx, self.nbz, Krhou)
-        Krhov = dudz3cG(Frhov, self.one_dz, self.nbx, self.nbz, Krhov)
-        Krhoe = dudz3cG(Frhoe, self.one_dz, self.nbx, self.nbz, Krhoe)
+        self.fld.Ku = dudx3c(self.fld.Eu, self.fld.Ku, self.msh.one_dx, *idx, *idz)
+        self.fld.Kv = dudx3c(self.fld.Ev, self.fld.Kv, self.msh.one_dx, *idx, *idz)
+        self.fld.Ke = dudx3c(self.fld.Ee, self.fld.Ke, self.msh.one_dx, *idx, *idz)
+
+        self.fld.Ku = dudz3c(self.fld.Fu, self.fld.Ku, self.msh.one_dz, *idx, *idz, True)
+        self.fld.Kv = dudz3c(self.fld.Fv, self.fld.Kv, self.msh.one_dz, *idx, *idz, True)
+        self.fld.Ke = dudz3c(self.fld.Fe, self.fld.Ke, self.msh.one_dz, *idx, *idz, True)
 
         # Integrate in time
-        rhou = integrate(self.nbx, self.nbz, self.dt, rhou, Krhou)
-        rhov = integrate(self.nbx, self.nbz, self.dt, rhov, Krhov)
-        rhoe = integrate(self.nbx, self.nbz, self.dt, rhoe, Krhoe)
+        self.fld.rhou = integrate(self.fld.rhou, self.fld.Ku, self.cfg.dt, *idx, *idz)
+        self.fld.rhov = integrate(self.fld.rhov, self.fld.Kv, self.cfg.dt, *idx, *idz)
+        self.fld.rhoe = integrate(self.fld.rhoe, self.fld.Ke, self.cfg.dt, *idx, *idz)

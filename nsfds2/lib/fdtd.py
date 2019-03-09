@@ -35,6 +35,7 @@ from ofdlib.fdtd import residual
 from ofdlib.fdtdc import pnl
 from .utils import disp_bench, timed
 from .efluxes import EulerianFluxes
+from .vfluxes import ViscousFluxes
 from .sfilter import SelectiveFilter
 from .scapture import ShockCapture
 
@@ -52,6 +53,7 @@ class FDTD:
         self.cfg = cfg
 
         self.efluxes = EulerianFluxes(self.msh, self.fld, self.cfg, self.cff)
+        self.vfluxes = ViscousFluxes(self.msh, self.fld, self.cfg, self.cff)
         self.sfilter = SelectiveFilter(self.msh, self.fld, self.cff)
         self.scapture = ShockCapture(self.msh, self.fld, self.cfg, self.cff,
                                      self.efluxes.ccin)
@@ -119,7 +121,9 @@ class FDTD:
     @timed('vfluxes')
     def viscous_flux(self):
         """ Viscous flux """
-        pass
+        if self.cfg.viscosity:
+            self.vfluxes.integrate()
+
 
     @timed('sfilt')
     def selective_filter(self):
