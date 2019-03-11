@@ -30,8 +30,8 @@ oscillations.
 """
 
 import numpy as np
-from ofdlib.fschmc import fxd, fzd, fx11c, fz11c, fx11d, fz11d
-from ofdlib.fschmc import filt, xsingle_filt, zsingle_filt
+from ofdlib2.filters import filt, fx11c, fz11c
+from ofdlib2.filters import fx711d, fz711d, fx4d, fz4d
 
 
 class SelectiveFilter:
@@ -61,39 +61,26 @@ class SelectiveFilter:
         """ Dispatch filtering. """
 
         for sub in self.msh.xdomains:
-            sub.filt_method(self.fld.rho, sub)
-            sub.filt_method(self.fld.rhou, sub)
-            sub.filt_method(self.fld.rhov, sub)
-            sub.filt_method(self.fld.rhoe, sub)
+            sub.filt_method(self.fld.rho, self.fld.K, sub)
+            sub.filt_method(self.fld.rhou, self.fld.Ku, sub)
+            sub.filt_method(self.fld.rhov, self.fld.Kv, sub)
+            sub.filt_method(self.fld.rhoe, self.fld.Ke, sub)
 
-    def f11RR(self, u, sub):
+    def f11RR(self, u, K, sub):
         """
             Selective filter : attenuate high frequencies
             4, 7 and 11 points filters
         """
 
-        idx = np.array([sub.xz[0], sub.xz[2]])
-        idz = np.array([sub.xz[1], sub.xz[3]])
+        idx = [sub.xz[0], sub.xz[2]]
+        idz = [sub.xz[1], sub.xz[3]]
 
-        # X FILTERING #########################################################
-        K = np.zeros_like(u)
-        # 1st and last points : 4 points scheme
-        K = fxd(u, self.d4d03, idx[0], idz, idx[0], 4, 1, K)
-        K = fxd(u, self.d4d03, idx[1], idz, idx[1], 4, -1, K)
-        u = xsingle_filt(u, K, idx[0], idz, self.xnu[1])
-        u = xsingle_filt(u, K, idx[1], idz, self.xnu[1])
-        # Other points
-        K = fx11d(u, K, self.d7d15, self.d11d, idx, idz)
-        K = fx11c(u, self.d11c, np.array([idx[0]+5, idx[1]-4]), idz, K)
-        u = filt(u, K, np.array([idx[0]+1, idx[1]]), idz, self.xnu[0])
-        # Z FILTERING #########################################################
-        K = np.zeros_like(u)
-        # 1st and last points : 4 points scheme
-        K = fzd(u, self.d4d03, idx, idz[0], idz[0], 4, 1, K)
-        K = fzd(u, self.d4d03, idx, idz[1], idz[1], 4, -1, K)
-        u = zsingle_filt(u, K, idx, idz[0], self.xnu[1])
-        u = zsingle_filt(u, K, idx, idz[1], self.xnu[1])
-        # Other points
-        K = fz11d(u, K, self.d7d15, self.d11d, idx, idz)
-        K = fz11c(u, self.d11c, idx, np.array([idz[0]+5, idz[1]-4]), K)
-        u = filt(u, K, idx, np.array([idz[0]+1, idz[1]]), self.xnu[0])
+        fx4d(u, K, self.xnu[1], *idx, *idz) # 1st and last points : 4pts scheme
+        fx711d(u, K, *idx, *idz)             # Other points : 7 & 11pts scheme
+        fx11c(u, K, *idx, *idz)
+        filt(u, K, self.xnu[0], *[idx[0]+1, idx[1]], *idz)
+
+        fz4d(u, K, self.xnu[1], *idx, *idz) # 1st and last points : 4pts scheme
+        fz711d(u, K, *idx, *idz)             # Other points : 7 & 11pts scheme
+        fz11c(u, K, *idx, *idz)
+        filt(u, K, self.xnu[0], *idx, *[idz[0]+1, idz[1]])

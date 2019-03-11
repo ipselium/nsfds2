@@ -32,6 +32,8 @@ procedure proposed by Bogey & al -- JCP228 -- 2009
 import numpy as np
 from ofdlib.scapturc import sigma_p, sigma_d, fo2
 from ofdlib.scapturc import xcapture, zcapture, update
+#from ofdlib2.capture import sigma_p, sigma_d, fo2
+#from ofdlib2.capture import xcapture, zcapture, update
 
 
 class ShockCapture:

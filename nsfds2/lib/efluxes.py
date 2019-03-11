@@ -31,6 +31,7 @@ Compute Eulerian fluxes
 
 import numpy as np
 from ofdlib.fdtdc import time_advance, pnl
+#from ofdlib2.fdtd import time_advance, pnl
 from nsfds2.utils.array import empty_like
 from .cin import Cin
 

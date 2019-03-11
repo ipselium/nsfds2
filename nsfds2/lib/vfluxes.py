@@ -19,7 +19,7 @@
 # along with nsfds2. If not, see <http://www.gnu.org/licenses/>.
 #
 #
-# Creation Date : 2018-04-13 00:48:58
+# Creation Date : 2018-04-13 - 00:48:58
 """
 -----------
 
@@ -30,10 +30,14 @@ Compute viscous fluxes
 
 
 import numpy as np
-from ofdlib.fdtdc import integrate
-from ofdlib.dschmc import dudx3c, dudz3c, dudxz3c
-from ofdlib.vfluxc import cErhou, cErhov, cErhoe, cFrhov, cFrhoe
-from ofdlib.cutils import cmult, cdiv
+#from ofdlib.fdtdc import integrate
+#from ofdlib.dschmc import dudx3c, dudz3c, dudxz3c
+#from ofdlib.vfluxc import cErhou, cErhov, cErhoe, cFrhov, cFrhoe
+#from ofdlib.cutils import cmult, cdiv
+from ofdlib2.fdtd import integrate
+from ofdlib2.derivation import dudx3c, dudz3c, dudxz3c
+from ofdlib2.vflux import cErhou, cErhov, cErhoe, cFrhov, cFrhoe
+from ofdlib2.utils import cmult, cdiv
 
 
 class ViscousFluxes:
