@@ -31,10 +31,7 @@ Finite Difference Time Domain class
 import os
 import time
 import numpy as np
-from ofdlib.fdtd import residual
-from ofdlib.fdtdc import pnl
-#from ofdlib2.fdtd import pnl
-
+from ofdlib2.fdtd import residual, comp_p
 from .utils import disp_bench, timed
 from .efluxes import EulerianFluxes
 from .vfluxes import ViscousFluxes
@@ -88,12 +85,13 @@ class FDTD:
             self.shock_capture()
             self.update_pressure()
 
-            res = residual(self.msh.nx, self.msh.nz, self.fld.p, self.cfg.p0)
+            res = residual(self.fld.p, self.cfg.p0)
             if (abs(res) > 100*self.cfg.S0) or np.any(np.isnan(self.fld.p)):
                 print('Stop simulation at iteration ', self.it)
                 if np.any(np.isnan(self.fld.p)):
                     print('Nan : {}'.format(np.argwhere(np.isnan(self.fld.p))))
-                self.fld.sfile.close()
+                if self.cfg.save:
+                    self.fld.sfile.close()
                 break
 
             if self.it % self.cfg.ns == 0:
@@ -103,7 +101,8 @@ class FDTD:
             else:
                 self.bench['total'].append(time.time() - tt)
 
-        self.fld.sfile.close()
+        if self.cfg.save:
+            self.fld.sfile.close()
 
         print('-'*int(self.columns))
         print('# Simulation completed in {:.2f} s.'.format(time.time() - self.tloopi))
@@ -126,7 +125,6 @@ class FDTD:
         if self.cfg.viscosity:
             self.vfluxes.integrate()
 
-
     @timed('sfilt')
     def selective_filter(self):
         """ Selective filter """
@@ -142,11 +140,9 @@ class FDTD:
     @timed('save')
     def save(self):
         """ Save data """
-
         if self.cfg.save and self.cfg.onlyp:
             self.fld.sfile.create_dataset('p_it' + str(self.it),
                                           data=self.fld.p, compression=self.cfg.comp)
-
         elif self.cfg.save:
             self.fld.sfile.create_dataset('rho_it' + str(self.it),
                                           data=self.fld.rho, compression=self.cfg.comp)
@@ -161,8 +157,8 @@ class FDTD:
     def update_pressure(self):
         """ Update pressure field """
 
-        self.fld.p = pnl(self.msh.nx, self.msh.nz, self.fld.p, self.fld.rho,
-                         self.fld.rhou, self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
+        comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
+               self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
 
     @timed('probe')
     def update_probes(self):

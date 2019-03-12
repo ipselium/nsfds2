@@ -33,7 +33,7 @@ import platform
 import textwrap
 import numpy
 import cython
-import ofdlib
+import ofdlib2
 import fdgrid
 import nsfds2
 
@@ -65,7 +65,7 @@ def version():
     print('\tOs     : ' + platform.platform())
     print('\tpython : ' + sys.version.split(' ')[0])
     print('\tnsfds2 : ' + nsfds2.__version__)
-    print('\tofdlib : ' + ofdlib.__version__)
+    print('\tofdlib : ' + ofdlib2.__version__)
     print('\tfdgrid : ' + fdgrid.__version__)
     print('\tnumpy  : ' + numpy.__version__)
     print('\tcython : ' + cython.__version__)

@@ -31,8 +31,8 @@ Post-treatment tools for nsfds2
 import sys
 import numpy as np
 import numba as nb
-from ofdlib.coefficients import a7o
-from ofdlib.fdtdc import pnl, cvar
+from ofdlib2.coefficients import a7o
+from ofdlib2.fdtd import comp_p, rhox2x
 
 @nb.jit
 def rot(data, iref, nx, nz, one_dx, one_dz, a7):
@@ -112,9 +112,8 @@ class FrameGenerator:
         rhov = self.data["{}_it{}".format('rhov', i)][:, :]
         rhoe = self.data["{}_it{}".format('rhoe', i)][:, :]
         p = np.empty_like(rho)
-
-        return pnl(rho.shape[0], rho.shape[1], p,
-                   rho, rhou, rhov, rhoe, self.data['gamma'].value) - self.data['p0'].value
+        comp_p(p, rho, rhou, rhov, rhoe, self.data['gamma'].value)
+        return p - self.data['p0'].value
 
     def next_item(self):
         """ Generate next value of variable """
@@ -128,7 +127,7 @@ class FrameGenerator:
         elif self.view in ['vx', 'vz', 'e']:
             vX = self.data["{}_it{}".format(self.var[self.view], self.icur)][:, :]
             rho = self.data["{}_it{}".format('rho', self.icur)][:, :]
-            return cvar(vX.shape[0], vX.shape[1], vX, rho).T
+            return rhox2x(vX, rho).T
 
         elif self.view in ['vort']:
             return rot(self.data, self.icur, self.nx, self.nz, self.one_dx, self.one_dz, self.a7).T

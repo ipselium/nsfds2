@@ -179,7 +179,8 @@ class CfgSetup:
             self.comp = SAVE.get('compression', 'lzf')
             self.view = SAVE.get('view', 'p')
             self.onlyp = SAVE.getboolean('only p', False)
-
+            if self.comp == 'None':
+                self.comp = None
 
             PRBS = self.cfg['probes']
             self.probes = PRBS.getboolean('probes', False)

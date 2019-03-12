@@ -30,11 +30,9 @@ procedure proposed by Bogey & al -- JCP228 -- 2009
 """
 
 import numpy as np
-from ofdlib.scapturc import sigma_p, sigma_d, fo2
-from ofdlib.scapturc import xcapture, zcapture, update
-#from ofdlib2.capture import sigma_p, sigma_d, fo2
-#from ofdlib2.capture import xcapture, zcapture, update
-
+from ofdlib2.capture import sigma_p, sigma_d, fo2
+from ofdlib2.capture import xcapture, zcapture, update
+from ofdlib2.fdtd import comp_p
 
 class ShockCapture:
     """ Shock Capturing procedure. (Bogey & al. -- JCP 228 -- 2009)"""
@@ -77,6 +75,8 @@ class ShockCapture:
         """
 
         if self.cfg.scapt_meth == 'pressure':
+            comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
+                   self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
             dpx, dpz = fo2(self.fld.p)
             sigmax, sigmaz = sigma_p(self.fld.p, dpx, dpz,
                                      self.cfg.rth, self.cfg.eps_machine)
@@ -92,25 +92,25 @@ class ShockCapture:
         """ Apply shock capture. """
 
         # Capture following x
-        self.fld.K = xcapture(self.fld.rho, self.fld.K, sigmax, self.cff.c_sc)
-        self.fld.Ku = xcapture(self.fld.rhou, self.fld.Ku, sigmax, self.cff.c_sc)
-        self.fld.Kv = xcapture(self.fld.rhov, self.fld.Kv, sigmax, self.cff.c_sc)
-        self.fld.Ke = xcapture(self.fld.rhoe, self.fld.Ke, sigmax, self.cff.c_sc)
+        xcapture(self.fld.rho, self.fld.K, sigmax, self.cff.c_sc)
+        xcapture(self.fld.rhou, self.fld.Ku, sigmax, self.cff.c_sc)
+        xcapture(self.fld.rhov, self.fld.Kv, sigmax, self.cff.c_sc)
+        xcapture(self.fld.rhoe, self.fld.Ke, sigmax, self.cff.c_sc)
         self.update()
 
         # Capture following z
-        self.fld.K = zcapture(self.fld.rho, self.fld.K, sigmaz, self.cff.c_sc)
-        self.fld.Ku = zcapture(self.fld.rhou, self.fld.Ku, sigmaz, self.cff.c_sc)
-        self.fld.Kv = zcapture(self.fld.rhov, self.fld.Kv, sigmaz, self.cff.c_sc)
-        self.fld.Ke = zcapture(self.fld.rhoe, self.fld.Ke, sigmaz, self.cff.c_sc)
+        zcapture(self.fld.rho, self.fld.K, sigmaz, self.cff.c_sc)
+        zcapture(self.fld.rhou, self.fld.Ku, sigmaz, self.cff.c_sc)
+        zcapture(self.fld.rhov, self.fld.Kv, sigmaz, self.cff.c_sc)
+        zcapture(self.fld.rhoe, self.fld.Ke, sigmaz, self.cff.c_sc)
         self.update()
 
     def update(self):
         """ Apply shock capture. """
 
-        idx = np.array([0, self.msh.nx])
-        idz = np.array([0, self.msh.nz])
-        self.fld.rho = update(self.fld.rho, self.fld.K, idx, idz)
-        self.fld.rhou = update(self.fld.rhou, self.fld.Ku, idx, idz)
-        self.fld.rhov = update(self.fld.rhov, self.fld.Kv, idx, idz)
-        self.fld.rhoe = update(self.fld.rhoe, self.fld.Ke, idx, idz)
+        idx = [0, self.msh.nx]
+        idz = [0, self.msh.nz]
+        update(self.fld.rho, self.fld.K, *idx, *idz)
+        update(self.fld.rhou, self.fld.Ku, *idx, *idz)
+        update(self.fld.rhov, self.fld.Kv, *idx, *idz)
+        update(self.fld.rhoe, self.fld.Ke, *idx, *idz)

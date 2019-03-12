@@ -45,7 +45,8 @@ class Fields:
 
         self.init_fields()
         self.init_derivatives()
-        self.init_save()
+        if self._cfg.save:
+            self.init_save()
         msg = 'Fields initialized in {:.4f} s.'
         print(msg.format(time.perf_counter() - ti))
 
