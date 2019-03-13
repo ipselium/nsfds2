@@ -90,7 +90,7 @@ def main():
     # Movie Parameters
     title = os.path.basename(filename).split('.')[0]
     metadata = dict(title=title, artist=getpass.getuser(), comment='From nsfds2')
-    writer = ani.FFMpegWriter(fps=30, metadata=metadata, bitrate=-1, codec="libx264")
+    writer = ani.FFMpegWriter(fps=24, metadata=metadata, bitrate=-1, codec="libx264")
     movie_filename = '{}.mkv'.format(title)
     frames = FrameGenerator(data, cfg.view)
 

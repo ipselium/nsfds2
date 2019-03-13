@@ -120,6 +120,9 @@ class CfgSetup:
         self.cfg.add_section('probes')
         self.cfg.set('probes', 'probes', 'False')
 
+        self.cfg.add_section('figures')
+        self.cfg.set('figures', 'figures', 'True')
+
         self.cfg.add_section('save')
         self.cfg.set('save', 'save', 'True')
         self.cfg.set('save', 'filename', 'tmp')
@@ -181,6 +184,9 @@ class CfgSetup:
             self.onlyp = SAVE.getboolean('only p', False)
             if self.comp == 'None':
                 self.comp = None
+
+            FIGS = self.cfg['figures']
+            self.figures = FIGS.getboolean('figures', True)
 
             PRBS = self.cfg['probes']
             self.probes = PRBS.getboolean('probes', False)

@@ -61,7 +61,7 @@ class FDTD:
         self.it = 0
         timing = ['total', 'efluxes', 'vfluxes', 'sfilt', 'scapt', 'save', 'pressure', 'probe']
         self.bench = {i: [] for i in timing}
-        self.tloopi = time.time()
+        self.tloopi = time.perf_counter()
 
     @property
     def columns(self):
@@ -77,7 +77,7 @@ class FDTD:
 
         for self.it in range(self.cfg.nt+1):
 
-            tt = time.time()
+            tt = time.perf_counter()
 
             self.eulerian_fluxes()
             self.viscous_flux()
@@ -96,16 +96,16 @@ class FDTD:
 
             if self.it % self.cfg.ns == 0:
                 self.save()
-                self.bench['total'].append(time.time() - tt)
+                self.bench['total'].append(time.perf_counter() - tt)
                 self.bench = disp_bench(self.bench, self.it, res)
             else:
-                self.bench['total'].append(time.time() - tt)
+                self.bench['total'].append(time.perf_counter() - tt)
 
         if self.cfg.save:
             self.fld.sfile.close()
 
         print('-'*int(self.columns))
-        print('# Simulation completed in {:.2f} s.'.format(time.time() - self.tloopi))
+        print('# Simulation completed in {:.2f} s.'.format(time.perf_counter() - self.tloopi))
         print('# End at t = {:.4f} sec.'.format(self.cfg.dt*self.it))
         print('-'*int(self.columns))
 

@@ -74,10 +74,14 @@ class ViscousFluxes:
         self.fld.Eu = cdiv(self.fld.rhou, self.fld.rho)
         self.fld.Ev = cdiv(self.fld.rhov, self.fld.rho)
 
+        tau11 = np.zeros_like(self.fld.p)
+        tau22 = np.zeros_like(self.fld.p)
+        tau12 = np.zeros_like(self.fld.p)
+
         # Strain tensor
-        tau11 = dudx3c(self.fld.Eu, np.zeros_like(self.fld.p), self.msh.one_dx, *idx, *idz)
-        tau22 = dudz3c(self.fld.Ev, np.zeros_like(self.fld.p), self.msh.one_dz, *idx, *idz, False)
-        tau12 = dudxz3c(self.fld.Eu, self.fld.Ev, np.zeros_like(self.fld.p), self.msh.one_dx, self.msh.dz, *idx, *idz)
+        dudx3c(self.fld.Eu, tau11, self.msh.one_dx, *idx, *idz)
+        dudz3c(self.fld.Ev, tau22, self.msh.one_dz, *idx, *idz, False)
+        dudxz3c(self.fld.Eu, self.fld.Ev, tau12, self.msh.one_dx, self.msh.dz, *idx, *idz)
 
         # Dynamic viscosity
         mu = cmult(self.fld.rho, self.cfg.nu)
@@ -96,15 +100,15 @@ class ViscousFluxes:
         idx = [1, self.msh.nx-1]
         idz = [1, self.msh.nz-1]
 
-        self.fld.Ku = dudx3c(self.fld.Eu, self.fld.Ku, self.msh.one_dx, *idx, *idz)
-        self.fld.Kv = dudx3c(self.fld.Ev, self.fld.Kv, self.msh.one_dx, *idx, *idz)
-        self.fld.Ke = dudx3c(self.fld.Ee, self.fld.Ke, self.msh.one_dx, *idx, *idz)
+        dudx3c(self.fld.Eu, self.fld.Ku, self.msh.one_dx, *idx, *idz)
+        dudx3c(self.fld.Ev, self.fld.Kv, self.msh.one_dx, *idx, *idz)
+        dudx3c(self.fld.Ee, self.fld.Ke, self.msh.one_dx, *idx, *idz)
 
-        self.fld.Ku = dudz3c(self.fld.Fu, self.fld.Ku, self.msh.one_dz, *idx, *idz, True)
-        self.fld.Kv = dudz3c(self.fld.Fv, self.fld.Kv, self.msh.one_dz, *idx, *idz, True)
-        self.fld.Ke = dudz3c(self.fld.Fe, self.fld.Ke, self.msh.one_dz, *idx, *idz, True)
+        dudz3c(self.fld.Fu, self.fld.Ku, self.msh.one_dz, *idx, *idz, True)
+        dudz3c(self.fld.Fv, self.fld.Kv, self.msh.one_dz, *idx, *idz, True)
+        dudz3c(self.fld.Fe, self.fld.Ke, self.msh.one_dz, *idx, *idz, True)
 
         # Integrate in time
-        self.fld.rhou = integrate(self.fld.rhou, self.fld.Ku, self.cfg.dt, *idx, *idz)
-        self.fld.rhov = integrate(self.fld.rhov, self.fld.Kv, self.cfg.dt, *idx, *idz)
-        self.fld.rhoe = integrate(self.fld.rhoe, self.fld.Ke, self.cfg.dt, *idx, *idz)
+        integrate(self.fld.rhou, self.fld.Ku, self.cfg.dt, *idx, *idz)
+        integrate(self.fld.rhov, self.fld.Kv, self.cfg.dt, *idx, *idz)
+        integrate(self.fld.rhoe, self.fld.Ke, self.cfg.dt, *idx, *idz)

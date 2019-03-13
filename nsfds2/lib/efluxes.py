@@ -65,10 +65,10 @@ class EulerianFluxes:
             self.cin()
 
             # Intregration of eulerian fluxes : update self.rhox
-            time_advance(self.rho, rho, self.fld.K, self.cff.rk[irk], self.cfg.dt)
-            time_advance(self.rhou, rhou, self.fld.Ku, self.cff.rk[irk], self.cfg.dt)
-            time_advance(self.rhov, rhov, self.fld.Kv, self.cff.rk[irk], self.cfg.dt)
-            time_advance(self.rhoe, rhoe, self.fld.Ke, self.cff.rk[irk], self.cfg.dt)
+            time_advance(self.rho, rho, self.fld.K, self.cff.dtrk[irk])
+            time_advance(self.rhou, rhou, self.fld.Ku, self.cff.dtrk[irk])
+            time_advance(self.rhov, rhov, self.fld.Kv, self.cff.dtrk[irk])
+            time_advance(self.rhoe, rhoe, self.fld.Ke, self.cff.dtrk[irk])
 
             # Boundary conditions
             self.cout()

@@ -35,12 +35,13 @@ import ofdlib.coefficients as cf
 class Coefficients:
     """ Finite difference scheme coefficients. """
 
-    def __init__(self, stencil):
+    def __init__(self, cfg, stencil):
 
         ti = time.perf_counter()
         self.stencil = stencil
+        self._cfg = cfg
         self.ac, self.ad = self.a_id(stencil)()
-        self.rk = cf.rk4o()
+        self.dtrk = self._cfg.dt*cf.rk4o()
         self.xnu = cf.fxnu()*2.5                   # [0.7, 0.1] / Olivier : 0.8
         self.d11c, self.d11d = cf.d11om()
         _, self.d7d15 = cf.d7o()

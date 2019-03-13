@@ -55,14 +55,17 @@ def main():
 
     # Simulation parameters
     fld = Fields(msh, cfg)
-    cff = Coefficients(msh.stencil)
+    cff = Coefficients(cfg, msh.stencil)
 
     # Simulation
     fdtd = FDTD(msh, fld, cff, cfg)
     p, rho, rhou, rhov, rhoe = fdtd.run()
 
     # Figures
-    figures.fields(p, rhou/rho, rhov/rho, rhoe/rho, msh, cfg)
+    if cfg.figures:
+        figures.fields(p, rhou/rho, rhov/rho, rhoe/rho, msh, cfg)
 
 if __name__ == "__main__":
+    import os
+    os.nice(20)
     main()
