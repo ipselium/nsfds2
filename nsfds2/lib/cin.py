@@ -33,6 +33,7 @@ import numpy as np
 from ofdlib2.fdtd import cEuv, cEvu, cEe
 from ofdlib2.derivation import dudx11c, dudx11p, dudx11m
 from ofdlib2.derivation import dudz11c, dudz11p, dudz11m
+from ofdlib2.derivation import dudx11xx, dudz11xx
 
 
 class Cin:
@@ -48,9 +49,9 @@ class Cin:
         self.ac = cff.ac
         self.ad = cff.ad
 
-        for subdomain in self.msh.all_domains:
-            fname = self.cin_id(subdomain, self.msh.stencil)
-            subdomain.cin_method = getattr(self, fname)
+        for sub in self.msh.all_domains:
+            fname = self.cin_id(sub, self.msh.stencil)
+            sub.cin_method = getattr(self, fname)
 
     def dispatch(self, p, rho, rhou, rhov, rhoe):
         """ Dispatch the domains to the functions. """
@@ -84,82 +85,30 @@ class Cin:
             sub.cin_method(self.fld.Fe, self.fld.Ke, sub)
 
     @staticmethod
-    def cin_id(subdomain, stencil):
+    def cin_id(sub, stencil):
         """ Identify which computation function to use for subdomain. """
-        return 'dud{}{}{}'.format(subdomain.axis, stencil, subdomain.bc.replace('.', ''))
+        return 'dud{}{}{}'.format(sub.axis, stencil, sub.bc.replace('.', ''))
 
-    def dudx11RR(self, u, K, subdomain):
+    def dudx11RR(self, u, K, sub):
         """ Rigid-Rigid following x with a 11 points scheme """
 
-        idx = [subdomain.xz[0]+5, subdomain.xz[2]-4]
-        idz = [subdomain.xz[1], subdomain.xz[3]+1]
+        dudx11c(u, K, self.one_dx, *sub.ix, *sub.iz)
+        dudx11p(u, K, self.one_dx, sub.ix[0], *sub.iz)
+        dudx11m(u, K, self.one_dx, sub.ix[1], *sub.iz)
 
-        dudx11c(u, K, self.one_dx, *idx, *idz)
-        dudx11p(u, K, self.one_dx, subdomain.xz[1], *idz)
-        dudx11m(u, K, self.one_dx, subdomain.xz[2], *idz)
-
-    def dudz11RR(self, u, K, subdomain):
+    def dudz11RR(self, u, K, sub):
         """ Rigid-Rigid following z with a 11 points scheme """
 
-        idx = [subdomain.xz[0], subdomain.xz[2]+1]
-        idz = [subdomain.xz[1]+5, subdomain.xz[3]-4]
+        dudz11c(u, K, self.one_dz, *sub.ix, *sub.iz, True)
+        dudz11p(u, K, self.one_dz, *sub.ix, sub.iz[0], True)
+        dudz11m(u, K, self.one_dz, *sub.ix, sub.iz[1], True)
 
-        dudz11c(u, K, self.one_dz, *idx, *idz, True)
-        dudz11p(u, K, self.one_dz, *idx, subdomain.xz[1], True)
-        dudz11m(u, K, self.one_dz, *idx, subdomain.xz[3], True)
+    def dudx11XX(self, u, K, sub):
+        """ Open-Open following x with a 11 points scheme """
 
-    def dudx11RX(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
+        dudx11xx(u, K, self.one_dx, *sub.ix, sub.iz[0])
 
-    def dudx11XR(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
+    def dudz11XX(self, u, K, sub):
+        """ Open-Open following z with a 11 points scheme """
 
-    def dudx11XX(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudx11PR(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudx11RP(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudx11PX(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudx11XP(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudz11RX(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudz11XR(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudz11XX(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudz11PR(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudz11RP(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudz11PX(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
-
-    def dudz11XP(self):
-        """ Rigid-Rigid following z with a 11 points scheme """
-        pass
+        dudz11xx(u, K, self.one_dz, sub.ix[0], *sub.iz, True)

@@ -45,7 +45,7 @@ def main():
     cfg = CfgSetup()
 
     # Mesh
-    obstacle = [] # templates.square(cfg.nx, cfg.nz)
+    obstacle = templates.square(cfg.nx, cfg.nz)
     msh = mesh.Mesh((cfg.nx, cfg.nz),
                     (cfg.dx, cfg.dz),
                     origin=(cfg.ix0, cfg.iz0),
@@ -56,6 +56,10 @@ def main():
     # Simulation parameters
     fld = Fields(msh, cfg)
     cff = Coefficients(cfg, msh.stencil)
+
+    # Wait for user input
+    _ = input('Hit enter to continue...')
+
 
     # Simulation
     fdtd = FDTD(msh, fld, cff, cfg)

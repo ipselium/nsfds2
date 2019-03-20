@@ -89,7 +89,6 @@ class CfgSetup:
 
         self.cfg.add_section('simulation')
         self.cfg.set('simulation', 'viscosity', 'True')
-        self.cfg.set('simulation', 'probes', 'True')
         self.cfg.set('simulation', 'nt', '150')
         self.cfg.set('simulation', 'ns', '10')
         self.cfg.set('simulation', 'nx', '256')

@@ -87,17 +87,17 @@ class EulerianFluxes:
 
         for s in self.msh.obstacles:
 
-            self.rhou[s.xz[0]:s.xz[2]+1, s.xz[1]] = 0
-            self.rhov[s.xz[0]:s.xz[2]+1, s.xz[1]] = 0
+            self.rhou[s.ix[0]:s.ix[1]+1, s.iz[0]] = 0
+            self.rhov[s.ix[0]:s.ix[1]+1, s.iz[0]] = 0
 
-            self.rhou[s.xz[0]:s.xz[2]+1, s.xz[3]] = 0
-            self.rhov[s.xz[0]:s.xz[2]+1, s.xz[3]] = 0
+            self.rhou[s.ix[0]:s.ix[1]+1, s.iz[1]] = 0
+            self.rhov[s.ix[0]:s.ix[1]+1, s.iz[1]] = 0
 
-            self.rhou[s.xz[0], s.xz[1]:s.xz[3]+1] = 0
-            self.rhov[s.xz[0], s.xz[1]:s.xz[3]+1] = 0
+            self.rhou[s.ix[0], s.iz[0]:s.iz[1]+1] = 0
+            self.rhov[s.ix[0], s.iz[0]:s.iz[1]+1] = 0
 
-            self.rhou[s.xz[2], s.xz[1]:s.xz[3]+1] = 0
-            self.rhov[s.xz[2], s.xz[1]:s.xz[3]+1] = 0
+            self.rhou[s.ix[1], s.iz[0]:s.iz[1]+1] = 0
+            self.rhov[s.ix[1], s.iz[0]:s.iz[1]+1] = 0
 
         self.rhou[[0, -1], :] = 0
         self.rhov[[0, -1], :] = 0
