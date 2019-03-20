@@ -3,3 +3,4 @@ archives/
 *.mkv
 *log*
 *bench*
+*profile.pof
