@@ -43,12 +43,11 @@ from ofdlib2.utils import cmult, cdiv
 class ViscousFluxes:
     """ Compute viscous flux : update rhou, rhov and rhoe only. """
 
-    def __init__(self, msh, fld, cfg, cff):
+    def __init__(self, msh, fld, cfg):
 
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
-        self.cff = cff
 
     def dispatch(self):
         """ Dispatch domains to integrate. """

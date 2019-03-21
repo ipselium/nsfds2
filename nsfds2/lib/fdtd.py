@@ -44,18 +44,16 @@ class FDTD:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, msh, fld, cff, cfg):
+    def __init__(self, msh, fld, cfg):
 
         self.msh = msh
         self.fld = fld
-        self.cff = cff
         self.cfg = cfg
 
-        self.efluxes = EulerianFluxes(self.msh, self.fld, self.cfg, self.cff)
-        self.vfluxes = ViscousFluxes(self.msh, self.fld, self.cfg, self.cff)
-        self.sfilter = SelectiveFilter(self.msh, self.fld, self.cff)
-        self.scapture = ShockCapture(self.msh, self.fld, self.cfg, self.cff,
-                                     self.efluxes.ccin)
+        self.efluxes = EulerianFluxes(self.msh, self.fld, self.cfg)
+        self.vfluxes = ViscousFluxes(self.msh, self.fld, self.cfg)
+        self.sfilter = SelectiveFilter(self.msh, self.fld, self.cfg)
+        self.scapture = ShockCapture(self.msh, self.fld, self.cfg, self.efluxes.ccin)
 
         # Time
         self.it = 0

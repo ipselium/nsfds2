@@ -33,19 +33,20 @@ import numpy as np
 from ofdlib2.fdtd import time_advance, comp_p
 from nsfds2.utils.array import empty_like
 from .cin import Cin
+import ofdlib.coefficients as cf
 
 
 class EulerianFluxes:
     """ Compute Eulerian fluxes. """
 
-    def __init__(self, msh, fld, cfg, cff):
+    def __init__(self, msh, fld, cfg):
 
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
-        self.cff = cff
         self.p, self.rho, self.rhou, self.rhov, self.rhoe = empty_like(msh.shape, 5)
-        self.ccin = Cin(msh, fld, cff)
+        self.ccin = Cin(msh, fld)
+        self.dtrk = self.cfg.dt*cf.rk4o()
 
     def rk4(self, p, rho, rhou, rhov, rhoe):
         """
@@ -65,10 +66,10 @@ class EulerianFluxes:
             self.cin()
 
             # Intregration of eulerian fluxes : update self.rhox
-            time_advance(self.rho, rho, self.fld.K, self.cff.dtrk[irk])
-            time_advance(self.rhou, rhou, self.fld.Ku, self.cff.dtrk[irk])
-            time_advance(self.rhov, rhov, self.fld.Kv, self.cff.dtrk[irk])
-            time_advance(self.rhoe, rhoe, self.fld.Ke, self.cff.dtrk[irk])
+            time_advance(self.rho, rho, self.fld.K, self.dtrk[irk])
+            time_advance(self.rhou, rhou, self.fld.Ku, self.dtrk[irk])
+            time_advance(self.rhov, rhov, self.fld.Kv, self.dtrk[irk])
+            time_advance(self.rhoe, rhoe, self.fld.Ke, self.dtrk[irk])
 
             # Boundary conditions
             self.cout()

@@ -30,56 +30,51 @@ oscillations.
 """
 
 import numpy as np
-from ofdlib2.filters import fx11rr, fz11rr
-from ofdlib2.filters import fx11xx, fz11xx
-
+import ofdlib2.filters as filters
 
 class SelectiveFilter:
     """ Filter rho, rhou, rhov and rhoe. """
 
 
-    def __init__(self, msh, fld, cff):
+    def __init__(self, msh, fld, cfg):
 
         self.msh = msh
         self.fld = fld
-        self.xnu = cff.xnu
+        self.xnu = cfg.xnu
 
         for subdomain in self.msh.all_domains:
             fname = self.filt_id(subdomain, self.msh.stencil)
-            subdomain.filt_method = getattr(self, fname)
+            subdomain.filt_method = getattr(filters, fname)
 
     @staticmethod
-    def filt_id(subdomain, stencil):
+    def filt_id(sub, stencil):
         """ Identify which filter function to use for subdomain. """
-        return 'f{}{}{}'.format(stencil, subdomain.axis, subdomain.bc.replace('.', ''))
+        return 'f{}{}{}{}'.format(sub.axis, stencil,
+                                  sub.bc.replace('.', ''), sub.patch)
 
     def apply(self):
         """ Dispatch filtering. """
 
         for sub in self.msh.xdomains:
-            sub.filt_method(self.fld.rho, self.fld.K, sub)
-            sub.filt_method(self.fld.rhou, self.fld.Ku, sub)
-            sub.filt_method(self.fld.rhov, self.fld.Kv, sub)
-            sub.filt_method(self.fld.rhoe, self.fld.Ke, sub)
+            sub.filt_method(self.fld.rho, self.fld.K,   *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.rhou, self.fld.Ku, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.rhov, self.fld.Kv, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.rhoe, self.fld.Ke, *sub.ix, *sub.iz)
+
+        self.update(self.msh.xdomains)
 
         for sub in self.msh.zdomains:
-            sub.filt_method(self.fld.rho, self.fld.K, sub)
-            sub.filt_method(self.fld.rhou, self.fld.Ku, sub)
-            sub.filt_method(self.fld.rhov, self.fld.Kv, sub)
-            sub.filt_method(self.fld.rhoe, self.fld.Ke, sub)
+            sub.filt_method(self.fld.rho, self.fld.K,   *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.rhou, self.fld.Ku, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.rhov, self.fld.Kv, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.rhoe, self.fld.Ke, *sub.ix, *sub.iz)
 
-    def f11xRR(self, u, K, sub):
-        """ Rigid-Rigid : 11 points selective filtering following x. """
-        fx11rr(u, K, self.xnu[0], *sub.ix, *sub.iz)
+        self.update(self.msh.zdomains)
 
-    def f11zRR(self, u, K, sub):
-        """ Rigid-Rigid : 11 points selective filtering following z. """
-        fz11rr(u, K, self.xnu[0], *sub.ix, *sub.iz)
-
-    def f11xXX(self, u, K, sub):
-        """ Open-Open : 11 points selective filtering following x. """
-        fx11xx(u, K, self.xnu[0], *sub.ix, sub.iz[0])
-
-    def f11zXX(self, u, K, sub):
-        """ Open-Open : 11 points selective filtering following z. """
-        fz11xx(u, K, self.xnu[0], sub.ix[0], *sub.iz)
+    def update(self, domains):
+        """ Update fields. """
+        for sub in domains:
+            filters.apply(self.fld.rho, self.fld.K, self.xnu, *sub.ix, *sub.iz)
+            filters.apply(self.fld.rhou, self.fld.Ku, self.xnu, *sub.ix, *sub.iz)
+            filters.apply(self.fld.rhov, self.fld.Kv, self.xnu, *sub.ix, *sub.iz)
+            filters.apply(self.fld.rhoe, self.fld.Ke, self.xnu, *sub.ix, *sub.iz)

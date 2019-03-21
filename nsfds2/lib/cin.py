@@ -31,84 +31,51 @@ Compute Derivatives
 
 import numpy as np
 from ofdlib2.fdtd import cEuv, cEvu, cEe
-from ofdlib2.derivation import dudx11c, dudx11p, dudx11m
-from ofdlib2.derivation import dudz11c, dudz11p, dudz11m
-from ofdlib2.derivation import dudx11xx, dudz11xx
-
+import ofdlib2.derivation as drv
 
 class Cin:
     """ Dispatch domains to associated computation functions. """
 
-    def __init__(self, msh, fld, cff):
+    def __init__(self, msh, fld):
 
         self.msh = msh
-        self.nx, self.nz = msh.shape
         self.one_dx = msh.one_dx
         self.one_dz = msh.one_dz
         self.fld = fld
-        self.ac = cff.ac
-        self.ad = cff.ad
 
         for sub in self.msh.all_domains:
             fname = self.cin_id(sub, self.msh.stencil)
-            sub.cin_method = getattr(self, fname)
+            sub.cin_method = getattr(drv, fname)
+
+    @staticmethod
+    def cin_id(sub, stencil):
+        """ Identify which computation function to use for subdomain. """
+        return 'dud{}{}{}{}'.format(sub.axis, stencil,
+                                    sub.bc.replace('.', ''), sub.patch)
 
     def dispatch(self, p, rho, rhou, rhov, rhoe):
         """ Dispatch the domains to the functions. """
 
-        #######################################################################
-        # dE/dz
-        #######################################################################
+        # dE/dz ---------------------------------------------------------------
         self.fld.E = rhou
         self.fld.Eu = cEuv(self.fld.Eu, rho, rhou, p)
         self.fld.Ev = cEvu(self.fld.Ev, rho, rhou, rhov)
         self.fld.Ee = cEe(self.fld.Ee, rho, rhou, rhoe, p)
 
         for sub in self.msh.xdomains:
-            sub.cin_method(self.fld.E, self.fld.K, sub)
-            sub.cin_method(self.fld.Eu, self.fld.Ku, sub)
-            sub.cin_method(self.fld.Ev, self.fld.Kv, sub)
-            sub.cin_method(self.fld.Ee, self.fld.Ke, sub)
+            sub.cin_method(self.fld.E, self.fld.K, self.one_dx, *sub.ix, *sub.iz)
+            sub.cin_method(self.fld.Eu, self.fld.Ku, self.one_dx, *sub.ix, *sub.iz)
+            sub.cin_method(self.fld.Ev, self.fld.Kv, self.one_dx, *sub.ix, *sub.iz)
+            sub.cin_method(self.fld.Ee, self.fld.Ke, self.one_dx, *sub.ix, *sub.iz)
 
-        #######################################################################
-        # dF/dz
-        #######################################################################
+        # dF/dz ---------------------------------------------------------------
         self.fld.F = rhov
         self.fld.Fu = self.fld.Ev
         self.fld.Fv = cEuv(self.fld.Fv, rho, rhov, p)
         self.fld.Fe = cEe(self.fld.Fe, rho, rhov, rhoe, p)
 
         for sub in self.msh.zdomains:
-            sub.cin_method(self.fld.F, self.fld.K, sub)
-            sub.cin_method(self.fld.Fu, self.fld.Ku, sub)
-            sub.cin_method(self.fld.Fv, self.fld.Kv, sub)
-            sub.cin_method(self.fld.Fe, self.fld.Ke, sub)
-
-    @staticmethod
-    def cin_id(sub, stencil):
-        """ Identify which computation function to use for subdomain. """
-        return 'dud{}{}{}'.format(sub.axis, stencil, sub.bc.replace('.', ''))
-
-    def dudx11RR(self, u, K, sub):
-        """ Rigid-Rigid following x with a 11 points scheme """
-
-        dudx11c(u, K, self.one_dx, *sub.ix, *sub.iz)
-        dudx11p(u, K, self.one_dx, sub.ix[0], *sub.iz)
-        dudx11m(u, K, self.one_dx, sub.ix[1], *sub.iz)
-
-    def dudz11RR(self, u, K, sub):
-        """ Rigid-Rigid following z with a 11 points scheme """
-
-        dudz11c(u, K, self.one_dz, *sub.ix, *sub.iz, True)
-        dudz11p(u, K, self.one_dz, *sub.ix, sub.iz[0], True)
-        dudz11m(u, K, self.one_dz, *sub.ix, sub.iz[1], True)
-
-    def dudx11XX(self, u, K, sub):
-        """ Open-Open following x with a 11 points scheme """
-
-        dudx11xx(u, K, self.one_dx, *sub.ix, sub.iz[0])
-
-    def dudz11XX(self, u, K, sub):
-        """ Open-Open following z with a 11 points scheme """
-
-        dudz11xx(u, K, self.one_dz, sub.ix[0], *sub.iz, True)
+            sub.cin_method(self.fld.F, self.fld.K, self.one_dz, *sub.ix, *sub.iz, True)
+            sub.cin_method(self.fld.Fu, self.fld.Ku, self.one_dz, *sub.ix, *sub.iz, True)
+            sub.cin_method(self.fld.Fv, self.fld.Kv, self.one_dz, *sub.ix, *sub.iz, True)
+            sub.cin_method(self.fld.Fe, self.fld.Ke, self.one_dz, *sub.ix, *sub.iz, True)

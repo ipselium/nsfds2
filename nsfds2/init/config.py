@@ -88,33 +88,38 @@ class CfgSetup:
         """ Write default configuration file. """
 
         self.cfg.add_section('simulation')
-        self.cfg.set('simulation', 'viscosity', 'True')
         self.cfg.set('simulation', 'nt', '150')
         self.cfg.set('simulation', 'ns', '10')
-        self.cfg.set('simulation', 'nx', '256')
-        self.cfg.set('simulation', 'nz', '256')
-        self.cfg.set('simulation', 'ix0', '0')
-        self.cfg.set('simulation', 'iz0', '0')
-        self.cfg.set('simulation', 'dx', '1')
-        self.cfg.set('simulation', 'dz', '1')
         self.cfg.set('simulation', 'CFL', '0.5')
-        self.cfg.set('simulation', 'bc', 'RRRR')
         self.cfg.set('simulation', 'Npml', '15')
         self.cfg.set('simulation', 'Stencil', '11')
-        self.cfg.set('simulation', 'viscosity', 'True')
 
-        self.cfg.add_section('filtering')
-        self.cfg.set('filtering', 'filter', 'True')
-
-        self.cfg.add_section('shock capture')
-        self.cfg.set('shock capture', 'shock capture', 'True')
-        self.cfg.set('shock capture', 'method', 'pressure')
+        self.cfg.add_section('geometry')
+        self.cfg.set('geometry', 'template', 'square')
+        self.cfg.set('geometry', 'bc', 'RRRR')
+        self.cfg.set('geometry', 'nx', '256')
+        self.cfg.set('geometry', 'nz', '256')
+        self.cfg.set('geometry', 'ix0', '0')
+        self.cfg.set('geometry', 'iz0', '0')
+        self.cfg.set('geometry', 'dx', '1')
+        self.cfg.set('geometry', 'dz', '1')
 
         self.cfg.add_section('source')
         self.cfg.set('source', 'type', 'pulse')
         self.cfg.set('source', 'ixS', '64')
         self.cfg.set('source', 'izS', '64')
         self.cfg.set('source', 'S0', '1e3')
+
+        self.cfg.add_section('filtering')
+        self.cfg.set('filtering', 'filter', 'True')
+        self.cfg.set('filtering', 'stength', '0.75')
+
+        self.cfg.add_section('viscosity')
+        self.cfg.set('viscosity', 'viscosity', 'True')
+
+        self.cfg.add_section('shock capture')
+        self.cfg.set('shock capture', 'shock capture', 'True')
+        self.cfg.set('shock capture', 'method', 'pressure')
 
         self.cfg.add_section('probes')
         self.cfg.set('probes', 'probes', 'False')
@@ -145,35 +150,41 @@ class CfgSetup:
 
         try:
             SIM = self.cfg['simulation']
-            self.viscosity = SIM.getboolean('viscosity', True)
             self.nt = SIM.getint('nt', 150)
             self.ns = SIM.getint('ns', 10)
-            self.nx = SIM.getint('nx', 256)
-            self.nz = SIM.getint('nz', 256)
-            self.ix0 = SIM.getint('ix0', 0)
-            self.iz0 = SIM.getint('iz0', 0)
-            self.dx = SIM.getfloat('dx', 1)
-            self.dz = SIM.getfloat('dz', 1)
             self.CFL = SIM.getfloat('CFL', 0.5)
-            self.bc = SIM.get('bc', 'RRRR')
             self.stencil = SIM.getint('stencil', 11)
             self.Npml = SIM.getint('Npml', 15)
+
+            GEO = self.cfg['geometry']
+            self.template = GEO.get('template', 'square')
+            self.bc = GEO.get('bc', 'RRRR')
+            self.nx = GEO.getint('nx', 256)
+            self.nz = GEO.getint('nz', 256)
+            self.ix0 = GEO.getint('ix0', 0)
+            self.iz0 = GEO.getint('iz0', 0)
+            self.dx = GEO.getfloat('dx', 1)
+            self.dz = GEO.getfloat('dz', 1)
             self.dt = min(self.dx, self.dz)*self.CFL/self.c0
-
-            FILT = self.cfg['filtering']
-            self.filt = FILT.getboolean('filter', True)
-
-            SCAPT = self.cfg['shock capture']
-            self.scapt = SCAPT.getboolean('shock capture', True)
-            self.scapt_meth = SCAPT.get('method', 'pressure')
-            self.rth = 1e-6
-            self.eps_machine = 6e-8                 # epsilon single precision
 
             SRC = self.cfg['source']
             self.typ = SRC.get('type', 'pulse')
             self.ixS = SRC.getint('ixS', 64)
             self.izS = SRC.getint('izS', 64)
             self.S0 = SRC.getfloat('S0', 1e3)
+
+            FILT = self.cfg['filtering']
+            self.filt = FILT.getboolean('filter', True)
+            self.xnu = FILT.getfloat('strength', 0.75)
+
+            VISC = self.cfg['viscosity']
+            self.viscosity = VISC.getboolean('viscosity', True)
+
+            SCAPT = self.cfg['shock capture']
+            self.scapt = SCAPT.getboolean('shock capture', True)
+            self.scapt_meth = SCAPT.get('method', 'pressure')
+            self.rth = 1e-6
+            self.eps_machine = 6e-8                 # epsilon single precision
 
             SAVE = self.cfg['save']
             self.save = SAVE.getboolean('save', True)
@@ -189,7 +200,6 @@ class CfgSetup:
 
             PRBS = self.cfg['probes']
             self.probes = PRBS.getboolean('probes', False)
-
 
         except ConfigParser.Error as err:
             print('Bad cfg file : ', err)

@@ -24,4 +24,3 @@
 
 from .config import CfgSetup
 from .fields import Fields
-from .coefficients import Coefficients

@@ -33,17 +33,18 @@ import numpy as np
 from ofdlib2.capture import sigma_p, sigma_d, fo2
 from ofdlib2.capture import xcapture, zcapture, update
 from ofdlib2.fdtd import comp_p
+import ofdlib.coefficients as cf
 
 class ShockCapture:
     """ Shock Capturing procedure. (Bogey & al. -- JCP 228 -- 2009)"""
 
-    def __init__(self, msh, fld, cfg, cff, cin):
+    def __init__(self, msh, fld, cfg, cin):
 
         self.msh = msh
         self.fld = fld
-        self.cff = cff
         self.cfg = cfg
         self.cin = cin
+        self.c_sc = cf.shock()
 
     def apply(self):
         """ Run shock capture. """
@@ -92,17 +93,17 @@ class ShockCapture:
         """ Apply shock capture. """
 
         # Capture following x
-        xcapture(self.fld.rho, self.fld.K, sigmax, self.cff.c_sc)
-        xcapture(self.fld.rhou, self.fld.Ku, sigmax, self.cff.c_sc)
-        xcapture(self.fld.rhov, self.fld.Kv, sigmax, self.cff.c_sc)
-        xcapture(self.fld.rhoe, self.fld.Ke, sigmax, self.cff.c_sc)
+        xcapture(self.fld.rho, self.fld.K, sigmax, self.c_sc)
+        xcapture(self.fld.rhou, self.fld.Ku, sigmax, self.c_sc)
+        xcapture(self.fld.rhov, self.fld.Kv, sigmax, self.c_sc)
+        xcapture(self.fld.rhoe, self.fld.Ke, sigmax, self.c_sc)
         self.update()
 
         # Capture following z
-        zcapture(self.fld.rho, self.fld.K, sigmaz, self.cff.c_sc)
-        zcapture(self.fld.rhou, self.fld.Ku, sigmaz, self.cff.c_sc)
-        zcapture(self.fld.rhov, self.fld.Kv, sigmaz, self.cff.c_sc)
-        zcapture(self.fld.rhoe, self.fld.Ke, sigmaz, self.cff.c_sc)
+        zcapture(self.fld.rho, self.fld.K, sigmaz, self.c_sc)
+        zcapture(self.fld.rhou, self.fld.Ku, sigmaz, self.c_sc)
+        zcapture(self.fld.rhov, self.fld.Kv, sigmaz, self.c_sc)
+        zcapture(self.fld.rhoe, self.fld.Ke, sigmaz, self.c_sc)
         self.update()
 
     def update(self):
