@@ -30,9 +30,9 @@ oscillations.
 """
 
 import numpy as np
-from ofdlib2.filters import filt, fx11c, fz11c
-from ofdlib2.filters import fx711d, fz711d, fx4d, fz4d
+from ofdlib2.filters import fx11rr, fz11rr
 from ofdlib2.filters import fx11xx, fz11xx
+
 
 class SelectiveFilter:
     """ Filter rho, rhou, rhov and rhoe. """
@@ -43,10 +43,6 @@ class SelectiveFilter:
         self.msh = msh
         self.fld = fld
         self.xnu = cff.xnu
-        self.d11c = cff.d11c
-        self.d11d = cff.d11d
-        self.d7d15 = cff.d7d15
-        self.d4d03 = cff.d4d03
 
         for subdomain in self.msh.all_domains:
             fname = self.filt_id(subdomain, self.msh.stencil)
@@ -66,46 +62,24 @@ class SelectiveFilter:
             sub.filt_method(self.fld.rhov, self.fld.Kv, sub)
             sub.filt_method(self.fld.rhoe, self.fld.Ke, sub)
 
-        self.xupdate()
-
         for sub in self.msh.zdomains:
             sub.filt_method(self.fld.rho, self.fld.K, sub)
             sub.filt_method(self.fld.rhou, self.fld.Ku, sub)
             sub.filt_method(self.fld.rhov, self.fld.Kv, sub)
             sub.filt_method(self.fld.rhoe, self.fld.Ke, sub)
 
-        self.zupdate()
-
-    def xupdate(self):
-        pass
-
-    def zupdate(self):
-        pass
-
     def f11xRR(self, u, K, sub):
-        """
-            Selective filter : attenuate high frequencies
-            4, 7 and 11 points filters
-        """
-
-        fx4d(u, K, self.xnu[1], *sub.ix, *sub.iz) # 1st and last points : 4pts scheme
-        fx711d(u, K, *sub.ix, *sub.iz)             # Other points : 7 & 11pts scheme
-        fx11c(u, K, *sub.ix, *sub.iz)
-        # Update all but the first and last points
-        filt(u, K, self.xnu[0], *[sub.ix[0]+1, sub.ix[1]], *sub.iz)
+        """ Rigid-Rigid : 11 points selective filtering following x. """
+        fx11rr(u, K, self.xnu[0], *sub.ix, *sub.iz)
 
     def f11zRR(self, u, K, sub):
-        """ Selective filter. """
-
-        fz4d(u, K, self.xnu[1], *sub.ix, *sub.iz) # 1st and last points : 4pts scheme
-        fz711d(u, K, *sub.ix, *sub.iz)             # Other points : 7 & 11pts scheme
-        fz11c(u, K, *sub.ix, *sub.iz)
-        # Update all but the first and last points
-        filt(u, K, self.xnu[0], *sub.ix, *[sub.iz[0]+1, sub.iz[1]])
+        """ Rigid-Rigid : 11 points selective filtering following z. """
+        fz11rr(u, K, self.xnu[0], *sub.ix, *sub.iz)
 
     def f11xXX(self, u, K, sub):
+        """ Open-Open : 11 points selective filtering following x. """
         fx11xx(u, K, self.xnu[0], *sub.ix, sub.iz[0])
 
     def f11zXX(self, u, K, sub):
+        """ Open-Open : 11 points selective filtering following z. """
         fz11xx(u, K, self.xnu[0], sub.ix[0], *sub.iz)
-
