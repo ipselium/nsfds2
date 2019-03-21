@@ -29,7 +29,6 @@ Initialize all fields
 """
 
 import os
-import time
 import h5py
 import numpy as np
 
@@ -39,7 +38,6 @@ class Fields:
 
     def __init__(self, msh, cfg):
 
-        ti = time.perf_counter()
         self._msh = msh
         self._cfg = cfg
 
@@ -47,8 +45,6 @@ class Fields:
         self.init_derivatives()
         if self._cfg.save:
             self.init_save()
-        msg = 'Fields initialized in {:.4f} s.'
-        print(msg.format(time.perf_counter() - ti))
 
     def init_fields(self):
         """ Setup initial fields. """

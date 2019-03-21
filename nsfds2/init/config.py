@@ -31,7 +31,6 @@ Parse config file and set all simulation parameters
 
 import sys
 import os
-import time
 try:
     import ConfigParser
 except ImportError:
@@ -45,7 +44,6 @@ class CfgSetup:
 
     def __init__(self):
 
-        ti = time.perf_counter()
         self.cfg = ConfigParser.RawConfigParser()
         self.home = os.path.expanduser("~")
         self.path = self.home + '/.nsfds2/'
@@ -61,10 +59,6 @@ class CfgSetup:
 
         # Parse arguments
         self.run()
-
-        # Log
-        msg = 'Config parsed in {:.4f} s.'
-        print(msg.format(time.perf_counter() - ti))
 
     @staticmethod
     def check_dir(directory):
@@ -95,7 +89,8 @@ class CfgSetup:
         self.cfg.set('simulation', 'Stencil', '11')
 
         self.cfg.add_section('geometry')
-        self.cfg.set('geometry', 'template', 'square')
+        self.cfg.set('geometry', 'file', 'None')
+        self.cfg.set('geometry', 'name', 'square')
         self.cfg.set('geometry', 'bc', 'RRRR')
         self.cfg.set('geometry', 'nx', '256')
         self.cfg.set('geometry', 'nz', '256')
@@ -106,8 +101,8 @@ class CfgSetup:
 
         self.cfg.add_section('source')
         self.cfg.set('source', 'type', 'pulse')
-        self.cfg.set('source', 'ixS', '64')
-        self.cfg.set('source', 'izS', '64')
+        self.cfg.set('source', 'ixS', '32')
+        self.cfg.set('source', 'izS', '32')
         self.cfg.set('source', 'S0', '1e3')
 
         self.cfg.add_section('filtering')
@@ -157,7 +152,8 @@ class CfgSetup:
             self.Npml = SIM.getint('Npml', 15)
 
             GEO = self.cfg['geometry']
-            self.template = GEO.get('template', 'square')
+            self.geofile = GEO.get('file', 'None')
+            self.geoname = GEO.get('name', 'square')
             self.bc = GEO.get('bc', 'RRRR')
             self.nx = GEO.getint('nx', 256)
             self.nz = GEO.getint('nz', 256)
@@ -169,8 +165,8 @@ class CfgSetup:
 
             SRC = self.cfg['source']
             self.typ = SRC.get('type', 'pulse')
-            self.ixS = SRC.getint('ixS', 64)
-            self.izS = SRC.getint('izS', 64)
+            self.ixS = SRC.getint('ixS', 32)
+            self.izS = SRC.getint('izS', 32)
             self.S0 = SRC.getfloat('S0', 1e3)
 
             FILT = self.cfg['filtering']

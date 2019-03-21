@@ -50,8 +50,7 @@ class Cin:
     @staticmethod
     def cin_id(sub, stencil):
         """ Identify which computation function to use for subdomain. """
-        return 'dud{}{}{}{}'.format(sub.axis, stencil,
-                                    sub.bc.replace('.', ''), sub.patch)
+        return 'dud{}{}{}'.format(sub.axis, stencil, sub.bc.replace('.', ''))
 
     def dispatch(self, p, rho, rhou, rhov, rhoe):
         """ Dispatch the domains to the functions. """

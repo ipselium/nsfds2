@@ -28,10 +28,11 @@ Navier Stokes Finite Differences Solver
 @author: Cyril Desjouy
 """
 
-from fdgrid import mesh, templates
+import os
+from fdgrid import mesh
 from nsfds2.init import CfgSetup, Fields
 from nsfds2.lib import FDTD
-from nsfds2.utils import figures, headers
+from nsfds2.utils import figures, headers, files
 
 
 def main():
@@ -45,10 +46,7 @@ def main():
     cfg = CfgSetup()
 
     # Geometry
-    try:
-        obstacle = getattr(templates, cfg.template)(cfg.nx, cfg.nz)
-    except AttributeError:
-        obstacle = []
+    obstacle = files.get_obstacle(cfg)
 
     # Mesh
     msh = mesh.Mesh((cfg.nx, cfg.nz),
@@ -61,9 +59,8 @@ def main():
     # Simulation parameters
     fld = Fields(msh, cfg)
 
-    # Wait for user input
-    _ = input('Hit enter to continue...')
-
+    # Prompt user for start
+    headers.start(cfg)
 
     # Simulation
     fdtd = FDTD(msh, fld, cfg)
@@ -75,6 +72,6 @@ def main():
 
 
 if __name__ == "__main__":
-    import os
+
     os.nice(20)
     main()

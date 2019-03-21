@@ -46,7 +46,9 @@ def _columns():
 def copyright():
     """ Show copyright. """
     col = 76 if _columns() > 76 else _columns
-    cp = [col*'#', "nsfds2 -- Copyright (C) 2016-2019 -- Cyril Desjouy", " "]
+    cp = [col*'#',
+          "nsfds2 v{} -- Copyright (C) 2016-2019 -- Cyril Desjouy".format(nsfds2.__version__),
+          " "]
     lc = "This program comes with ABSOLUTELY NO WARRANTY. " + \
          "This is free software, and you are welcome to redistribute it " + \
          "under certain conditions; See GNU GPL v3 for more details."
@@ -61,12 +63,17 @@ def copyright():
 def version():
     """ Display versions of modules in use. """
 
-    print('System information :\n')
-    print('\tOs     : ' + platform.platform())
-    print('\tpython : ' + sys.version.split(' ')[0])
-    print('\tnsfds2 : ' + nsfds2.__version__)
-    print('\tofdlib : ' + ofdlib2.__version__)
-    print('\tfdgrid : ' + fdgrid.__version__)
-    print('\tnumpy  : ' + numpy.__version__)
-    print('\tcython : ' + cython.__version__)
+    print('System : {}\n'.format(platform.platform()))
+    print('\tpython : {:<10}\tnumpy  : {:<10}'.format(sys.version.split(' ')[0], numpy.__version__))
+    print('\tfdgrid : {:<10}\tofdlib : {:<10}'.format(fdgrid.__version__, ofdlib2.__version__))
     print('\n' + _columns()*"#" + "\n")
+
+
+def start(cfg):
+    """ Prompt start. """
+
+    log = "Starting computation for geometry : '{}' ({}x{})."
+    print(log.format(cfg.geoname, cfg.nx, cfg.nz))
+    key = input("Hit enter to continue (prefix 'q' to quit) ! ")
+    if key == 'q':
+        sys.exit(0)
