@@ -30,12 +30,8 @@ Compute viscous fluxes
 
 
 import numpy as np
-#from ofdlib.fdtdc import integrate
-#from ofdlib.dschmc import dudx3c, dudz3c, dudxz3c
-#from ofdlib.vfluxc import cErhou, cErhov, cErhoe, cFrhov, cFrhoe
-#from ofdlib.cutils import cmult, cdiv
 from ofdlib2.fdtd import integrate
-from ofdlib2.derivation import dudx3c, dudz3c, dudxz3c
+from ofdlib2.derivation import dudx3RR, dudz3RR, dudxz3c
 from ofdlib2.vflux import cErhou, cErhov, cErhoe, cFrhov, cFrhoe
 from ofdlib2.utils import cmult, cdiv
 
@@ -58,8 +54,8 @@ class ViscousFluxes:
             Viscous flux integration : interior points [optimized]
         """
 
-        idx = [0, self.msh.nx]
-        idz = [0, self.msh.nz]
+        idx = [0, self.msh.nx-1]
+        idz = [0, self.msh.nz-1]
 
         self.fld.Ku[:, :] = 0
         self.fld.Kv[:, :] = 0
@@ -77,9 +73,9 @@ class ViscousFluxes:
         tau22 = np.zeros_like(self.fld.p)
         tau12 = np.zeros_like(self.fld.p)
 
-        # Strain tensor
-        dudx3c(self.fld.Eu, tau11, self.msh.one_dx, *idx, *idz)
-        dudz3c(self.fld.Ev, tau22, self.msh.one_dz, *idx, *idz, False)
+        # Strain tensor : WARNING : CHECK THAT DUDX3RR CORRESPONDS TO THIS NEED !
+        dudx3RR(self.fld.Eu, tau11, self.msh.one_dx, *idx, *idz)
+        dudz3RR(self.fld.Ev, tau22, self.msh.one_dz, *idx, *idz, False)
         dudxz3c(self.fld.Eu, self.fld.Ev, tau12, self.msh.one_dx, self.msh.dz, *idx, *idz)
 
         # Dynamic viscosity
@@ -99,13 +95,13 @@ class ViscousFluxes:
         idx = [1, self.msh.nx-1]
         idz = [1, self.msh.nz-1]
 
-        dudx3c(self.fld.Eu, self.fld.Ku, self.msh.one_dx, *idx, *idz)
-        dudx3c(self.fld.Ev, self.fld.Kv, self.msh.one_dx, *idx, *idz)
-        dudx3c(self.fld.Ee, self.fld.Ke, self.msh.one_dx, *idx, *idz)
+        dudx3RR(self.fld.Eu, self.fld.Ku, self.msh.one_dx, *idx, *idz)
+        dudx3RR(self.fld.Ev, self.fld.Kv, self.msh.one_dx, *idx, *idz)
+        dudx3RR(self.fld.Ee, self.fld.Ke, self.msh.one_dx, *idx, *idz)
 
-        dudz3c(self.fld.Fu, self.fld.Ku, self.msh.one_dz, *idx, *idz, True)
-        dudz3c(self.fld.Fv, self.fld.Kv, self.msh.one_dz, *idx, *idz, True)
-        dudz3c(self.fld.Fe, self.fld.Ke, self.msh.one_dz, *idx, *idz, True)
+        dudz3RR(self.fld.Fu, self.fld.Ku, self.msh.one_dz, *idx, *idz, True)
+        dudz3RR(self.fld.Fv, self.fld.Kv, self.msh.one_dz, *idx, *idz, True)
+        dudz3RR(self.fld.Fe, self.fld.Ke, self.msh.one_dz, *idx, *idz, True)
 
         # Integrate in time
         integrate(self.fld.rhou, self.fld.Ku, self.cfg.dt, *idx, *idz)

@@ -49,7 +49,13 @@ class SelectiveFilter:
     @staticmethod
     def filt_id(sub, stencil):
         """ Identify which filter function to use for subdomain. """
-        return 'f{}{}{}'.format(sub.axis, stencil, sub.bc.replace('.', ''))
+
+        if sub.axis == 0:
+            axis = 'x'
+        elif sub.axis == 1:
+            axis = 'z'
+
+        return 'f{}{}{}'.format(axis, stencil, sub.bc.replace('.', ''))
 
     def apply(self):
         """ Dispatch filtering. """

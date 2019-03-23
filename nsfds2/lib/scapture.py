@@ -33,7 +33,7 @@ import numpy as np
 from ofdlib2.capture import sigma_p, sigma_d, fo2
 from ofdlib2.capture import xcapture, zcapture, update
 from ofdlib2.fdtd import comp_p
-import ofdlib.coefficients as cf
+import ofdlib2.derivation as drv
 
 class ShockCapture:
     """ Shock Capturing procedure. (Bogey & al. -- JCP 228 -- 2009)"""
@@ -44,7 +44,6 @@ class ShockCapture:
         self.fld = fld
         self.cfg = cfg
         self.cin = cin
-        self.c_sc = cf.shock()
 
     def apply(self):
         """ Run shock capture. """
@@ -59,11 +58,13 @@ class ShockCapture:
 
         for sub in self.msh.xdomains:
             name = self.cin.cin_id(sub, self.msh.stencil)
-            self.fld.K = getattr(self.cin, name)(self.fld.E, self.fld.K, sub)
+            getattr(drv, name)(self.fld.E, self.fld.K,
+                               self.msh.one_dx, *sub.ix, *sub.iz)
 
         for sub in self.msh.zdomains:
             name = self.cin.cin_id(sub, self.msh.stencil)
-            self.fld.K = getattr(self.cin, name)(self.fld.F, self.fld.K, sub)
+            getattr(drv, name)(self.fld.F, self.fld.K,
+                               self.msh.one_dz, *sub.ix, *sub.iz, True)
 
         return self.fld.K
 
@@ -76,34 +77,40 @@ class ShockCapture:
         """
 
         if self.cfg.scapt_meth == 'pressure':
+
             comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
                    self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
+
             dpx, dpz = fo2(self.fld.p)
             sigmax, sigmaz = sigma_p(self.fld.p, dpx, dpz,
                                      self.cfg.rth, self.cfg.eps_machine)
+
         elif self.cfg.scapt_meth == 'dilatation':
+
             theta = self.dilatation()
+
             dpx, dpz = fo2(theta)
             sigmax, sigmaz = sigma_d(self.fld.p, self.fld.rho, dpx, dpz,
                                      self.cfg.gamma, self.cfg.rth,
                                      self.cfg.eps_machine)
+
         return sigmax, sigmaz
 
     def new_fields(self, sigmax, sigmaz):
         """ Apply shock capture. """
 
         # Capture following x
-        xcapture(self.fld.rho, self.fld.K, sigmax, self.c_sc)
-        xcapture(self.fld.rhou, self.fld.Ku, sigmax, self.c_sc)
-        xcapture(self.fld.rhov, self.fld.Kv, sigmax, self.c_sc)
-        xcapture(self.fld.rhoe, self.fld.Ke, sigmax, self.c_sc)
+        xcapture(self.fld.rho, self.fld.K, sigmax)
+        xcapture(self.fld.rhou, self.fld.Ku, sigmax)
+        xcapture(self.fld.rhov, self.fld.Kv, sigmax)
+        xcapture(self.fld.rhoe, self.fld.Ke, sigmax)
         self.update()
 
         # Capture following z
-        zcapture(self.fld.rho, self.fld.K, sigmaz, self.c_sc)
-        zcapture(self.fld.rhou, self.fld.Ku, sigmaz, self.c_sc)
-        zcapture(self.fld.rhov, self.fld.Kv, sigmaz, self.c_sc)
-        zcapture(self.fld.rhoe, self.fld.Ke, sigmaz, self.c_sc)
+        zcapture(self.fld.rho, self.fld.K, sigmaz)
+        zcapture(self.fld.rhou, self.fld.Ku, sigmaz)
+        zcapture(self.fld.rhov, self.fld.Kv, sigmaz)
+        zcapture(self.fld.rhoe, self.fld.Ke, sigmaz)
         self.update()
 
     def update(self):
