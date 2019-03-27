@@ -58,3 +58,29 @@ def fields(p, u, v, e, msh, cfg):
         plt.colorbar(im, cax=cax)
 
     plt.show()
+
+
+def debug(var1, var2, var3, var4, msh, cfg):
+    """ Make figure """
+
+    cm = modified_jet()
+    norm = MidpointNormalize(midpoint=0)
+
+    _, axes = plt.subplots(2, 2, figsize=(12, 9))
+
+    im1 = axes[0, 0].pcolorfast(msh.x, msh.z, var1.T, cmap=cm, norm=norm)
+    im2 = axes[0, 1].pcolorfast(msh.x, msh.z, var2.T, cmap=cm)
+    im3 = axes[1, 0].pcolorfast(msh.x, msh.z, var3.T, cmap=cm)
+    im4 = axes[1, 1].pcolorfast(msh.x, msh.z, var4.T, cmap=cm)
+    ims = [im1, im2, im3, im4]
+
+    for ax, im in zip(axes.ravel(), ims):
+        msh.plot_obstacles(msh.x, msh.z, ax, msh.get_obstacles(), facecolor='y')
+        ax.set_xlabel(r'$x$ [m]')
+        ax.set_ylabel(r'$z$ [m]')
+        ax.set_aspect('equal')
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        plt.colorbar(im, cax=cax)
+
+    plt.show()

@@ -180,7 +180,6 @@ class CfgSetup:
             self.scapt = SCAPT.getboolean('shock capture', True)
             self.scapt_meth = SCAPT.get('method', 'pressure')
             self.rth = 1e-6
-            self.eps_machine = 6e-8                 # epsilon single precision
 
             SAVE = self.cfg['save']
             self.save = SAVE.getboolean('save', True)

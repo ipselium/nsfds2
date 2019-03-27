@@ -43,6 +43,7 @@ class Fields:
 
         self.init_fields()
         self.init_derivatives()
+        self.init_filters()
         if self._cfg.save:
             self.init_save()
 
@@ -53,6 +54,7 @@ class Fields:
         self.rho = np.zeros_like(self.p) + self._cfg.rho0
         self.rhou = np.zeros_like(self.p)
         self.rhov = np.zeros_like(self.p)
+        self.dltn = np.zeros_like(self.p)
 
         # Location
         ixS = self._cfg.ixS
@@ -82,6 +84,12 @@ class Fields:
         self.Fu = np.empty_like(self.p)
         self.Fv = np.empty_like(self.p)
         self.Fe = np.empty_like(self.p)
+
+    def init_filters(self):
+        """ Init variables used for filtering. """
+
+        self.dp = np.zeros_like(self.p)
+        self.sg = np.zeros_like(self.p)
 
     def init_save(self):
         """ Init save. """

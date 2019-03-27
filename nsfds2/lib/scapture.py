@@ -30,10 +30,11 @@ procedure proposed by Bogey & al -- JCP228 -- 2009
 """
 
 import numpy as np
-from ofdlib2.capture import sigma_p, sigma_d, fo2
-from ofdlib2.capture import xcapture, zcapture, update
 from ofdlib2.fdtd import comp_p
 import ofdlib2.derivation as drv
+import ofdlib2.laplacian as lpl
+import ofdlib2.capture as cpt
+
 
 class ShockCapture:
     """ Shock Capturing procedure. (Bogey & al. -- JCP 228 -- 2009)"""
@@ -45,80 +46,89 @@ class ShockCapture:
         self.cfg = cfg
         self.cin = cin
 
+        for sub in self.msh.all_domains:
+
+            bc = sub.bc.replace('.', '')
+
+            name = self.cin.cin_id(sub, 7)
+            sub.dltn = getattr(drv, name)
+            name = 'lplf{}3{}'.format(sub.axname, bc)
+            sub.lpl = getattr(lpl, name)
+            name = 'cpt{}{}'.format(sub.axname, bc)
+            sub.cpt = getattr(cpt, name)
+            if self.cfg.scapt_meth == "pressure":
+                name = 'sp{}{}'.format(sub.axname, bc)
+            elif self.cfg.scapt_meth == "dilatation":
+                name = 'sd{}{}'.format(sub.axname, bc)
+            sub.sg = getattr(cpt, name)
+
     def apply(self):
         """ Run shock capture. """
-        sigmax, sigmaz = self.detector()
-        self.new_fields(sigmax, sigmaz)
+
+        for direction in [self.msh.xdomains, self.msh.zdomains]:
+
+            self.update_reference()
+
+            for sub in direction:
+                self.detector(sub)
+
+            for sub in direction:
+                self.filter(sub)
+
+            for sub in direction:
+                self.update(sub)
+
+    def update_reference(self):
+        """ Update pressure / dilatation. """
+
+        comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
+               self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
+
+        if self.cfg.scapt_meth == 'dilatation':
+            self.dilatation()
 
     def dilatation(self):
-        """ Compute dilatation : Theta = div.v. """
+        """ Compute dilatation with 7 points scheme : dltn = div.v. """
 
         self.fld.E = self.fld.rhou/self.fld.rho
         self.fld.F = self.fld.rhov/self.fld.rho
 
         for sub in self.msh.xdomains:
-            name = self.cin.cin_id(sub, self.msh.stencil)
-            getattr(drv, name)(self.fld.E, self.fld.K,
-                               self.msh.one_dx, *sub.ix, *sub.iz)
+            sub.dltn(self.fld.E, self.fld.dltn, self.msh.one_dx, *sub.ix, *sub.iz)
 
         for sub in self.msh.zdomains:
-            name = self.cin.cin_id(sub, self.msh.stencil)
-            getattr(drv, name)(self.fld.F, self.fld.K,
-                               self.msh.one_dz, *sub.ix, *sub.iz, True)
+            sub.dltn(self.fld.F, self.fld.dltn, self.msh.one_dz, *sub.ix, *sub.iz, True)
 
-        return self.fld.K
-
-    def detector(self):
+    def detector(self, sub):
         """ Detector determination.
 
         * Determine the high frequency components of pressure (or dilatation)
-        with a high pass filter (fo2)
-        * Determine the filtering magnitude (sigmax, sigmaz)
+        with a high pass filter (laplacian filter)
+        * Determine the filtering magnitude (sg)
         """
 
         if self.cfg.scapt_meth == 'pressure':
+            sub.lpl(self.fld.p, self.fld.dp, *sub.ix, *sub.iz)
+            sub.sg(self.fld.p, self.fld.sg, self.fld.dp,
+                   self.cfg.rth, *sub.ix, *sub.iz)
 
-            comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
-                   self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
+        elif self.cfg.scapt_meth == "dilatation":
+            sub.lpl(self.fld.dltn, self.fld.dp, *sub.ix, *sub.iz)
+            sub.sg(self.fld.p, self.fld.rho, self.fld.sg, self.fld.dp,
+                   self.cfg.gamma, self.cfg.rth, *sub.ix, *sub.iz)
 
-            dpx, dpz = fo2(self.fld.p)
-            sigmax, sigmaz = sigma_p(self.fld.p, dpx, dpz,
-                                     self.cfg.rth, self.cfg.eps_machine)
+    def filter(self, sub):
+        """ Compute filter. """
 
-        elif self.cfg.scapt_meth == 'dilatation':
+        sub.cpt(self.fld.rho, self.fld.K, self.fld.sg, *sub.ix, *sub.iz)
+        sub.cpt(self.fld.rhou, self.fld.Ku, self.fld.sg, *sub.ix, *sub.iz)
+        sub.cpt(self.fld.rhov, self.fld.Kv, self.fld.sg, *sub.ix, *sub.iz)
+        sub.cpt(self.fld.rhoe, self.fld.Ke, self.fld.sg, *sub.ix, *sub.iz)
 
-            theta = self.dilatation()
+    def update(self, sub):
+        """ Apply filter to conservative variables. """
 
-            dpx, dpz = fo2(theta)
-            sigmax, sigmaz = sigma_d(self.fld.p, self.fld.rho, dpx, dpz,
-                                     self.cfg.gamma, self.cfg.rth,
-                                     self.cfg.eps_machine)
-
-        return sigmax, sigmaz
-
-    def new_fields(self, sigmax, sigmaz):
-        """ Apply shock capture. """
-
-        # Capture following x
-        xcapture(self.fld.rho, self.fld.K, sigmax)
-        xcapture(self.fld.rhou, self.fld.Ku, sigmax)
-        xcapture(self.fld.rhov, self.fld.Kv, sigmax)
-        xcapture(self.fld.rhoe, self.fld.Ke, sigmax)
-        self.update()
-
-        # Capture following z
-        zcapture(self.fld.rho, self.fld.K, sigmaz)
-        zcapture(self.fld.rhou, self.fld.Ku, sigmaz)
-        zcapture(self.fld.rhov, self.fld.Kv, sigmaz)
-        zcapture(self.fld.rhoe, self.fld.Ke, sigmaz)
-        self.update()
-
-    def update(self):
-        """ Apply shock capture. """
-
-        idx = [0, self.msh.nx]
-        idz = [0, self.msh.nz]
-        update(self.fld.rho, self.fld.K, *idx, *idz)
-        update(self.fld.rhou, self.fld.Ku, *idx, *idz)
-        update(self.fld.rhov, self.fld.Kv, *idx, *idz)
-        update(self.fld.rhoe, self.fld.Ke, *idx, *idz)
+        cpt.update(self.fld.rho, self.fld.K, *sub.ix, *sub.iz)
+        cpt.update(self.fld.rhou, self.fld.Ku, *sub.ix, *sub.iz)
+        cpt.update(self.fld.rhov, self.fld.Kv, *sub.ix, *sub.iz)
+        cpt.update(self.fld.rhoe, self.fld.Ke, *sub.ix, *sub.iz)

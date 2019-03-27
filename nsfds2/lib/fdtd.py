@@ -150,6 +150,9 @@ class FDTD:
                                           data=self.fld.rhov, compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhoe_it' + str(self.it),
                                           data=self.fld.rhoe, compression=self.cfg.comp)
+            if self.cfg.scapt_meth == 'dilatation':
+                self.fld.sfile.create_dataset('dltn_it' + str(self.it),
+                                          data=self.fld.dltn, compression=self.cfg.comp)
 
     @timed('pressure')
     def update_pressure(self):

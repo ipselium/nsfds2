@@ -85,6 +85,7 @@ def main():
     x = data['x'][:]
     z = data['z'][:]
     nt = data['nt'].value
+    ns = data['nt'].value
     obstacles = data['obstacles'][:]
 
     # Movie Parameters
@@ -92,10 +93,14 @@ def main():
     metadata = dict(title=title, artist=getpass.getuser(), comment='From nsfds2')
     writer = ani.FFMpegWriter(fps=24, metadata=metadata, bitrate=-1, codec="libx264")
     movie_filename = '{}.mkv'.format(title)
-    frames = FrameGenerator(data, cfg.view)
+    try:
+        frames = FrameGenerator(data, cfg.view, iref=nt)
+        maxp, minp = frames.reference()
+    except KeyError:
+        frames = FrameGenerator(data, cfg.view)
+        maxp, minp = frames.reference()
 
     # CMAP
-    maxp, minp = frames.reference()
     mycm = modified_jet()
     if minp < 0:
         norm = MidpointNormalize(vmax=maxp, vmin=minp, midpoint=0)

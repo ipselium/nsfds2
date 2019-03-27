@@ -51,12 +51,7 @@ class Cin:
     def cin_id(sub, stencil):
         """ Identify which computation function to use for subdomain. """
 
-        if sub.axis == 0:
-            axis = 'x'
-        elif sub.axis == 1:
-            axis = 'z'
-
-        return 'dud{}{}{}'.format(axis, stencil, sub.bc.replace('.', ''))
+        return 'dud{}{}{}'.format(sub.axname, stencil, sub.bc.replace('.', ''))
 
     def dispatch(self, p, rho, rhou, rhov, rhoe):
         """ Dispatch the domains to the functions. """
