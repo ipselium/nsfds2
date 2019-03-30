@@ -28,7 +28,7 @@ Parse config file and set all simulation parameters
 @author: Cyril Desjouy
 """
 
-
+import time
 import sys
 import os
 try:
@@ -86,7 +86,6 @@ class CfgSetup:
         self.cfg.set('simulation', 'ns', '10')
         self.cfg.set('simulation', 'CFL', '0.5')
         self.cfg.set('simulation', 'Npml', '15')
-        self.cfg.set('simulation', 'Stencil', '11')
 
         self.cfg.add_section('geometry')
         self.cfg.set('geometry', 'file', 'None')
