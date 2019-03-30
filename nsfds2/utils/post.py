@@ -32,7 +32,8 @@ import sys
 import numpy as np
 import numba as nb
 from ofdlib2.coefficients import a7o
-from ofdlib2.fdtd import comp_p, rhox2x
+from ofdlib2.fdtd import comp_p
+from ofdlib2.utils import cdiv
 
 @nb.jit
 def rot(data, iref, nx, nz, one_dx, one_dz, a7):
@@ -127,7 +128,7 @@ class FrameGenerator:
         elif self.view in ['vx', 'vz', 'e']:
             vX = self.data["{}_it{}".format(self.var[self.view], self.icur)][:, :]
             rho = self.data["{}_it{}".format('rho', self.icur)][:, :]
-            return rhox2x(vX, rho).T
+            return cdiv(vX, rho).T
 
         elif self.view in ['vort']:
             return rot(self.data, self.icur, self.nx, self.nz, self.one_dx, self.one_dz, self.a7).T

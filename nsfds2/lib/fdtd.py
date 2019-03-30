@@ -120,7 +120,7 @@ class FDTD:
     @timed('vfluxes')
     def viscous_flux(self):
         """ Viscous flux """
-        if self.cfg.viscosity:
+        if self.cfg.vsc:
             self.vfluxes.integrate()
 
     @timed('sfilt')

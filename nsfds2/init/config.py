@@ -109,8 +109,8 @@ class CfgSetup:
         self.cfg.set('filtering', 'filter', 'True')
         self.cfg.set('filtering', 'stength', '0.75')
 
-        self.cfg.add_section('viscosity')
-        self.cfg.set('viscosity', 'viscosity', 'True')
+        self.cfg.add_section('viscous fluxes')
+        self.cfg.set('viscous fluxes', 'viscosity', 'True')
 
         self.cfg.add_section('shock capture')
         self.cfg.set('shock capture', 'shock capture', 'True')
@@ -173,8 +173,8 @@ class CfgSetup:
             self.filt = FILT.getboolean('filter', True)
             self.xnu = FILT.getfloat('strength', 0.75)
 
-            VISC = self.cfg['viscosity']
-            self.viscosity = VISC.getboolean('viscosity', True)
+            VISC = self.cfg['viscous fluxes']
+            self.vsc = VISC.getboolean('viscosity', True)
 
             SCAPT = self.cfg['shock capture']
             self.scapt = SCAPT.getboolean('shock capture', True)

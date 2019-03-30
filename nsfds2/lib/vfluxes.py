@@ -32,7 +32,7 @@ Compute viscous fluxes
 import numpy as np
 from ofdlib2.fdtd import integrate
 from ofdlib2.derivation import dudx3RR, dudz3RR, dudxz3c
-from ofdlib2.vflux import cErhou, cErhov, cErhoe, cFrhov, cFrhoe
+import ofdlib2.vflux as vf
 from ofdlib2.utils import cmult, cdiv
 
 
@@ -82,14 +82,14 @@ class ViscousFluxes:
         mu = cmult(self.fld.rho, self.cfg.nu)
 
         # dE/dx term
-        self.fld.Eu = cErhou(mu, self.fld.Eu, tau11, tau22)
-        self.fld.Ev = cErhov(mu, self.fld.Ev, tau12)
-        self.fld.Ee = cErhoe(mu, self.fld.Ee, tau11, tau12, tau22, self.fld.rho, self.fld.rhou, self.fld.rhov)
+        self.fld.Eu = vf.cErhou(mu, self.fld.Eu, tau11, tau22)
+        self.fld.Ev = vf.cErhov(mu, self.fld.Ev, tau12)
+        self.fld.Ee = vf.cErhoe(mu, self.fld.Ee, tau11, tau12, tau22, self.fld.rho, self.fld.rhou, self.fld.rhov)
 
         # dF/dz term
         self.fld.Fu = self.fld.Ev
-        self.fld.Fv = cFrhov(mu, self.fld.Fv, tau11, tau22)
-        self.fld.Fe = cFrhoe(mu, self.fld.Fe, tau11, tau12, tau22, self.fld.rho, self.fld.rhou, self.fld.rhov)
+        self.fld.Fv = vf.cFrhov(mu, self.fld.Fv, tau11, tau22)
+        self.fld.Fe = vf.cFrhoe(mu, self.fld.Fe, tau11, tau12, tau22, self.fld.rho, self.fld.rhou, self.fld.rhov)
 
         # viscous flux : order 2 centered scheme
         idx = [1, self.msh.nx-1]
