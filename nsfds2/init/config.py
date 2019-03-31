@@ -104,15 +104,21 @@ class CfgSetup:
         self.cfg.set('source', 'izS', '32')
         self.cfg.set('source', 'S0', '1e3')
 
+        self.cfg.add_section('eulerian fluxes')
+        self.cfg.set('eulerian fluxes', 'stencil', '11')
+
         self.cfg.add_section('filtering')
         self.cfg.set('filtering', 'filter', 'True')
+        self.cfg.set('filtering', 'stencil', '11')
         self.cfg.set('filtering', 'stength', '0.75')
 
         self.cfg.add_section('viscous fluxes')
         self.cfg.set('viscous fluxes', 'viscosity', 'True')
+        self.cfg.set('viscous fluxes', 'stencil', '7')
 
         self.cfg.add_section('shock capture')
         self.cfg.set('shock capture', 'shock capture', 'True')
+        self.cfg.set('shock capture', 'stencil', '7')
         self.cfg.set('shock capture', 'method', 'pressure')
 
         self.cfg.add_section('probes')
@@ -147,7 +153,6 @@ class CfgSetup:
             self.nt = SIM.getint('nt', 150)
             self.ns = SIM.getint('ns', 10)
             self.CFL = SIM.getfloat('CFL', 0.5)
-            self.stencil = SIM.getint('stencil', 11)
             self.Npml = SIM.getint('Npml', 15)
 
             GEO = self.cfg['geometry']
@@ -168,16 +173,22 @@ class CfgSetup:
             self.izS = SRC.getint('izS', 32)
             self.S0 = SRC.getfloat('S0', 1e3)
 
-            FILT = self.cfg['filtering']
-            self.filt = FILT.getboolean('filter', True)
-            self.xnu = FILT.getfloat('strength', 0.75)
+            EUL = self.cfg['eulerian fluxes']
+            self.stencil = EUL.getint('stencil', 11)
 
-            VISC = self.cfg['viscous fluxes']
-            self.vsc = VISC.getboolean('viscosity', True)
+            FLT = self.cfg['filtering']
+            self.flt = FLT.getboolean('filter', True)
+            self.flt_stencil = FLT.getint('stencil', 11)
+            self.xnu = FLT.getfloat('strength', 0.75)
 
-            SCAPT = self.cfg['shock capture']
-            self.scapt = SCAPT.getboolean('shock capture', True)
-            self.scapt_meth = SCAPT.get('method', 'pressure')
+            VSC = self.cfg['viscous fluxes']
+            self.vsc = VSC.getboolean('viscosity', True)
+            self.vsc_stencil = VSC.getint('stencil', 3)
+
+            CPT = self.cfg['shock capture']
+            self.cpt = CPT.getboolean('shock capture', True)
+            self.cpt_stencil = CPT.getint('stencil', 7)
+            self.cpt_meth = CPT.get('method', 'pressure')
             self.rth = 1e-6
 
             SAVE = self.cfg['save']

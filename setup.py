@@ -44,7 +44,7 @@ setup(
     author_email="ipselium@free.fr",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["numba", "numpy", "matplotlib", "ofdlib2", "progressbar33", "mpltools", "h5py"],
+    install_requires=["cython", "numpy", "matplotlib", "ofdlib2", "progressbar33", "mpltools", "h5py"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",

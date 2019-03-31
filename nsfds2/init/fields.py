@@ -90,6 +90,9 @@ class Fields:
 
         self.dp = np.zeros_like(self.p)
         self.sg = np.zeros_like(self.p)
+        self.tau11 = np.zeros_like(self.p)
+        self.tau22 = np.zeros_like(self.p)
+        self.tau12 = np.zeros_like(self.p)
 
     def init_save(self):
         """ Init save. """

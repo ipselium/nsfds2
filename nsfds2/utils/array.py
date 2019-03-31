@@ -29,9 +29,9 @@ Some array manipulation tools
 """
 
 import time
-import numpy as np
+import numpy as _np
 
 
 def empty_like(shape, N):
     """ Return N ndarray objects with shape. """
-    return [np.empty_like(shape) for i in range(N)]
+    return [_np.empty_like(shape) for i in range(N)]

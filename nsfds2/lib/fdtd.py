@@ -126,13 +126,13 @@ class FDTD:
     @timed('sfilt')
     def selective_filter(self):
         """ Selective filter """
-        if self.cfg.filt:
+        if self.cfg.flt:
             self.sfilter.apply()
 
     @timed('scapt')
     def shock_capture(self):
         """ Shock Capture """
-        if self.cfg.scapt:
+        if self.cfg.cpt:
             self.scapture.apply()
 
     @timed('save')
@@ -150,7 +150,7 @@ class FDTD:
                                           data=self.fld.rhov, compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhoe_it' + str(self.it),
                                           data=self.fld.rhoe, compression=self.cfg.comp)
-            if self.cfg.scapt_meth == 'dilatation':
+            if self.cfg.cpt_meth == 'dilatation':
                 self.fld.sfile.create_dataset('dltn_it' + str(self.it),
                                           data=self.fld.dltn, compression=self.cfg.comp)
 

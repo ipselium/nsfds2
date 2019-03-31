@@ -56,9 +56,9 @@ class ShockCapture:
             sub.lpl = getattr(lpl, name)
             name = 'cpt{}{}'.format(sub.axname, bc)
             sub.cpt = getattr(cpt, name)
-            if self.cfg.scapt_meth == "pressure":
+            if self.cfg.cpt_meth == "pressure":
                 name = 'sp{}{}'.format(sub.axname, bc)
-            elif self.cfg.scapt_meth == "dilatation":
+            elif self.cfg.cpt_meth == "dilatation":
                 name = 'sd{}{}'.format(sub.axname, bc)
             sub.sg = getattr(cpt, name)
 
@@ -75,8 +75,8 @@ class ShockCapture:
             for sub in direction:
                 self.filter(sub)
 
-            for sub in direction:
-                self.update(sub)
+        for sub in self.msh.sdomains:
+            self.update(sub)
 
     def update_reference(self):
         """ Update pressure / dilatation. """
@@ -84,7 +84,7 @@ class ShockCapture:
         comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
                self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
 
-        if self.cfg.scapt_meth == 'dilatation':
+        if self.cfg.cpt_meth == 'dilatation':
             self.dilatation()
 
     def dilatation(self):
@@ -107,12 +107,12 @@ class ShockCapture:
         * Determine the filtering magnitude (sg)
         """
 
-        if self.cfg.scapt_meth == 'pressure':
+        if self.cfg.cpt_meth == 'pressure':
             sub.lpl(self.fld.p, self.fld.dp, *sub.ix, *sub.iz)
             sub.sg(self.fld.p, self.fld.sg, self.fld.dp,
                    self.cfg.rth, *sub.ix, *sub.iz)
 
-        elif self.cfg.scapt_meth == "dilatation":
+        elif self.cfg.cpt_meth == "dilatation":
             sub.lpl(self.fld.dltn, self.fld.dp, *sub.ix, *sub.iz)
             sub.sg(self.fld.p, self.fld.rho, self.fld.sg, self.fld.dp,
                    self.cfg.gamma, self.cfg.rth, *sub.ix, *sub.iz)

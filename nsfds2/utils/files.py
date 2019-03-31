@@ -27,7 +27,7 @@ DOCSTRING
 """
 
 import os, sys
-from fdgrid import templates
+from fdgrid import templates as _tplt
 
 
 def get_obstacle(cfg):
@@ -50,7 +50,7 @@ def get_obstacle(cfg):
             obstacle = []
     else:
         try:
-            obstacle = getattr(templates, cfg.geoname)(cfg.nx, cfg.nz)
+            obstacle = getattr(_tplt, cfg.geoname)(cfg.nx, cfg.nz)
         except AttributeError:
             print('{} not found'.format(cfg.geoname))
             print('Computation with an empty domain...')
