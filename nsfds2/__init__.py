@@ -22,4 +22,4 @@
 # Creation Date : 2019-03-07 - 23:02:29
 
 
-__version__ = "0.4.0-dev0"
+__version__ = "0.4.0"
