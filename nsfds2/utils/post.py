@@ -77,7 +77,7 @@ class FrameGenerator:
         self.view = view
         self.imin = 0
         self.iref = iref
-        self.ns = data['ns'].value
+        self.ns = data['ns'][...]
         self.icur = self.imin
         self.var = {'p': 'p',
                     'rho': 'rho',
@@ -85,10 +85,10 @@ class FrameGenerator:
                     'vz': 'rhov',
                     'e': 'rhoe'}
         self.a7, _ = a7o()
-        self.one_dx = 1/self.data['dx'].value
-        self.one_dz = 1/self.data['dz'].value
-        self.nx = self.data['nx'].value
-        self.nz = self.data['nz'].value
+        self.one_dx = 1/self.data['dx'][...]
+        self.one_dz = 1/self.data['dz'][...]
+        self.nx = self.data['nx'][...]
+        self.nz = self.data['nz'][...]
 
     def reference(self):
         """ Generate the reference for min/max colormap values """
@@ -113,8 +113,8 @@ class FrameGenerator:
         rhov = self.data["{}_it{}".format('rhov', i)][:, :]
         rhoe = self.data["{}_it{}".format('rhoe', i)][:, :]
         p = np.empty_like(rho)
-        comp_p(p, rho, rhou, rhov, rhoe, self.data['gamma'].value)
-        return p - self.data['p0'].value
+        comp_p(p, rho, rhou, rhov, rhoe, self.data['gamma'][...])
+        return p - self.data['p0'][...]
 
     def next_item(self):
         """ Generate next value of variable """

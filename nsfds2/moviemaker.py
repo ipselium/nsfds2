@@ -84,8 +84,8 @@ def main():
     # Mesh and time parameters
     x = data['x'][:]
     z = data['z'][:]
-    nt = data['nt'].value
-    ns = data['nt'].value
+    nt = data['nt'][...]
+    ns = data['nt'][...]
     obstacles = data['obstacles'][:]
 
     # Movie Parameters

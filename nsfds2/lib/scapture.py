@@ -75,8 +75,8 @@ class ShockCapture:
             for sub in direction:
                 self.filter(sub)
 
-        for sub in self.msh.sdomains:
-            self.update(sub)
+            for sub in direction:
+                self.update(sub)
 
     def update_reference(self):
         """ Update pressure / dilatation. """
