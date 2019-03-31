@@ -35,6 +35,13 @@ from nsfds2.lib import FDTD
 from nsfds2.utils import figures, headers, files
 
 
+def check_source(xs, zs, obstacles):
+
+    for obs in obstacles:
+        if obs.ix[0] < xs < obs.ix[1] and obs.iz[0] < zs < obs.iz[1]:
+            raise ValueError('source cannot be in an obstacle')
+
+
 def main():
     """ Main """
 
@@ -46,13 +53,16 @@ def main():
     cfg = CfgSetup()
 
     # Geometry
-    obstacle = files.get_obstacle(cfg)
+    obstacles = files.get_obstacle(cfg)
+
+    # Check source location
+    check_source(cfg.ixS, cfg.izS, obstacles)
 
     # Mesh
     msh = mesh.Mesh((cfg.nx, cfg.nz),
                     (cfg.dx, cfg.dz),
                     origin=(cfg.ix0, cfg.iz0),
-                    bc=cfg.bc, obstacles=obstacle,
+                    bc=cfg.bc, obstacles=obstacles,
                     Npml=cfg.Npml,
                     stencil=cfg.stencil)
 
