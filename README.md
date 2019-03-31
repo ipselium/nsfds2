@@ -3,45 +3,62 @@
 
 # Dependencies
 
-pip install h5py==2.8.0rc1
-pip install progressbar33
-pip install ofdlib
-pip install fdgrid
+* numpy
+* matplotlib
+* cython
+* h5py
+* progressbar33
+* ofdlib
+* fdgrid
 
 # Config file
 
 ```
 [simulation]
-viscosity = True
-probes = True
 nt = 150
 ns = 10
+cfl = 0.5
+npml = 15
+
+[geometry]
+file = None
+name = square
+bc = RRRR
 nx = 256
 nz = 256
 ix0 = 0
 iz0 = 0
 dx = 1
 dz = 1
-cfl = 0.5
-bc = RRRR
-npml = 15
+
+[source]
+type = pulse
+ixs = 32
+izs = 32
+s0 = 1e3
+
+[eulerian fluxes]
 stencil = 11
 
 [filtering]
 filter = True
+stencil = 11
+stength = 0.75
+
+[viscous fluxes]
+viscosity = True
+stencil = 7
 
 [shock capture]
 shock capture = True
+stencil = 7
 method = pressure
-
-[source]
-type = pulse
-ixs = 64
-izs = 64
-s0 = 1e6
 
 [probes]
 probes = False
+
+[figures]
+figures = True
 
 [save]
 save = True
