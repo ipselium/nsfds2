@@ -53,7 +53,7 @@ class FDTD:
         self.efluxes = EulerianFluxes(self.msh, self.fld, self.cfg)
         self.vfluxes = ViscousFluxes(self.msh, self.fld, self.cfg)
         self.sfilter = SelectiveFilter(self.msh, self.fld, self.cfg)
-        self.scapture = ShockCapture(self.msh, self.fld, self.cfg, self.efluxes.ccin)
+        self.scapture = ShockCapture(self.msh, self.fld, self.cfg)
 
         # Time
         self.it = 0

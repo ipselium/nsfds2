@@ -88,20 +88,37 @@ class EulerianFluxes:
 
         for s in self.msh.obstacles:
 
-            self.rhou[s.ix[0]:s.ix[1]+1, s.iz[0]] = 0
-            self.rhov[s.ix[0]:s.ix[1]+1, s.iz[0]] = 0
+            self.rhou[s.sx, s.iz[0]] = 0
+            self.rhov[s.sx, s.iz[0]] = 0
 
-            self.rhou[s.ix[0]:s.ix[1]+1, s.iz[1]] = 0
-            self.rhov[s.ix[0]:s.ix[1]+1, s.iz[1]] = 0
+            self.rhou[s.sx, s.iz[1]] = 0
+            self.rhov[s.sx, s.iz[1]] = 0
 
-            self.rhou[s.ix[0], s.iz[0]:s.iz[1]+1] = 0
-            self.rhov[s.ix[0], s.iz[0]:s.iz[1]+1] = 0
+            self.rhou[s.ix[0], s.sz] = 0
+            self.rhov[s.ix[0], s.sz] = 0
 
-            self.rhou[s.ix[1], s.iz[0]:s.iz[1]+1] = 0
-            self.rhov[s.ix[1], s.iz[0]:s.iz[1]+1] = 0
+            self.rhou[s.ix[1], s.sz] = 0
+            self.rhov[s.ix[1], s.sz] = 0
 
-        self.rhou[[0, -1], :] = 0
-        self.rhov[[0, -1], :] = 0
+        if self.msh.bc[0] == 'R':
+            self.rhou[0, :] = 0
+            self.rhov[0, :] = 0
 
-        self.rhou[:, [0, -1]] = 0
-        self.rhov[:, [0, -1]] = 0
+        if self.msh.bc[2] == 'R':
+            self.rhou[-1, :] = 0
+            self.rhov[-1, :] = 0
+
+        if self.msh.bc[1] == 'R':
+            self.rhou[:, 0] = 0
+            self.rhov[:, 0] = 0
+
+        if self.msh.bc[3] == 'R':
+            self.rhou[:, -1] = 0
+            self.rhov[:, -1] = 0
+
+
+        self.rhou[:103, -1] = 0
+        self.rhov[:103, -1] = 0
+
+        self.rhou[153:, -1] = 0
+        self.rhov[153:, -1] = 0

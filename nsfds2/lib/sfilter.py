@@ -40,22 +40,18 @@ class SelectiveFilter:
 
         self.msh = msh
         self.fld = fld
-        self.xnu = cfg.xnu
+        cls = getattr(filters, f'f{cfg.flt_stencil}')
+        self.flt = cls(msh.nx, msh.nz, cfg.xnu)
+
 
         for subdomain in self.msh.all_domains:
             fname = self.filt_id(subdomain, self.msh.stencil)
-            subdomain.filt_method = getattr(filters, fname)
+            subdomain.filt_method = getattr(self.flt, fname)
 
     @staticmethod
     def filt_id(sub, stencil):
         """ Identify which filter function to use for subdomain. """
-
-        if sub.axis == 0:
-            axis = 'x'
-        elif sub.axis == 1:
-            axis = 'z'
-
-        return 'f{}{}{}'.format(axis, stencil, sub.bc.replace('.', ''))
+        return f"f{sub.axname}_{sub.bc.replace('.', '')}"
 
     def apply(self):
         """ Dispatch filtering. """
@@ -79,7 +75,7 @@ class SelectiveFilter:
     def update(self, domains):
         """ Update fields. """
         for sub in domains:
-            filters.apply(self.fld.rho, self.fld.K, self.xnu, *sub.ix, *sub.iz)
-            filters.apply(self.fld.rhou, self.fld.Ku, self.xnu, *sub.ix, *sub.iz)
-            filters.apply(self.fld.rhov, self.fld.Kv, self.xnu, *sub.ix, *sub.iz)
-            filters.apply(self.fld.rhoe, self.fld.Ke, self.xnu, *sub.ix, *sub.iz)
+            self.flt.apply(self.fld.rho, self.fld.K, *sub.ix, *sub.iz)
+            self.flt.apply(self.fld.rhou, self.fld.Ku, *sub.ix, *sub.iz)
+            self.flt.apply(self.fld.rhov, self.fld.Kv, *sub.ix, *sub.iz)
+            self.flt.apply(self.fld.rhoe, self.fld.Ke, *sub.ix, *sub.iz)

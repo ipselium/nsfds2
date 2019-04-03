@@ -30,7 +30,7 @@ procedure proposed by Bogey & al -- JCP228 -- 2009
 """
 
 import numpy as np
-from ofdlib2.fdtd import comp_p
+import ofdlib2.fdtd as fdtd
 import ofdlib2.derivation as drv
 import ofdlib2.laplacian as lpl
 import ofdlib2.capture as cpt
@@ -39,28 +39,28 @@ import ofdlib2.capture as cpt
 class ShockCapture:
     """ Shock Capturing procedure. (Bogey & al. -- JCP 228 -- 2009)"""
 
-    def __init__(self, msh, fld, cfg, cin):
+    def __init__(self, msh, fld, cfg):
 
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
-        self.cin = cin
+
+        du_cls = getattr(drv, 'du{}'.format(cfg.cpt_stencil))
+        sg_cls = getattr(cpt, 'sigma_{}'.format(self.cfg.cpt_meth[0]))
+
+        self.du = du_cls(msh.nx, msh.nz, msh.one_dx, msh.one_dz)
+        self.sg = sg_cls(msh.nx, msh.nz, cfg.rth, cfg.gamma)
+        self.lpl = lpl.lplf3(msh.nx, msh.nz)
+        self.cpt = cpt.capture(msh.nx, msh.nz)
 
         for sub in self.msh.all_domains:
 
             bc = sub.bc.replace('.', '')
 
-            name = self.cin.cin_id(sub, 7)
-            sub.dltn = getattr(drv, name)
-            name = 'lplf{}3{}'.format(sub.axname, bc)
-            sub.lpl = getattr(lpl, name)
-            name = 'cpt{}{}'.format(sub.axname, bc)
-            sub.cpt = getattr(cpt, name)
-            if self.cfg.cpt_meth == "pressure":
-                name = 'sp{}{}'.format(sub.axname, bc)
-            elif self.cfg.cpt_meth == "dilatation":
-                name = 'sd{}{}'.format(sub.axname, bc)
-            sub.sg = getattr(cpt, name)
+            sub.dltn = getattr(self.du, f'dud{sub.axname}_{bc}')
+            sub.lpl = getattr(self.lpl, f'lplf{sub.axname}_{bc}')
+            sub.cpt = getattr(self.cpt, f'cpt{sub.axname}_{bc}')
+            sub.sg = getattr(self.sg, f'sg{sub.axname}_{bc}')
 
     def apply(self):
         """ Run shock capture. """
@@ -81,8 +81,8 @@ class ShockCapture:
     def update_reference(self):
         """ Update pressure / dilatation. """
 
-        comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
-               self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
+        fdtd.comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
+                    self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
 
         if self.cfg.cpt_meth == 'dilatation':
             self.dilatation()
@@ -94,10 +94,10 @@ class ShockCapture:
         self.fld.F = self.fld.rhov/self.fld.rho
 
         for sub in self.msh.xdomains:
-            sub.dltn(self.fld.E, self.fld.dltn, self.msh.one_dx, *sub.ix, *sub.iz)
+            sub.dltn(self.fld.E, self.fld.dltn, *sub.ix, *sub.iz)
 
         for sub in self.msh.zdomains:
-            sub.dltn(self.fld.F, self.fld.dltn, self.msh.one_dz, *sub.ix, *sub.iz, True)
+            sub.dltn(self.fld.F, self.fld.dltn, *sub.ix, *sub.iz)
 
     def detector(self, sub):
         """ Detector determination.
@@ -109,13 +109,11 @@ class ShockCapture:
 
         if self.cfg.cpt_meth == 'pressure':
             sub.lpl(self.fld.p, self.fld.dp, *sub.ix, *sub.iz)
-            sub.sg(self.fld.p, self.fld.sg, self.fld.dp,
-                   self.cfg.rth, *sub.ix, *sub.iz)
+            sub.sg(self.fld.p, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
 
         elif self.cfg.cpt_meth == "dilatation":
             sub.lpl(self.fld.dltn, self.fld.dp, *sub.ix, *sub.iz)
-            sub.sg(self.fld.p, self.fld.rho, self.fld.sg, self.fld.dp,
-                   self.cfg.gamma, self.cfg.rth, *sub.ix, *sub.iz)
+            sub.sg(self.fld.p, self.fld.rho, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
 
     def filter(self, sub):
         """ Compute filter. """
