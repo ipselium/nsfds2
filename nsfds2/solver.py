@@ -29,6 +29,7 @@ Navier Stokes Finite Differences Solver
 """
 
 import os
+import warnings
 from fdgrid import mesh
 from nsfds2.init import CfgSetup, Fields
 from nsfds2.lib import FDTD
@@ -36,10 +37,27 @@ from nsfds2.utils import figures, headers, files
 
 
 def check_source(xs, zs, obstacles):
-
+    """ Check if source is not in an obstacle. """
     for obs in obstacles:
         if obs.ix[0] < xs < obs.ix[1] and obs.iz[0] < zs < obs.iz[1]:
             raise ValueError('source cannot be in an obstacle')
+
+
+def check_obstacles(obstacles):
+    """ Check validity of obstacles boundary conditions. """
+    flag = False
+
+    for obs in obstacles:
+        if obs.bc is not 'RRRR':
+            warnings.warn("obstacles can only have 'RRRR' bc attribute for now")
+            flag = True
+            break
+
+    if flag:
+        warnings.warn("Fix x.bc ro 'RRR'")
+        for obs in obstacles:
+            if obs.bc is not 'RRRR':
+                obs.bc = 'RRRR'
 
 
 def main():
@@ -54,6 +72,7 @@ def main():
 
     # Geometry
     obstacles = files.get_obstacle(cfg)
+    check_obstacles(obstacles)
 
     # Check source location
     check_source(cfg.ixS, cfg.izS, obstacles)
