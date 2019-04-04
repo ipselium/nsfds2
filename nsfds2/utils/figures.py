@@ -49,7 +49,7 @@ def fields(p, u, v, e, msh, cfg):
     ims = [im1, im2, im3, im4]
 
     for ax, im in zip(axes.ravel(), ims):
-        msh.plot_obstacles(msh.x, msh.z, ax, msh.get_obstacles(), facecolor='y')
+        msh.plot_obstacles(msh.x, msh.z, ax, msh.get_obstacles())
         ax.set_xlabel(r'$x$ [m]')
         ax.set_ylabel(r'$z$ [m]')
         ax.set_aspect('equal')

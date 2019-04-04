@@ -1,4 +1,4 @@
-# nsdf2 : 2D Navier-Stokes Finite Differences Solver
+# nsfds2 : 2D Navier-Stokes Finite Differences Solver
 
 
 # Dependencies

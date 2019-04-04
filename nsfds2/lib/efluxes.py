@@ -29,6 +29,7 @@ Compute Eulerian fluxes
 """
 
 
+import re
 import numpy as np
 from ofdlib2.fdtd import time_advance, comp_p
 from nsfds2.utils.array import empty_like
@@ -116,9 +117,12 @@ class EulerianFluxes:
             self.rhou[:, -1] = 0
             self.rhov[:, -1] = 0
 
+        if re.match(r'P.P.', self.msh.bc):
+            for s in self.msh.xdomains.rigid_bc:
+                self.rhou[s] = 0
+                self.rhov[s] = 0
 
-        self.rhou[:103, -1] = 0
-        self.rhov[:103, -1] = 0
-
-        self.rhou[153:, -1] = 0
-        self.rhov[153:, -1] = 0
+        if re.match(r'.P.P', self.msh.bc):
+            for s in self.msh.zdomains.rigid_bc:
+                self.rhou[s] = 0
+                self.rhov[s] = 0
