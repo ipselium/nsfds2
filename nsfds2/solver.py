@@ -28,6 +28,7 @@ Navier Stokes Finite Differences Solver
 @author: Cyril Desjouy
 """
 
+import re
 import os
 import warnings
 from fdgrid import mesh
@@ -49,15 +50,19 @@ def check_obstacles(obstacles):
 
     for obs in obstacles:
         if obs.bc is not 'RRRR':
-            warnings.warn("obstacles can only have 'RRRR' bc attribute for now")
-            flag = True
-            break
+            s = "Obstacles can only be 'RRRR' for now. "
+            s += "Fix bcs to 'RRRR'."
+            warnings.warn(s, stacklevel=8)
+            obs.bc = 'RRRR'
 
-    if flag:
-        warnings.warn("Fix x.bc ro 'RRR'")
-        for obs in obstacles:
-            if obs.bc is not 'RRRR':
-                obs.bc = 'RRRR'
+
+def check_domain(domain):
+    """ Check validity of the bcs. """
+    if not re.match(r'[PR][PR][PR][PR]', domain.bc):
+        s = "Only 'R' and 'P' bc are implemented for now. "
+        s += "Fix bcs to 'RRRR'."
+        warnings.warn(s, stacklevel=8)
+        domain.bc = 'RRRR'
 
 
 def main():
@@ -83,7 +88,9 @@ def main():
                     origin=(cfg.ix0, cfg.iz0),
                     bc=cfg.bc, obstacles=obstacles,
                     Npml=cfg.Npml,
-                    stencil=cfg.stencil)
+                    stencil=cfg.stencil,
+                    autojoin=True)
+    check_domain(msh)
 
     # Simulation parameters
     fld = Fields(msh, cfg)

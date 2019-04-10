@@ -70,7 +70,10 @@ class ShockCapture:
             self.update_reference()
 
             for sub in direction:
-                self.detector(sub)
+                self.laplacian(sub)
+
+            for sub in direction:
+                self.filter_magnitude(sub)
 
             for sub in direction:
                 self.filter(sub)
@@ -99,20 +102,24 @@ class ShockCapture:
         for sub in self.msh.zdomains:
             sub.dltn(self.fld.F, self.fld.dltn, *sub.ix, *sub.iz)
 
-    def detector(self, sub):
-        """ Detector determination.
-
-        * Determine the high frequency components of pressure (or dilatation)
-        with a high pass filter (laplacian filter)
-        * Determine the filtering magnitude (sg)
+    def laplacian(self, sub):
+        """  Determine the high frequency components
+        of pressure (or dilatation) with a high pass filter (laplacian filter)
         """
 
         if self.cfg.cpt_meth == 'pressure':
             sub.lpl(self.fld.p, self.fld.dp, *sub.ix, *sub.iz)
-            sub.sg(self.fld.p, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
 
         elif self.cfg.cpt_meth == "dilatation":
             sub.lpl(self.fld.dltn, self.fld.dp, *sub.ix, *sub.iz)
+
+    def filter_magnitude(self, sub):
+        """ Determine the filtering magnitude (sg). """
+
+        if self.cfg.cpt_meth == 'pressure':
+            sub.sg(self.fld.p, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
+
+        elif self.cfg.cpt_meth == "dilatation":
             sub.sg(self.fld.p, self.fld.rho, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
 
     def filter(self, sub):

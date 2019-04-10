@@ -101,19 +101,19 @@ class EulerianFluxes:
             self.rhou[s.ix[1], s.sz] = 0
             self.rhov[s.ix[1], s.sz] = 0
 
-        if self.msh.bc[0] == 'R':
+        if self.msh.bc[0] is 'R':
             self.rhou[0, :] = 0
             self.rhov[0, :] = 0
 
-        if self.msh.bc[2] == 'R':
-            self.rhou[-1, :] = 0
-            self.rhov[-1, :] = 0
-
-        if self.msh.bc[1] == 'R':
+        if self.msh.bc[1] is 'R':
             self.rhou[:, 0] = 0
             self.rhov[:, 0] = 0
 
-        if self.msh.bc[3] == 'R':
+        if self.msh.bc[2] is 'R':
+            self.rhou[-1, :] = 0
+            self.rhov[-1, :] = 0
+
+        if self.msh.bc[3] is 'R':
             self.rhou[:, -1] = 0
             self.rhov[:, -1] = 0
 
