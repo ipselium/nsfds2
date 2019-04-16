@@ -44,7 +44,7 @@ class SelectiveFilter:
         self.flt = cls(msh.nx, msh.nz, cfg.xnu)
 
 
-        for subdomain in self.msh.all_domains:
+        for subdomain in self.msh.mdomains:
             fname = self.filt_id(subdomain, self.msh.stencil)
             subdomain.filt_method = getattr(self.flt, fname)
 

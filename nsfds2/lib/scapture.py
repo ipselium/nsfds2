@@ -53,7 +53,7 @@ class ShockCapture:
         self.lpl = lpl.lplf3(msh.nx, msh.nz)
         self.cpt = cpt.capture(msh.nx, msh.nz)
 
-        for sub in self.msh.all_domains:
+        for sub in self.msh.mdomains:
 
             bc = sub.bc.replace('.', '')
 

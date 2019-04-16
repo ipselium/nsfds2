@@ -118,11 +118,11 @@ class EulerianFluxes:
             self.rhov[:, -1] = 0
 
         if re.match(r'P.P.', self.msh.bc):
-            for s in self.msh.xdomains.rigid_bc:
+            for s in self.msh.xdomains.additional_rigid_bc:
                 self.rhou[s] = 0
                 self.rhov[s] = 0
 
         if re.match(r'.P.P', self.msh.bc):
-            for s in self.msh.zdomains.rigid_bc:
+            for s in self.msh.zdomains.additional_rigid_bc:
                 self.rhou[s] = 0
                 self.rhov[s] = 0

@@ -43,7 +43,7 @@ class Cin:
         cls = getattr(drv, 'du{}'.format(msh.stencil))
         self.du = cls(msh.nx, msh.nz, msh.one_dx, msh.one_dz)
 
-        for sub in self.msh.all_domains:
+        for sub in self.msh.mdomains:
             fname = self.cin_id(sub)
             sub.cin_method = getattr(self.du, fname)
 

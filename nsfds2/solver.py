@@ -88,8 +88,7 @@ def main():
                     origin=(cfg.ix0, cfg.iz0),
                     bc=cfg.bc, obstacles=obstacles,
                     Npml=cfg.Npml,
-                    stencil=cfg.stencil,
-                    autojoin=True)
+                    stencil=cfg.stencil)
     check_domain(msh)
 
     # Simulation parameters

@@ -48,7 +48,7 @@ class ViscousFluxes:
         cls = getattr(drv, 'du{}'.format(self.cfg.vsc_stencil))
         self.du = cls(msh.nx, msh.nz, msh.one_dx, msh.one_dz)
 
-        for sub in self.msh.all_domains:
+        for sub in self.msh.mdomains:
 
             bc = sub.bc.replace('.', '')
             name = 'dud{}_{}'.format(sub.axname, bc)
