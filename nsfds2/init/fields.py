@@ -20,6 +20,8 @@
 #
 #
 # Creation Date : 2019-03-01 - 14:09:42
+#
+# pylint: disable=too-many-instance-attributes
 """
 -----------
 
@@ -113,7 +115,6 @@ class Fields:
                                  - self._msh.z[self._msh.Npml])/Dz)**self._cfg.alpha
         self.sz[self._msh.nz - self._msh.Npml:] = self.sz[self._msh.Npml-1::-1]
 
-
         # Init Q
         self.qx = np.zeros_like(self.p)
         self.qux = np.zeros_like(self.p)
@@ -147,8 +148,8 @@ class Fields:
 
     def init_save(self):
         """ Init save. """
-        self.PATH = "results/"
-        self.sfile = h5py.File(self.PATH + self._cfg.filename + '.hdf5', 'w')
+
+        self.sfile = h5py.File(self._cfg.savepath + self._cfg.filename + '.hdf5', 'w')
         self.sfile.create_dataset('x', data=self._msh.x, compression=self._cfg.comp)
         self.sfile.create_dataset('z', data=self._msh.z, compression=self._cfg.comp)
         self.sfile.create_dataset('dx', data=self._msh.dx)
@@ -162,6 +163,10 @@ class Fields:
         self.sfile.create_dataset('rho0', data=self._cfg.rho0)
         self.sfile.create_dataset('gamma', data=self._cfg.gamma)
         self.sfile.create_dataset('obstacles', data=self._msh.get_obstacles())
+        if self._cfg.probes and self._cfg.probes_loc:
+            probes = np.zeros((len(self._cfg.probes_loc), self._cfg.nt))
+            self.sfile.create_dataset('probes', data=probes, compression=self._cfg.comp)
+            self.sfile.create_dataset('probes_location', data=self._cfg.probes_loc)
 
     def get(self):
         """ Get initial fields as a tuple. """

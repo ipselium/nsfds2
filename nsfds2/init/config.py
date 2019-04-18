@@ -20,6 +20,8 @@
 #
 #
 # Creation Date : 2016-11-29 - 23:18:27
+#
+# pylint: disable=too-many-statements
 """
 -----------
 
@@ -28,6 +30,7 @@ Parse config file and set all simulation parameters
 @author: Cyril Desjouy
 """
 
+import json
 import time
 import sys
 import os
@@ -129,12 +132,14 @@ class CfgSetup:
 
         self.cfg.add_section('probes')
         self.cfg.set('probes', 'probes', 'False')
+        self.cfg.set('probes', 'location', '[]')
 
         self.cfg.add_section('figures')
         self.cfg.set('figures', 'figures', 'True')
 
         self.cfg.add_section('save')
         self.cfg.set('save', 'save', 'True')
+        self.cfg.set('save', 'path', 'results/')
         self.cfg.set('save', 'filename', 'tmp')
         self.cfg.set('save', 'compression', 'lzf')
         self.cfg.set('save', 'only p', 'False')
@@ -206,18 +211,24 @@ class CfgSetup:
 
             SAVE = self.cfg['save']
             self.save = SAVE.getboolean('save', True)
+            self.savepath = SAVE.get('path', 'results/')
             self.filename = SAVE.get('filename', 'tmp')
             self.comp = SAVE.get('compression', 'lzf')
             self.view = SAVE.get('view', 'p')
             self.onlyp = SAVE.getboolean('only p', False)
             if self.comp == 'None':
                 self.comp = None
+            if self.savepath and not self.savepath.endswith('/'):
+                self.savepath += '/'
+            # if self.savepath does not exist, create it
+            self.check_dir(self.savepath)
 
             FIGS = self.cfg['figures']
             self.figures = FIGS.getboolean('figures', True)
 
             PRBS = self.cfg['probes']
             self.probes = PRBS.getboolean('probes', False)
+            self.probes_loc = json.loads(PRBS.get('location', '[]'))
 
         except ConfigParser.Error as err:
             print('Bad cfg file : ', err)

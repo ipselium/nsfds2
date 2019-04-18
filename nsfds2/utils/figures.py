@@ -20,6 +20,8 @@
 #
 #
 # Creation Date : 2019-03-07 - 22:59:23
+#
+# pylint: disable=too-many-locals
 """
 -----------
 
@@ -29,6 +31,8 @@ Plotting library for nsfds2
 """
 
 
+import h5py
+import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpltools import modified_jet, MidpointNormalize
@@ -50,6 +54,8 @@ def fields(p, u, v, e, msh, cfg):
 
     for ax, im in zip(axes.ravel(), ims):
         msh.plot_obstacles(msh.x, msh.z, ax, msh.get_obstacles())
+        if cfg.probes and cfg.probes_loc:
+            ax.plot(*cfg.probes_loc, 'ro')
         ax.set_xlabel(r'$x$ [m]')
         ax.set_ylabel(r'$z$ [m]')
         ax.set_aspect('equal')
@@ -57,10 +63,30 @@ def fields(p, u, v, e, msh, cfg):
         cax = divider.append_axes("right", size="5%", pad=0.05)
         plt.colorbar(im, cax=cax)
 
-    plt.show()
+
+def probes(cfg):
+    """ Plot probes. """
+
+    with h5py.File(cfg.savepath + cfg.filename + '.hdf5', 'r') as sfile:
+
+        nt = sfile['nt'][...]
+        dt = sfile['dt'][...]
+        p0 = sfile['p0'][...]
+        pressure = sfile['probes'][...] - p0
+        probes_loc = sfile['probes_location'][...]
+        t = np.arange(nt)*dt
+
+        _, ax = plt.subplots(figsize=(9, 4))
+        for i, c in enumerate(probes_loc):
+            ax.plot(t, pressure[i, :], label=f'@{tuple(c)}')
+        ax.set_xlim(t.min(), t.max())
+        ax.set_xlabel('Time [s]')
+        ax.set_ylabel('Pressure [Pa]')
+        ax.legend()
+        ax.grid()
 
 
-def debug(var1, var2, var3, var4, msh, cfg):
+def debug(var1, var2, var3, var4, msh):
     """ Make figure """
 
     cm = modified_jet()
@@ -82,5 +108,3 @@ def debug(var1, var2, var3, var4, msh, cfg):
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         plt.colorbar(im, cax=cax)
-
-    plt.show()

@@ -26,7 +26,8 @@ DOCSTRING
 @author: Cyril Desjouy
 """
 
-import os, sys
+import os
+import sys
 from fdgrid import templates as _tplt
 
 

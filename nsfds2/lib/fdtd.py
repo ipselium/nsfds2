@@ -55,9 +55,16 @@ class FDTD:
         self.sfilter = SelectiveFilter(self.msh, self.fld, self.cfg)
         self.scapture = ShockCapture(self.msh, self.fld, self.cfg)
 
+        # Probes
+        if cfg.probes and cfg.probes_loc:
+            self.probes = np.zeros((len(cfg.probes_loc), cfg.ns))
+        else:
+            cfg.probes = False
+
         # Time
         self.it = 0
-        timing = ['total', 'efluxes', 'vfluxes', 'sfilt', 'scapt', 'save', 'pressure', 'probe']
+        timing = ['total', 'efluxes', 'vfluxes', 'sfilt',
+                  'scapt', 'save', 'pressure', 'probe']
         self.bench = {i: [] for i in timing}
         self.tloopi = time.perf_counter()
 
@@ -77,12 +84,14 @@ class FDTD:
 
             tt = time.perf_counter()
 
+            # FDTD
             self.eulerian_fluxes()
             self.viscous_flux()
             self.selective_filter()
             self.shock_capture()
             self.update_pressure()
 
+            # Break when computation diverges
             res = fdtd.residual(self.fld.p, self.cfg.p0)
             if (abs(res) > 100*self.cfg.S0) or np.any(np.isnan(self.fld.p)):
                 print('Stop simulation at iteration ', self.it)
@@ -92,6 +101,7 @@ class FDTD:
                     self.fld.sfile.close()
                 break
 
+            # Display log
             if self.it % self.cfg.ns == 0:
                 self.save()
                 self.bench['total'].append(time.perf_counter() - tt)
@@ -99,12 +109,16 @@ class FDTD:
             else:
                 self.bench['total'].append(time.perf_counter() - tt)
 
+            if self.cfg.probes:
+                self.update_probes()
+
         if self.cfg.save:
             self.fld.sfile.close()
 
         print('-'*int(self.columns))
-        print('# Simulation completed in {:.2f} s.'.format(time.perf_counter() - self.tloopi))
-        print('# End at t = {:.4f} sec.'.format(self.cfg.dt*self.it))
+        msg = '# Simulation completed in {:.2f} s.\n'
+        msg += '# End at t = {:.4f} sec.'
+        print(msg.format(time.perf_counter() - self.tloopi, self.cfg.dt*self.it))
         print('-'*int(self.columns))
 
         return self.fld.p, self.fld.r, self.fld.ru, self.fld.rv, self.fld.re
@@ -151,6 +165,8 @@ class FDTD:
             if self.cfg.cpt_meth == 'dilatation':
                 self.fld.sfile.create_dataset('dltn_it' + str(self.it),
                                               data=self.fld.dltn, compression=self.cfg.comp)
+            if self.cfg.probes:
+                self.fld.sfile['probes'][:, self.it-self.cfg.ns:self.it] = self.probes
 
     @timed('pressure')
     def update_pressure(self):
@@ -162,7 +178,8 @@ class FDTD:
     @timed('probe')
     def update_probes(self):
         """ Update probes """
-        pass
+        for n, c in enumerate(self.cfg.probes_loc):
+            self.probes[n, self.it%self.cfg.ns] = self.fld.p[c[0], c[1]]
 
     def __str__(self):
 

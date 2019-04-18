@@ -105,6 +105,11 @@ def main():
     if cfg.figures:
         figures.fields(p, rhou/rho, rhov/rho, rhoe/rho, msh, cfg)
 
+    if cfg.figures and cfg.probes:
+        figures.probes(cfg)
+
+    figures.plt.show()
+
 
 if __name__ == "__main__":
 
