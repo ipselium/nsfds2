@@ -94,7 +94,7 @@ def main():
     writer = ani.FFMpegWriter(fps=24, metadata=metadata, bitrate=-1, codec="libx264")
     movie_filename = '{}.mkv'.format(title)
     try:
-        frames = FrameGenerator(data, cfg.view, iref=nt)
+        frames = FrameGenerator(data, cfg.view, iref=int(nt/2))
         maxp, minp = frames.reference()
     except KeyError:
         frames = FrameGenerator(data, cfg.view)

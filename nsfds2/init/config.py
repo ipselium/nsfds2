@@ -82,15 +82,14 @@ class CfgSetup:
         """ Write default configuration file. """
 
         self.cfg.add_section('simulation')
-        self.cfg.set('simulation', 'nt', '150')
+        self.cfg.set('simulation', 'nt', '500')
         self.cfg.set('simulation', 'ns', '10')
         self.cfg.set('simulation', 'CFL', '0.5')
-        self.cfg.set('simulation', 'Npml', '15')
 
         self.cfg.add_section('geometry')
         self.cfg.set('geometry', 'file', 'None')
-        self.cfg.set('geometry', 'name', 'square')
-        self.cfg.set('geometry', 'bc', 'RRRR')
+        self.cfg.set('geometry', 'name', 'helmholtz_double')
+        self.cfg.set('geometry', 'bc', 'PPPP')
         self.cfg.set('geometry', 'nx', '256')
         self.cfg.set('geometry', 'nz', '256')
         self.cfg.set('geometry', 'ix0', '0')
@@ -98,11 +97,18 @@ class CfgSetup:
         self.cfg.set('geometry', 'dx', '1')
         self.cfg.set('geometry', 'dz', '1')
 
+        self.cfg.add_section('PML')
+        self.cfg.set('PML', 'beta', 0.)
+        self.cfg.set('PML', 'alpha', 4.)
+        self.cfg.set('PML', 'sigmax', 20.)
+        self.cfg.set('PML', 'sigmaz', 20.)
+        self.cfg.set('PML', 'Npml', 15)
+
         self.cfg.add_section('source')
         self.cfg.set('source', 'type', 'pulse')
         self.cfg.set('source', 'ixS', '32')
-        self.cfg.set('source', 'izS', '32')
-        self.cfg.set('source', 'S0', '1e3')
+        self.cfg.set('source', 'izS', '128')
+        self.cfg.set('source', 'S0', '1e6')
 
         self.cfg.add_section('eulerian fluxes')
         self.cfg.set('eulerian fluxes', 'stencil', '11')
@@ -166,6 +172,13 @@ class CfgSetup:
             self.dx = GEO.getfloat('dx', 1)
             self.dz = GEO.getfloat('dz', 1)
             self.dt = min(self.dx, self.dz)*self.CFL/self.c0
+
+            PML = self.cfg['PML']
+            self.beta = PML.getfloat('beta', 0.)
+            self.alpha = PML.getfloat('alpha', 4.)
+            self.sigmax = PML.getfloat('sigmax', 20.)
+            self.sigmaz = PML.getfloat('sigmaz', 20.)
+            self.Npml = PML.getint('Npml', 15)
 
             SRC = self.cfg['source']
             self.typ = SRC.get('type', 'pulse')

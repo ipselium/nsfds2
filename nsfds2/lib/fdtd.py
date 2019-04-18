@@ -31,7 +31,7 @@ Finite Difference Time Domain class
 import os
 import time
 import numpy as np
-from ofdlib2.fdtd import residual, comp_p
+from ofdlib2 import fdtd
 from .utils import disp_bench, timed
 from .efluxes import EulerianFluxes
 from .vfluxes import ViscousFluxes
@@ -83,7 +83,7 @@ class FDTD:
             self.shock_capture()
             self.update_pressure()
 
-            res = residual(self.fld.p, self.cfg.p0)
+            res = fdtd.residual(self.fld.p, self.cfg.p0)
             if (abs(res) > 100*self.cfg.S0) or np.any(np.isnan(self.fld.p)):
                 print('Stop simulation at iteration ', self.it)
                 if np.any(np.isnan(self.fld.p)):
@@ -107,15 +107,13 @@ class FDTD:
         print('# End at t = {:.4f} sec.'.format(self.cfg.dt*self.it))
         print('-'*int(self.columns))
 
-        return self.fld.p, self.fld.rho, self.fld.rhou, self.fld.rhov, self.fld.rhoe
+        return self.fld.p, self.fld.r, self.fld.ru, self.fld.rv, self.fld.re
 
     @timed('efluxes')
     def eulerian_fluxes(self):
         """ Compute Eulerian fluxes. """
 
-        self.fld.p, self.fld.rho, self.fld.rhou, self.fld.rhov, self.fld.rhoe = \
-            self.efluxes.rk4(self.fld.p, self.fld.rho,
-                             self.fld.rhou, self.fld.rhov, self.fld.rhoe)
+        self.efluxes.rk4()
 
     @timed('vfluxes')
     def viscous_flux(self):
@@ -143,23 +141,23 @@ class FDTD:
                                           data=self.fld.p, compression=self.cfg.comp)
         elif self.cfg.save:
             self.fld.sfile.create_dataset('rho_it' + str(self.it),
-                                          data=self.fld.rho, compression=self.cfg.comp)
+                                          data=self.fld.r, compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhou_it' + str(self.it),
-                                          data=self.fld.rhou, compression=self.cfg.comp)
+                                          data=self.fld.ru, compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhov_it' + str(self.it),
-                                          data=self.fld.rhov, compression=self.cfg.comp)
+                                          data=self.fld.rv, compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhoe_it' + str(self.it),
-                                          data=self.fld.rhoe, compression=self.cfg.comp)
+                                          data=self.fld.re, compression=self.cfg.comp)
             if self.cfg.cpt_meth == 'dilatation':
                 self.fld.sfile.create_dataset('dltn_it' + str(self.it),
-                                          data=self.fld.dltn, compression=self.cfg.comp)
+                                              data=self.fld.dltn, compression=self.cfg.comp)
 
     @timed('pressure')
     def update_pressure(self):
         """ Update pressure field """
 
-        comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
-               self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
+        fdtd.p(self.fld.p, self.fld.r, self.fld.ru,
+               self.fld.rv, self.fld.re, self.cfg.gamma)
 
     @timed('probe')
     def update_probes(self):

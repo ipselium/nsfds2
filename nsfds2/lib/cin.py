@@ -43,7 +43,7 @@ class Cin:
         cls = getattr(drv, 'du{}'.format(msh.stencil))
         self.du = cls(msh.nx, msh.nz, msh.one_dx, msh.one_dz)
 
-        for sub in self.msh.mdomains:
+        for sub in self.msh.dmdomains:
             fname = self.cin_id(sub)
             sub.cin_method = getattr(self.du, fname)
 
@@ -53,28 +53,28 @@ class Cin:
 
         return 'dud{}_{}'.format(sub.axname, sub.bc.replace('.', ''))
 
-    def dispatch(self, p, rho, rhou, rhov, rhoe):
+    def dispatch(self):
         """ Dispatch the domains to the functions. """
 
         # dE/dz ---------------------------------------------------------------
-        self.fld.E = rhou
-        self.fld.Eu = cEuv(self.fld.Eu, rho, rhou, p)
-        self.fld.Ev = cEvu(self.fld.Ev, rho, rhou, rhov)
-        self.fld.Ee = cEe(self.fld.Ee, rho, rhou, rhoe, p)
+        self.fld.E = self.fld.ru
+        self.fld.Eu = cEuv(self.fld.Eu, self.fld.r, self.fld.ru, self.fld.p)
+        self.fld.Ev = cEvu(self.fld.Ev, self.fld.r, self.fld.ru, self.fld.rv)
+        self.fld.Ee = cEe(self.fld.Ee, self.fld.r, self.fld.ru, self.fld.re, self.fld.p)
 
-        for sub in self.msh.xdomains:
+        for sub in self.msh.dxdomains:
             sub.cin_method(self.fld.E, self.fld.K, *sub.ix, *sub.iz)
             sub.cin_method(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz)
             sub.cin_method(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz)
             sub.cin_method(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz)
 
         # dF/dz ---------------------------------------------------------------
-        self.fld.F = rhov
+        self.fld.F = self.fld.rv
         self.fld.Fu = self.fld.Ev
-        self.fld.Fv = cEuv(self.fld.Fv, rho, rhov, p)
-        self.fld.Fe = cEe(self.fld.Fe, rho, rhov, rhoe, p)
+        self.fld.Fv = cEuv(self.fld.Fv, self.fld.r, self.fld.rv, self.fld.p)
+        self.fld.Fe = cEe(self.fld.Fe, self.fld.r, self.fld.rv, self.fld.re, self.fld.p)
 
-        for sub in self.msh.zdomains:
+        for sub in self.msh.dzdomains:
             sub.cin_method(self.fld.F, self.fld.K, *sub.ix, *sub.iz)
             sub.cin_method(self.fld.Fu, self.fld.Ku, *sub.ix, *sub.iz)
             sub.cin_method(self.fld.Fv, self.fld.Kv, *sub.ix, *sub.iz)

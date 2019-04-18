@@ -53,7 +53,7 @@ class ShockCapture:
         self.lpl = lpl.lplf3(msh.nx, msh.nz)
         self.cpt = cpt.capture(msh.nx, msh.nz)
 
-        for sub in self.msh.mdomains:
+        for sub in self.msh.fmdomains:
 
             bc = sub.bc.replace('.', '')
 
@@ -65,7 +65,7 @@ class ShockCapture:
     def apply(self):
         """ Run shock capture. """
 
-        for direction in [self.msh.xdomains, self.msh.zdomains]:
+        for direction in [self.msh.fxdomains, self.msh.fzdomains]:
 
             self.update_reference()
 
@@ -84,8 +84,8 @@ class ShockCapture:
     def update_reference(self):
         """ Update pressure / dilatation. """
 
-        fdtd.comp_p(self.fld.p, self.fld.rho, self.fld.rhou,
-                    self.fld.rhov, self.fld.rhoe, self.cfg.gamma)
+        fdtd.p(self.fld.p, self.fld.r, self.fld.ru,
+               self.fld.rv, self.fld.re, self.cfg.gamma)
 
         if self.cfg.cpt_meth == 'dilatation':
             self.dilatation()
@@ -93,13 +93,13 @@ class ShockCapture:
     def dilatation(self):
         """ Compute dilatation with 7 points scheme : dltn = div.v. """
 
-        self.fld.E = self.fld.rhou/self.fld.rho
-        self.fld.F = self.fld.rhov/self.fld.rho
+        self.fld.E = self.fld.ru/self.fld.r
+        self.fld.F = self.fld.rv/self.fld.r
 
-        for sub in self.msh.xdomains:
+        for sub in self.msh.fxdomains:
             sub.dltn(self.fld.E, self.fld.dltn, *sub.ix, *sub.iz)
 
-        for sub in self.msh.zdomains:
+        for sub in self.msh.fzdomains:
             sub.dltn(self.fld.F, self.fld.dltn, *sub.ix, *sub.iz)
 
     def laplacian(self, sub):
@@ -120,20 +120,20 @@ class ShockCapture:
             sub.sg(self.fld.p, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
 
         elif self.cfg.cpt_meth == "dilatation":
-            sub.sg(self.fld.p, self.fld.rho, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
+            sub.sg(self.fld.p, self.fld.r, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
 
     def filter(self, sub):
         """ Compute filter. """
 
-        sub.cpt(self.fld.rho, self.fld.K, self.fld.sg, *sub.ix, *sub.iz)
-        sub.cpt(self.fld.rhou, self.fld.Ku, self.fld.sg, *sub.ix, *sub.iz)
-        sub.cpt(self.fld.rhov, self.fld.Kv, self.fld.sg, *sub.ix, *sub.iz)
-        sub.cpt(self.fld.rhoe, self.fld.Ke, self.fld.sg, *sub.ix, *sub.iz)
+        sub.cpt(self.fld.r, self.fld.K, self.fld.sg, *sub.ix, *sub.iz)
+        sub.cpt(self.fld.ru, self.fld.Ku, self.fld.sg, *sub.ix, *sub.iz)
+        sub.cpt(self.fld.rv, self.fld.Kv, self.fld.sg, *sub.ix, *sub.iz)
+        sub.cpt(self.fld.re, self.fld.Ke, self.fld.sg, *sub.ix, *sub.iz)
 
     def update(self, sub):
         """ Apply filter to conservative variables. """
 
-        cpt.update(self.fld.rho, self.fld.K, *sub.ix, *sub.iz)
-        cpt.update(self.fld.rhou, self.fld.Ku, *sub.ix, *sub.iz)
-        cpt.update(self.fld.rhov, self.fld.Kv, *sub.ix, *sub.iz)
-        cpt.update(self.fld.rhoe, self.fld.Ke, *sub.ix, *sub.iz)
+        cpt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
+        cpt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+        cpt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+        cpt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)

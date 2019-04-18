@@ -48,7 +48,7 @@ class ViscousFluxes:
         cls = getattr(drv, 'du{}'.format(self.cfg.vsc_stencil))
         self.du = cls(msh.nx, msh.nz, msh.one_dx, msh.one_dz)
 
-        for sub in self.msh.mdomains:
+        for sub in self.msh.dmdomains:
 
             bc = sub.bc.replace('.', '')
             name = 'dud{}_{}'.format(sub.axname, bc)
@@ -60,44 +60,44 @@ class ViscousFluxes:
         """
 
         # dE/dx term
-        self.fld.Eu = self.fld.rhou/self.fld.rho
-        self.fld.Ev = self.fld.rhov/self.fld.rho
+        self.fld.Eu = self.fld.ru/self.fld.r
+        self.fld.Ev = self.fld.rv/self.fld.r
 
         # Strain tensor : WARNING : CHECK THAT DUDX3RR CORRESPONDS TO THIS NEED !
-        for sub in self.msh.xdomains:
+        for sub in self.msh.dxdomains:
             sub.du(self.fld.Eu, self.fld.tau11, *sub.ix, *sub.iz)
             sub.du(0.5*self.fld.Ev, self.fld.tau12, *sub.ix, *sub.iz)
 
         # Important : Init tau22 (because of adding previous tau22 in dudz !)
         self.fld.tau22[:, :] = 0
-        for sub in self.msh.zdomains:
+        for sub in self.msh.dzdomains:
             sub.du(self.fld.Ev, self.fld.tau22, *sub.ix, *sub.iz)
             sub.du(0.5*self.fld.Eu, self.fld.tau12, *sub.ix, *sub.iz)
 
 
         # Dynamic viscosity
-        mu = self.fld.rho*self.cfg.nu
+        mu = self.fld.r*self.cfg.nu
 
         # dE/dx and dF/dz
         vf.dEF(self.fld.Eu, self.fld.Ev, self.fld.Ee,
                self.fld.Fu, self.fld.Fv, self.fld.Fe, mu,
                self.fld.tau11, self.fld.tau12, self.fld.tau22,
-               self.fld.rho, self.fld.rhou, self.fld.rhov)
+               self.fld.r, self.fld.ru, self.fld.rv)
 
 
         # viscous flux : order 2 centered scheme
-        for sub in self.msh.xdomains:
+        for sub in self.msh.dxdomains:
             sub.du(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz)
             sub.du(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz)
             sub.du(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz)
 
-        for sub in self.msh.zdomains:
+        for sub in self.msh.dzdomains:
             sub.du(self.fld.Fu, self.fld.Ku, *sub.ix, *sub.iz)
             sub.du(self.fld.Fv, self.fld.Kv, *sub.ix, *sub.iz)
             sub.du(self.fld.Fe, self.fld.Ke, *sub.ix, *sub.iz)
 
         # Integrate in time
-        for sub in self.msh.sdomains:
-            fdtd.integrate(self.fld.rhou, self.fld.Ku, self.cfg.dt, *sub.ix, *sub.iz)
-            fdtd.integrate(self.fld.rhov, self.fld.Kv, self.cfg.dt, *sub.ix, *sub.iz)
-            fdtd.integrate(self.fld.rhoe, self.fld.Ke, self.cfg.dt, *sub.ix, *sub.iz)
+        for sub in self.msh.dsdomains:
+            fdtd.integrate(self.fld.ru, self.fld.Ku, self.cfg.dt, *sub.ix, *sub.iz)
+            fdtd.integrate(self.fld.rv, self.fld.Kv, self.cfg.dt, *sub.ix, *sub.iz)
+            fdtd.integrate(self.fld.re, self.fld.Ke, self.cfg.dt, *sub.ix, *sub.iz)

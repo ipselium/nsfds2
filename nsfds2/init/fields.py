@@ -28,7 +28,6 @@ Initialize all fields
 @author: Cyril Desjouy
 """
 
-import os
 import h5py
 import numpy as np
 
@@ -46,14 +45,16 @@ class Fields:
         self.init_filters()
         if self._cfg.save:
             self.init_save()
+        if 'A' in self._msh.bc:
+            self.init_pml()
 
     def init_fields(self):
         """ Setup initial fields. """
 
         self.p = np.zeros(self._msh.shape)
-        self.rho = np.zeros_like(self.p) + self._cfg.rho0
-        self.rhou = np.zeros_like(self.p)
-        self.rhov = np.zeros_like(self.p)
+        self.r = np.zeros_like(self.p) + self._cfg.rho0
+        self.ru = np.zeros_like(self.p)
+        self.rv = np.zeros_like(self.p)
         self.dltn = np.zeros_like(self.p)
 
         # Location
@@ -63,9 +64,10 @@ class Fields:
         S0 = self._cfg.S0
 
         for iz in range(0, self._msh.nz):
-            self.p[:, iz] = self._cfg.p0 + S0*np.exp(-np.log(2)*((self._msh.x-self._msh.x[ixS])**2 +
-                                                                 (self._msh.z[iz]-self._msh.z[izS])**2)/Bx**2)
-        self.rhoe = self.p/(self._cfg.gamma-1.)
+            self.p[:, iz] = self._cfg.p0 + \
+                    S0*np.exp(-np.log(2)*((self._msh.x-self._msh.x[ixS])**2 +
+                                          (self._msh.z[iz]-self._msh.z[izS])**2)/Bx**2)
+        self.re = self.p/(self._cfg.gamma-1.)
 
     def init_derivatives(self):
         """ Init derivatives. """
@@ -94,6 +96,55 @@ class Fields:
         self.tau22 = np.zeros_like(self.p)
         self.tau12 = np.zeros_like(self.p)
 
+    def init_pml(self):
+        """ Init PMLs. """
+
+        # sigmax
+        Dx = self._msh.Npml*self._msh.dx                      # Width of the PML
+        self.sx = np.zeros(self._msh.nx)
+        self.sx[:self._msh.Npml] = self._cfg.sigmax*abs((self._msh.x[:self._msh.Npml] \
+                                 - self._msh.x[self._msh.Npml])/Dx)**self._cfg.alpha
+        self.sx[self._msh.nx - self._msh.Npml:] = self.sx[self._msh.Npml-1::-1]
+
+        # sigmaz
+        Dz = self._msh.Npml*self._msh.dz                      # Width of the PML
+        self.sz = np.zeros(self._msh.nz)
+        self.sz[:self._msh.Npml] = self._cfg.sigmaz*abs((self._msh.z[:self._msh.Npml] \
+                                 - self._msh.z[self._msh.Npml])/Dz)**self._cfg.alpha
+        self.sz[self._msh.nz - self._msh.Npml:] = self.sz[self._msh.Npml-1::-1]
+
+
+        # Init Q
+        self.qx = np.zeros_like(self.p)
+        self.qux = np.zeros_like(self.p)
+        self.qvx = np.zeros_like(self.p)
+        self.qex = np.zeros_like(self.p)
+        self.qz = np.zeros_like(self.p)
+        self.quz = np.zeros_like(self.p)
+        self.qvz = np.zeros_like(self.p)
+        self.qez = np.zeros_like(self.p)
+
+        # Init K
+        self.Kx = np.zeros_like(self.p)
+        self.Kux = np.zeros_like(self.p)
+        self.Kvx = np.zeros_like(self.p)
+        self.Kex = np.zeros_like(self.p)
+        self.Kz = np.zeros_like(self.p)
+        self.Kuz = np.zeros_like(self.p)
+        self.Kvz = np.zeros_like(self.p)
+        self.Kez = np.zeros_like(self.p)
+
+        # Initial E & F
+        self.Ei = self.ru
+        self.Eui = self.ru**2/self.r + self.p
+        self.Evi = self.ru*self.rv/self.r
+        self.Eei = self.ru/self.r*(self.re + self.p)
+
+        self.Fi = self.rv
+        self.Fui = self.ru*self.rv/ self.r
+        self.Fvi = self.rv**2/self.r + self.p
+        self.Fei = self.rv/self.r*(self.re + self.p)
+
     def init_save(self):
         """ Init save. """
         self.PATH = "results/"
@@ -114,4 +165,4 @@ class Fields:
 
     def get(self):
         """ Get initial fields as a tuple. """
-        return self.p, self.rho, self.rhou, self.rhov, self.rhoe
+        return self.p, self.r, self.ru, self.rv, self.re

@@ -32,7 +32,7 @@ import sys
 import numpy as np
 import numba as nb
 from ofdlib2.coefficients import a7o
-from ofdlib2.fdtd import comp_p
+from ofdlib2 import fdtd
 from ofdlib2.utils import cdiv
 
 @nb.jit
@@ -71,7 +71,7 @@ def rot(data, iref, nx, nz, one_dx, one_dz, a7):
 class FrameGenerator:
     """ Frame Genrator """
 
-    def __init__(self, data, view, iref=50):
+    def __init__(self, data, view, iref=20):
 
         self.data = data
         self.view = view
@@ -113,7 +113,7 @@ class FrameGenerator:
         rhov = self.data["{}_it{}".format('rhov', i)][:, :]
         rhoe = self.data["{}_it{}".format('rhoe', i)][:, :]
         p = np.empty_like(rho)
-        comp_p(p, rho, rhou, rhov, rhoe, self.data['gamma'][...])
+        fdtd.p(p, rho, rhou, rhov, rhoe, self.data['gamma'][...])
         return p - self.data['p0'][...]
 
     def next_item(self):

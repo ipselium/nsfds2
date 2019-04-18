@@ -58,7 +58,7 @@ def check_obstacles(obstacles):
 
 def check_domain(domain):
     """ Check validity of the bcs. """
-    if not re.match(r'[PR][PR][PR][PR]', domain.bc):
+    if not re.match(r'[PRA][PRA][PRA][PRA]', domain.bc):
         s = "Only 'R' and 'P' bc are implemented for now. "
         s += "Fix bcs to 'RRRR'."
         warnings.warn(s, stacklevel=8)

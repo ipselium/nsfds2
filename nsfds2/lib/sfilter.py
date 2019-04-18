@@ -44,7 +44,7 @@ class SelectiveFilter:
         self.flt = cls(msh.nx, msh.nz, cfg.xnu)
 
 
-        for subdomain in self.msh.mdomains:
+        for subdomain in self.msh.fmdomains:
             fname = self.filt_id(subdomain, self.msh.stencil)
             subdomain.filt_method = getattr(self.flt, fname)
 
@@ -56,26 +56,26 @@ class SelectiveFilter:
     def apply(self):
         """ Dispatch filtering. """
 
-        for sub in self.msh.xdomains:
-            sub.filt_method(self.fld.rho, self.fld.K,   *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.rhou, self.fld.Ku, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.rhov, self.fld.Kv, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.rhoe, self.fld.Ke, *sub.ix, *sub.iz)
+        for sub in self.msh.fxdomains:
+            sub.filt_method(self.fld.r, self.fld.K,   *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
 
-        self.update(self.msh.xdomains)
+        self.update(self.msh.fxdomains)
 
-        for sub in self.msh.zdomains:
-            sub.filt_method(self.fld.rho, self.fld.K,   *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.rhou, self.fld.Ku, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.rhov, self.fld.Kv, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.rhoe, self.fld.Ke, *sub.ix, *sub.iz)
+        for sub in self.msh.fzdomains:
+            sub.filt_method(self.fld.r, self.fld.K,   *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
 
-        self.update(self.msh.zdomains)
+        self.update(self.msh.fzdomains)
 
     def update(self, domains):
         """ Update fields. """
         for sub in domains:
-            self.flt.apply(self.fld.rho, self.fld.K, *sub.ix, *sub.iz)
-            self.flt.apply(self.fld.rhou, self.fld.Ku, *sub.ix, *sub.iz)
-            self.flt.apply(self.fld.rhov, self.fld.Kv, *sub.ix, *sub.iz)
-            self.flt.apply(self.fld.rhoe, self.fld.Ke, *sub.ix, *sub.iz)
+            self.flt.apply(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
+            self.flt.apply(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+            self.flt.apply(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+            self.flt.apply(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
