@@ -74,6 +74,6 @@ def start(cfg):
 
     log = "Starting computation for geometry : '{}' ({}x{})."
     print(log.format(cfg.geoname, cfg.nx, cfg.nz))
-    key = input("Hit enter to continue (prefix 'q' to quit) ! ")
+    key = input("Hit enter to continue (prefix 'q' to abort) ! ")
     if key == 'q':
         sys.exit(0)

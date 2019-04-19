@@ -32,51 +32,99 @@ Plotting library for nsfds2
 
 
 import h5py
-import numpy as np
-import matplotlib.pyplot as plt
+import numpy as _np
+import matplotlib.pyplot as _plt
+from ofdlib2 import fdtd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from fdgrid.mesh import plot_obstacles
 from mpltools import modified_jet, MidpointNormalize
 
 
-def fields(p, u, v, e, msh, cfg):
+def show():
+    """ Show all figures. """
+    _plt.show()
+
+
+def fields(cfg):
     """ Make figure """
+
+    if not cfg.figures or not cfg.save:
+        return None
+
+    with h5py.File(cfg.savepath + cfg.filename + '.hdf5', 'r') as sfile:
+
+        nt = sfile['nt'][...]
+        x = sfile['x'][...]
+        z = sfile['z'][...]
+        obstacles = sfile['obstacles'][...]
+        if cfg.onlyp:
+            p = sfile[f'p_it{nt}'][...]
+        else:
+            rho = sfile[f'rho_it{nt}'][...]
+            rhou = sfile[f'rhou_it{nt}'][...]
+            rhov = sfile[f'rhov_it{nt}'][...]
+            rhoe = sfile[f'rhoe_it{nt}'][...]
+            u = rhou/rho
+            v = rhov/rho
+            e = rhoe/rho
+            p = _np.empty_like(rho)
+            fdtd.p(p, rho, rhou, rhov, rhoe, cfg.gamma)
 
     cm = modified_jet()
     norm = MidpointNormalize(midpoint=0)
 
-    _, axes = plt.subplots(2, 2, figsize=(12, 9))
-
-    im1 = axes[0, 0].pcolorfast(msh.x, msh.z, (p-cfg.p0).T, cmap=cm, norm=norm)
-    im2 = axes[0, 1].pcolorfast(msh.x, msh.z, u.T, cmap=cm)
-    im3 = axes[1, 0].pcolorfast(msh.x, msh.z, v.T, cmap=cm)
-    im4 = axes[1, 1].pcolorfast(msh.x, msh.z, e.T, cmap=cm)
-    ims = [im1, im2, im3, im4]
-
-    for ax, im in zip(axes.ravel(), ims):
-        msh.plot_obstacles(msh.x, msh.z, ax, msh.get_obstacles())
-        if cfg.probes and cfg.probes_loc:
-            ax.plot(*cfg.probes_loc, 'ro')
+    if cfg.onlyp:
+        _, ax = _plt.subplots(figsize=(12, 9))
+        im = ax.pcolorfast(x, z, (p-cfg.p0).T, cmap=cm, norm=norm)
+        plot_obstacles(x, z, ax, obstacles)
         ax.set_xlabel(r'$x$ [m]')
         ax.set_ylabel(r'$z$ [m]')
         ax.set_aspect('equal')
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(im, cax=cax)
+        _plt.colorbar(im, cax=cax)
+        if cfg.probes:
+            ax.plot(*cfg.probes_loc, 'ro')
+
+    else:
+        _, axes = _plt.subplots(2, 2, figsize=(12, 9))
+
+        im1 = axes[0, 0].pcolorfast(x, z, (p-cfg.p0).T, cmap=cm, norm=norm)
+        im2 = axes[0, 1].pcolorfast(x, z, u.T, cmap=cm)
+        im3 = axes[1, 0].pcolorfast(x, z, v.T, cmap=cm)
+        im4 = axes[1, 1].pcolorfast(x, z, e.T, cmap=cm)
+        ims = [im1, im2, im3, im4]
+
+        for ax, im in zip(axes.ravel(), ims):
+            plot_obstacles(x, z, ax, obstacles)
+            ax.set_xlabel(r'$x$ [m]')
+            ax.set_ylabel(r'$z$ [m]')
+            ax.set_aspect('equal')
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes("right", size="5%", pad=0.05)
+            _plt.colorbar(im, cax=cax)
+            if cfg.probes and cfg.probes_loc:
+                ax.plot(*cfg.probes_loc, 'ro')
+
+    return None
 
 
 def probes(cfg):
     """ Plot probes. """
 
-    with h5py.File(cfg.savepath + cfg.filename + '.hdf5', 'r') as sfile:
+    if cfg.figures and cfg.probes:
 
-        nt = sfile['nt'][...]
-        dt = sfile['dt'][...]
-        p0 = sfile['p0'][...]
-        pressure = sfile['probes'][...] - p0
-        probes_loc = sfile['probes_location'][...]
-        t = np.arange(nt)*dt
+        with h5py.File(cfg.savepath + cfg.filename + '.hdf5', 'r') as sfile:
 
-        _, ax = plt.subplots(figsize=(9, 4))
+            nt = sfile['nt'][...]
+            dt = sfile['dt'][...]
+            p0 = sfile['p0'][...]
+            pressure = sfile['probes'][...] - p0
+            probes_loc = sfile['probes_location'][...]
+
+        t = _np.arange(nt)*dt
+
+        _, ax = _plt.subplots(figsize=(9, 4))
         for i, c in enumerate(probes_loc):
             ax.plot(t, pressure[i, :], label=f'@{tuple(c)}')
         ax.set_xlim(t.min(), t.max())
@@ -84,27 +132,3 @@ def probes(cfg):
         ax.set_ylabel('Pressure [Pa]')
         ax.legend()
         ax.grid()
-
-
-def debug(var1, var2, var3, var4, msh):
-    """ Make figure """
-
-    cm = modified_jet()
-    norm = MidpointNormalize(midpoint=0)
-
-    _, axes = plt.subplots(2, 2, figsize=(12, 9))
-
-    im1 = axes[0, 0].pcolorfast(msh.x, msh.z, var1.T, cmap=cm, norm=norm)
-    im2 = axes[0, 1].pcolorfast(msh.x, msh.z, var2.T, cmap=cm)
-    im3 = axes[1, 0].pcolorfast(msh.x, msh.z, var3.T, cmap=cm)
-    im4 = axes[1, 1].pcolorfast(msh.x, msh.z, var4.T, cmap=cm)
-    ims = [im1, im2, im3, im4]
-
-    for ax, im in zip(axes.ravel(), ims):
-        msh.plot_obstacles(msh.x, msh.z, ax, msh.get_obstacles(), facecolor='y')
-        ax.set_xlabel(r'$x$ [m]')
-        ax.set_ylabel(r'$z$ [m]')
-        ax.set_aspect('equal')
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="5%", pad=0.05)
-        plt.colorbar(im, cax=cax)

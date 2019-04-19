@@ -28,87 +28,37 @@ Navier Stokes Finite Differences Solver
 @author: Cyril Desjouy
 """
 
-import re
 import os
-import warnings
 from fdgrid import mesh
 from nsfds2.init import CfgSetup, Fields
 from nsfds2.lib import FDTD
-from nsfds2.utils import figures, headers, files
-
-
-def check_source(xs, zs, obstacles):
-    """ Check if source is not in an obstacle. """
-    for obs in obstacles:
-        if obs.ix[0] < xs < obs.ix[1] and obs.iz[0] < zs < obs.iz[1]:
-            raise ValueError('source cannot be in an obstacle')
-
-
-def check_obstacles(obstacles):
-    """ Check validity of obstacles boundary conditions. """
-    flag = False
-
-    for obs in obstacles:
-        if obs.bc is not 'RRRR':
-            s = "Obstacles can only be 'RRRR' for now. "
-            s += "Fix bcs to 'RRRR'."
-            warnings.warn(s, stacklevel=8)
-            obs.bc = 'RRRR'
-
-
-def check_domain(domain):
-    """ Check validity of the bcs. """
-    if not re.match(r'[PRA][PRA][PRA][PRA]', domain.bc):
-        s = "Only 'R' and 'P' bc are implemented for now. "
-        s += "Fix bcs to 'RRRR'."
-        warnings.warn(s, stacklevel=8)
-        domain.bc = 'RRRR'
+from nsfds2.utils import figures, files
 
 
 def main():
     """ Main """
-
-    # Headers
-    headers.copyright()
-    headers.version()
 
     # Parse Config
     cfg = CfgSetup()
 
     # Geometry
     obstacles = files.get_obstacle(cfg)
-    check_obstacles(obstacles)
-
-    # Check source location
-    check_source(cfg.ixS, cfg.izS, obstacles)
 
     # Mesh
-    msh = mesh.Mesh((cfg.nx, cfg.nz),
-                    (cfg.dx, cfg.dz),
-                    origin=(cfg.ix0, cfg.iz0),
-                    bc=cfg.bc, obstacles=obstacles,
-                    Npml=cfg.Npml,
-                    stencil=cfg.stencil)
-    check_domain(msh)
+    msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0),
+                    bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml, stencil=cfg.stencil)
 
     # Simulation parameters
     fld = Fields(msh, cfg)
 
-    # Prompt user for start
-    headers.start(cfg)
-
     # Simulation
     fdtd = FDTD(msh, fld, cfg)
-    p, rho, rhou, rhov, rhoe = fdtd.run()
+    fdtd.run()
 
     # Figures
-    if cfg.figures:
-        figures.fields(p, rhou/rho, rhov/rho, rhoe/rho, msh, cfg)
-
-    if cfg.figures and cfg.probes:
-        figures.probes(cfg)
-
-    figures.plt.show()
+    figures.fields(cfg)
+    figures.probes(cfg)
+    figures.show()
 
 
 if __name__ == "__main__":

@@ -130,10 +130,6 @@ class CfgSetup:
         self.cfg.set('shock capture', 'stencil', '7')
         self.cfg.set('shock capture', 'method', 'pressure')
 
-        self.cfg.add_section('probes')
-        self.cfg.set('probes', 'probes', 'False')
-        self.cfg.set('probes', 'location', '[]')
-
         self.cfg.add_section('figures')
         self.cfg.set('figures', 'figures', 'True')
 
@@ -143,7 +139,8 @@ class CfgSetup:
         self.cfg.set('save', 'filename', 'tmp')
         self.cfg.set('save', 'compression', 'lzf')
         self.cfg.set('save', 'only p', 'False')
-        self.cfg.set('save', 'view', 'p')
+        self.cfg.set('save', 'probes', 'False')
+        self.cfg.set('save', 'probes_locations', '[]')
 
 
         with open(self.path + 'nsfds2.conf', 'w') as configfile:
@@ -214,8 +211,10 @@ class CfgSetup:
             self.savepath = SAVE.get('path', 'results/')
             self.filename = SAVE.get('filename', 'tmp')
             self.comp = SAVE.get('compression', 'lzf')
-            self.view = SAVE.get('view', 'p')
             self.onlyp = SAVE.getboolean('only p', False)
+            self.probes = SAVE.getboolean('probes', False)
+            self.probes_loc = json.loads(SAVE.get('probes_locations', '[]'))
+
             if self.comp == 'None':
                 self.comp = None
             if self.savepath and not self.savepath.endswith('/'):
@@ -225,10 +224,6 @@ class CfgSetup:
 
             FIGS = self.cfg['figures']
             self.figures = FIGS.getboolean('figures', True)
-
-            PRBS = self.cfg['probes']
-            self.probes = PRBS.getboolean('probes', False)
-            self.probes_loc = json.loads(PRBS.get('location', '[]'))
 
         except ConfigParser.Error as err:
             print('Bad cfg file : ', err)

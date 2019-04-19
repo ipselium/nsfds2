@@ -20,6 +20,8 @@
 #
 #
 # Creation Date : 2015-02-11 - 01:05:29
+#
+# pylint: disable=too-many-locals
 """
 -----------
 
@@ -39,9 +41,8 @@ import h5py
 import matplotlib.pyplot as plt
 import matplotlib.animation as ani
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
-from fdgrid.mesh import Mesh
+from fdgrid.mesh import plot_obstacles
 from mpltools.custom_cmap import MidpointNormalize, modified_jet
-from nsfds2.init import CfgSetup
 from nsfds2.utils import FrameGenerator
 
 
@@ -50,10 +51,12 @@ def get_arg():
     try:
         filename = sys.argv[1]
         if not os.path.exists(filename):
-            sys.stderr.write('You must provide a valid hdf5 file : moviemaker mydir/myfile.hdf5/\n')
+            msg = 'You must provide a valid hdf5 file : moviemaker mydir/myfile.hdf5/\n'
+            sys.stderr.write(msg)
             sys.exit(1)
     except TypeError:
-        sys.stderr.write('You must provide the working directory : moviemaker mydir/myfile.hdf5/\n')
+        msg = 'You must provide the working directory : moviemaker mydir/myfile.hdf5/\n'
+        sys.stderr.write(msg)
         sys.exit(1)
     else:
         return filename
@@ -71,22 +74,18 @@ def get_data(filename):
         return data
 
 
-def main():
+def main(view='p'):
     """ Movie maker main. """
 
     filename = get_arg()
     path = os.path.dirname(filename) + '/'
     data = get_data(filename)
 
-    cfg = CfgSetup()
-    cfg.run()
-
     # Mesh and time parameters
-    x = data['x'][:]
-    z = data['z'][:]
+    x = data['x'][...]
+    z = data['z'][...]
     nt = data['nt'][...]
-    ns = data['nt'][...]
-    obstacles = data['obstacles'][:]
+    obstacles = data['obstacles'][...]
 
     # Movie Parameters
     title = os.path.basename(filename).split('.')[0]
@@ -94,10 +93,10 @@ def main():
     writer = ani.FFMpegWriter(fps=24, metadata=metadata, bitrate=-1, codec="libx264")
     movie_filename = '{}.mkv'.format(title)
     try:
-        frames = FrameGenerator(data, cfg.view, iref=int(nt/2))
+        frames = FrameGenerator(data, view, iref=int(nt/2))
         maxp, minp = frames.reference()
     except KeyError:
-        frames = FrameGenerator(data, cfg.view)
+        frames = FrameGenerator(data, view)
         maxp, minp = frames.reference()
 
     # CMAP
@@ -111,7 +110,7 @@ def main():
     widgets = [Bar('>'), ' ', ETA(), ' ', ReverseBar('<')]
     pbar = ProgressBar(widgets=widgets, maxval=nt).start()
 
-    # Init figure with 1st image
+    # 1st frame
     _, p = next(frames)
     movie = plt.figure(figsize=(20, 9))
     movie.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15)
@@ -120,19 +119,19 @@ def main():
     title = r'{} -- iteration : {}'
     axm.set_xlabel(r'$x$ [m]', fontsize=22)
     axm.set_ylabel(r'$y$ [m]', fontsize=22)
-    axm.set_title(title.format(0, cfg.view))
+    axm.set_title(title.format(0, view))
     axm.set_aspect('equal')
     # plot
     movie_plt = axm.pcolorfast(x, z, p, cmap=mycm, norm=norm)
-    cbar = plt.colorbar(movie_plt)
-    Mesh.plot_obstacles(x, z, axm, obstacles)
+    plt.colorbar(movie_plt)
+    plot_obstacles(x, z, axm, obstacles)
 
     # Start Video
     with writer.saving(movie, path + movie_filename, dpi=100):
         for i, var in frames:
-            axm.set_title(r'{} -- iteration : {}'.format(cfg.view, i))
+            axm.set_title(r'{} -- iteration : {}'.format(view, i))
             movie_plt.set_data(var)
-            Mesh.plot_obstacles(x, z, axm, obstacles)
+            plot_obstacles(x, z, axm, obstacles)
             writer.grab_frame()
             pbar.update(i)
         pbar.finish()

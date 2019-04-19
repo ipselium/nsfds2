@@ -18,20 +18,16 @@
 # You should have received a copy of the GNU General Public License
 # along with nsfds2. If not, see <http://www.gnu.org/licenses/>.
 #
-#
-# Creation Date : 2019-03-07 - 23:54:38
+# Creation Date : 2019-04-19 - 15:14:22
 """
 -----------
-
-Some tools
+DOCSTRING
 
 @author: Cyril Desjouy
 """
 
 import re
-import time
 import warnings
-import numpy as np
 
 
 class Check:
@@ -71,37 +67,3 @@ class Check:
             s += "Fix bcs to 'RRRR'."
             warnings.warn(s, stacklevel=8)
             self.msh.bc = 'RRRR'
-
-
-def timed(name):
-    """ Time method of a class containing 'bench' attribute. """
-    def layer(func):
-        def wrapper(*args, **kwargs):
-            start = time.perf_counter()
-            func(*args, **kwargs)
-            args[0].bench[name].append(time.perf_counter() - start)
-        return wrapper
-    return layer
-
-
-def disp_bench(bench, it, residu):
-    """ Display time spent at each step. """
-
-    template = "Iteration : {0:5} | Res. : {1:.8f} | Time : {2:.4f} s."
-    print(template.format(it, residu, np.mean(bench['total'])))
-    template = "\t {:6} : {:.4f} s."
-    if 'vfluxes' not in bench.keys():
-        bench['vfluxes'] = 0
-    if not bench['vfluxes']:
-        bench['vfluxes'] = 0
-    if not bench['save']:
-        bench['save'] = 0
-    print(template.format('EFlux', np.mean(bench['efluxes'])))
-    if 0 not in bench['vfluxes']:
-        print(template.format('VFlux', np.mean(bench['vfluxes'])))
-    print(template.format('Filt', np.mean(bench['sfilt'])))
-    print(template.format('Capt', np.mean(bench['scapt'])))
-    print(template.format('Save', np.mean(bench['save'])))
-    bench = {key: [] for key in bench.keys()}
-
-    return bench

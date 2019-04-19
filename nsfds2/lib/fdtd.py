@@ -20,6 +20,8 @@
 #
 #
 # Creation Date : 2019-03-01 - 14:43:51
+#
+# pylint: disable=too-many-instance-attributes
 """
 -----------
 
@@ -32,7 +34,8 @@ import os
 import time
 import numpy as np
 from ofdlib2 import fdtd
-from .utils import disp_bench, timed
+from nsfds2.utils import headers
+from .utils import disp_bench, timed, Check
 from .efluxes import EulerianFluxes
 from .vfluxes import ViscousFluxes
 from .sfilter import SelectiveFilter
@@ -42,26 +45,35 @@ from .scapture import ShockCapture
 class FDTD:
     """ FDTD. """
 
-    # pylint: disable=too-many-instance-attributes
-
     def __init__(self, msh, fld, cfg):
 
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
 
+        # Headers
+        headers.copyright()
+        headers.version()
+
+        # Check some of the simulation parameters
+        Check(self.cfg, self.msh)
+
+        # Init libs
         self.efluxes = EulerianFluxes(self.msh, self.fld, self.cfg)
         self.vfluxes = ViscousFluxes(self.msh, self.fld, self.cfg)
         self.sfilter = SelectiveFilter(self.msh, self.fld, self.cfg)
         self.scapture = ShockCapture(self.msh, self.fld, self.cfg)
 
-        # Probes
+        # Init probes
         if cfg.probes and cfg.probes_loc:
             self.probes = np.zeros((len(cfg.probes_loc), cfg.ns))
         else:
             cfg.probes = False
 
-        # Time
+        # Prompt user for start
+        headers.start(cfg)
+
+        # Init timings
         self.it = 0
         timing = ['total', 'efluxes', 'vfluxes', 'sfilt',
                   'scapt', 'save', 'pressure', 'probe']
@@ -121,8 +133,6 @@ class FDTD:
         print(msg.format(time.perf_counter() - self.tloopi, self.cfg.dt*self.it))
         print('-'*int(self.columns))
 
-        return self.fld.p, self.fld.r, self.fld.ru, self.fld.rv, self.fld.re
-
     @timed('efluxes')
     def eulerian_fluxes(self):
         """ Compute Eulerian fluxes. """
@@ -150,9 +160,14 @@ class FDTD:
     @timed('save')
     def save(self):
         """ Save data """
+
+        if self.cfg.save and self.cfg.probes:
+            self.fld.sfile['probes'][:, self.it-self.cfg.ns:self.it] = self.probes
+
         if self.cfg.save and self.cfg.onlyp:
             self.fld.sfile.create_dataset('p_it' + str(self.it),
                                           data=self.fld.p, compression=self.cfg.comp)
+
         elif self.cfg.save:
             self.fld.sfile.create_dataset('rho_it' + str(self.it),
                                           data=self.fld.r, compression=self.cfg.comp)
@@ -162,11 +177,6 @@ class FDTD:
                                           data=self.fld.rv, compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhoe_it' + str(self.it),
                                           data=self.fld.re, compression=self.cfg.comp)
-            if self.cfg.cpt_meth == 'dilatation':
-                self.fld.sfile.create_dataset('dltn_it' + str(self.it),
-                                              data=self.fld.dltn, compression=self.cfg.comp)
-            if self.cfg.probes:
-                self.fld.sfile['probes'][:, self.it-self.cfg.ns:self.it] = self.probes
 
     @timed('pressure')
     def update_pressure(self):
