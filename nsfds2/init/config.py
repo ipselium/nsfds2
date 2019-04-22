@@ -34,10 +34,7 @@ import json
 import time
 import sys
 import os
-try:
-    import ConfigParser
-except ImportError:
-    import configparser as ConfigParser
+import configparser
 
 
 class CfgSetup:
@@ -45,9 +42,13 @@ class CfgSetup:
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self):
+    def __init__(self, args=None):
 
-        self.cfg = ConfigParser.RawConfigParser()
+        # Command line arguments
+        self.args = args
+
+        # Create config parser
+        self.cfg = configparser.RawConfigParser()
         self.home = os.path.expanduser("~")
         self.path = self.home + '/.nsfds2/'
 
@@ -57,8 +58,12 @@ class CfgSetup:
         # Check if config file exist. If not create it
         self.init_cfg()
 
-        # Read config file
-        self.cfg.read(self.path + 'nsfds2.conf')
+        # Read config file (can be overridden by command line)
+        cf = getattr(self.args, 'cfgfile', None)
+        if cf:
+            self.cfg.read(cf)
+        else:
+            self.cfg.read(self.path + 'nsfds2.conf')
 
         # Parse arguments
         self.run()
@@ -83,6 +88,10 @@ class CfgSetup:
 
     def write_default(self):
         """ Write default configuration file. """
+
+        self.cfg.add_section('configuration')
+        self.cfg.set('configuration', 'timings', 'True')
+        self.cfg.set('configuration', 'quiet', 'False')
 
         self.cfg.add_section('simulation')
         self.cfg.set('simulation', 'nt', '500')
@@ -142,9 +151,8 @@ class CfgSetup:
         self.cfg.set('save', 'probes', 'False')
         self.cfg.set('save', 'probes_locations', '[]')
 
-
-        with open(self.path + 'nsfds2.conf', 'w') as configfile:
-            self.cfg.write(configfile)
+        with open(self.path + 'nsfds2.conf', 'w') as cf:
+            self.cfg.write(cf)
 
     def run(self):
         """ Run configuration. """
@@ -157,15 +165,30 @@ class CfgSetup:
         self.p0 = self.rho0*self.c0**2/self.gamma
 
         try:
+            CFG = self.cfg['configuration']
+
+            self.timings = getattr(self.args, 'timings', None)
+            if not isinstance(self.timings, bool):
+                self.timings = CFG.getboolean('timings', True)
+
+            self.quiet = getattr(self.args, 'quiet', None)
+            if not isinstance(self.quiet, bool):
+                self.quiet = CFG.getboolean('quiet', False)
+
             SIM = self.cfg['simulation']
-            self.nt = SIM.getint('nt', 150)
+            self.nt = getattr(self.args, 'nt', None)
+            if not self.nt:
+                self.nt = SIM.getint('nt', 500)
             self.ns = SIM.getint('ns', 10)
             self.CFL = SIM.getfloat('CFL', 0.5)
-            self.Npml = SIM.getint('Npml', 15)
 
             GEO = self.cfg['geometry']
-            self.geofile = GEO.get('file', 'None')
-            self.geoname = GEO.get('name', 'square')
+            self.geofile = getattr(self.args, 'geofile', None)
+            if  self.geofile:
+                self.geofile, self.geoname = self.args.geofile
+            else:
+                self.geofile = GEO.get('file', 'None')
+                self.geoname = GEO.get('name', 'square')
             self.bc = GEO.get('bc', 'RRRR')
             self.nx = GEO.getint('nx', 256)
             self.nz = GEO.getint('nz', 256)
@@ -209,7 +232,7 @@ class CfgSetup:
             SAVE = self.cfg['save']
             self.save = SAVE.getboolean('save', True)
             self.savepath = SAVE.get('path', 'results/')
-            self.filename = SAVE.get('filename', 'tmp')
+            self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
             self.comp = SAVE.get('compression', 'lzf')
             self.onlyp = SAVE.getboolean('only p', False)
             self.probes = SAVE.getboolean('probes', False)
@@ -222,9 +245,13 @@ class CfgSetup:
             # if self.savepath does not exist, create it
             self.check_dir(self.savepath)
 
+            self.datafile = getattr(self.args, 'datafile', None)
+            if not self.datafile:
+                self.datafile = self.savepath + self.savefile
+
             FIGS = self.cfg['figures']
             self.figures = FIGS.getboolean('figures', True)
 
-        except ConfigParser.Error as err:
+        except configparser.Error as err:
             print('Bad cfg file : ', err)
             sys.exit(1)

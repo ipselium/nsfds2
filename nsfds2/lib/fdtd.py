@@ -31,8 +31,10 @@ Finite Difference Time Domain class
 """
 
 import os
+import sys
 import time
 import numpy as np
+from progressbar import ProgressBar, Bar, ReverseBar, ETA
 from ofdlib2 import fdtd
 from nsfds2.utils import headers
 from .utils import disp_bench, timed, Check
@@ -52,8 +54,9 @@ class FDTD:
         self.cfg = cfg
 
         # Headers
-        headers.copyright()
-        headers.version()
+        if not self.cfg.quiet:
+            headers.copyright()
+            headers.version()
 
         # Check some of the simulation parameters
         Check(self.cfg, self.msh)
@@ -71,10 +74,13 @@ class FDTD:
             cfg.probes = False
 
         # Prompt user for start
-        headers.start(cfg)
+        if not self.cfg.quiet:
+            headers.start(cfg)
 
-        # Init timings
+        # Init timings and residuals
+        self.res = 0
         self.it = 0
+        self.tt = 0
         timing = ['total', 'efluxes', 'vfluxes', 'sfilt',
                   'scapt', 'save', 'pressure', 'probe']
         self.bench = {i: [] for i in timing}
@@ -89,12 +95,18 @@ class FDTD:
     def run(self):
         """ Main loop. """
 
-        print('-'*int(self.columns))
-        print('# Start main loop ')
+        if not self.cfg.quiet:
+            print('-'*int(self.columns))
+            print('# Start main loop ')
+
+        if not self.cfg.quiet and not self.cfg.timings:
+            widgets = [Bar('>'), ' ', ETA(), ' ', ReverseBar('<')]
+            pbar = ProgressBar(widgets=widgets, maxval=self.cfg.nt,
+                               term_width=self.columns).start()
 
         for self.it in range(self.cfg.nt+1):
 
-            tt = time.perf_counter()
+            self.tt = time.perf_counter()
 
             # FDTD
             self.eulerian_fluxes()
@@ -104,34 +116,32 @@ class FDTD:
             self.update_pressure()
 
             # Break when computation diverges
-            res = fdtd.residual(self.fld.p, self.cfg.p0)
-            if (abs(res) > 100*self.cfg.S0) or np.any(np.isnan(self.fld.p)):
-                print('Stop simulation at iteration ', self.it)
-                if np.any(np.isnan(self.fld.p)):
-                    print('Nan : {}'.format(np.argwhere(np.isnan(self.fld.p))))
-                if self.cfg.save:
-                    self.fld.sfile.close()
-                break
+            self.check_results()
 
             # Display log
-            if self.it % self.cfg.ns == 0:
-                self.save()
-                self.bench['total'].append(time.perf_counter() - tt)
-                self.bench = disp_bench(self.bench, self.it, res)
-            else:
-                self.bench['total'].append(time.perf_counter() - tt)
+            self.log()
 
+            # Update probes
             if self.cfg.probes:
                 self.update_probes()
+
+            # Progress bar
+            if not self.cfg.timings and not self.cfg.quiet:
+                pbar.update(self.it)
+
 
         if self.cfg.save:
             self.fld.sfile.close()
 
-        print('-'*int(self.columns))
-        msg = '# Simulation completed in {:.2f} s.\n'
-        msg += '# End at t = {:.4f} sec.'
-        print(msg.format(time.perf_counter() - self.tloopi, self.cfg.dt*self.it))
-        print('-'*int(self.columns))
+        if not self.cfg.quiet and not self.cfg.timings:
+            pbar.finish()
+
+        if not self.cfg.quiet:
+            print('-'*int(self.columns))
+            msg = '# Simulation completed in {:.2f} s.\n'
+            msg += '# End at t = {:.4f} sec.'
+            print(msg.format(time.perf_counter() - self.tloopi, self.cfg.dt*self.it))
+            print('-'*int(self.columns))
 
     @timed('efluxes')
     def eulerian_fluxes(self):
@@ -187,9 +197,33 @@ class FDTD:
 
     @timed('probe')
     def update_probes(self):
-        """ Update probes """
+        """ Update probes. """
+
         for n, c in enumerate(self.cfg.probes_loc):
             self.probes[n, self.it%self.cfg.ns] = self.fld.p[c[0], c[1]]
+
+    def check_results(self):
+        """ Check if computation diverges. """
+
+        self.res = fdtd.residual(self.fld.p, self.cfg.p0)
+        if (abs(self.res) > 100*self.cfg.S0) or np.any(np.isnan(self.fld.p)):
+            print('Stop simulation at iteration ', self.it)
+            if np.any(np.isnan(self.fld.p)):
+                print('Nan : {}'.format(np.argwhere(np.isnan(self.fld.p))))
+            if self.cfg.save:
+                self.fld.sfile.close()
+            sys.exit(1)
+
+    def log(self):
+        """ Display timings. """
+
+        if self.it % self.cfg.ns == 0:
+            self.save()
+            if self.cfg.timings and not self.cfg.quiet:
+                self.bench['total'].append(time.perf_counter() - self.tt)
+                self.bench = disp_bench(self.bench, self.it, self.res)
+        elif self.cfg.timings and not self.cfg.quiet:
+            self.bench['total'].append(time.perf_counter() - self.tt)
 
     def __str__(self):
 

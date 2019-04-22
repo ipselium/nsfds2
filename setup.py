@@ -23,7 +23,8 @@
 # Last Modified : ven. 11 mai 2018 16:13:55 CEST
 """
 -----------
-DOCSTRING
+
+setup file for nsfds2
 
 @author: Cyril Desjouy
 """
@@ -52,5 +53,10 @@ setup(
         "Topic :: Scientific/Engineering :: Physics",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
-    ]
+    ],
+    entry_points={
+        'console_scripts': [
+            'nsfds2 = nsfds2.solver:main',
+        ],
+    }
 )

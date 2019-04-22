@@ -19,6 +19,8 @@
 # along with nsfds2. If not, see <http://www.gnu.org/licenses/>.
 #
 # Creation Date : 2019-03-08 - 10:47:50
+#
+# pylint: disable=redefined-builtin
 """
 -----------
 
@@ -32,7 +34,6 @@ import sys
 import platform
 import textwrap
 import numpy
-import cython
 import ofdlib2
 import fdgrid
 import nsfds2
@@ -72,8 +73,32 @@ def version():
 def start(cfg):
     """ Prompt start. """
 
+    check_geo(cfg)
+
     log = "Starting computation for geometry : '{}' ({}x{})."
     print(log.format(cfg.geoname, cfg.nx, cfg.nz))
     key = input("Hit enter to continue (prefix 'q' to abort) ! ")
     if key == 'q':
         sys.exit(0)
+
+
+def check_geo(cfg):
+    """ Check geofile. """
+
+    if not cfg.geoflag:
+        print('Warning: Unable to load {} from {}'.format(cfg.geoname, cfg.geofile))
+        cfg.geoname = 'empty'
+
+
+def parameters(cfg):
+    """ Show simulation parameters. """
+
+    s = "geometry : '{}' ({}x{})".format(cfg.geoname, cfg.nx, cfg.nz)
+    s += "\n\t* {} points PML : ".format(cfg.Npml)
+    s += "sigma=({}, {}) and beta={}".format(cfg.sigmax, cfg.sigmaz, cfg.beta)
+    s += "\n\t* source : {} at ({}, {}).".format(cfg.typ, cfg.ixS, cfg.izS)
+    s += "\n\t* bc = {} (PML: {} points)".format(cfg.bc, cfg.Npml)
+    s += "\n\t* dx = {} m\tdz = {} m.".format(cfg.dx, cfg.dz)
+    s += "\n\t* dt = {} s\tnt = {}.".format(cfg.dt, cfg.nt)
+
+    print(s)

@@ -20,6 +20,10 @@
 #
 #
 # Creation Date : 2019-03-07 - 21:31:14
+#
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-locals
+#
 """
 -----------
 
@@ -28,20 +32,29 @@ Post-treatment tools for nsfds2
 @author: Cyril Desjouy
 """
 
+import os
 import sys
+import getpass
+import h5py
 import numpy as np
 import numba as nb
 from ofdlib2.coefficients import a7o
 from ofdlib2 import fdtd
-from ofdlib2.utils import cdiv
+import matplotlib.pyplot as plt
+import matplotlib.animation as ani
+from progressbar import ProgressBar, Bar, ReverseBar, ETA
+from fdgrid.mesh import plot_obstacles
+from mpltools.custom_cmap import MidpointNormalize, modified_jet
+
 
 @nb.jit
-def rot(data, iref, nx, nz, one_dx, one_dz, a7):
+def rot(data, ref, nx, nz, one_dx, one_dz, a7):
     """ Rotational. """
+
     name = "{}_it{}"
-    rho = data[name.format('rho', iref)][:, :]
-    rhou = data[name.format('rhou', iref)][:, :]
-    rhov = data[name.format('rhov', iref)][:, :]
+    rho = data[name.format('rho', ref)][:, :]
+    rhou = data[name.format('rhou', ref)][:, :]
+    rhov = data[name.format('rhov', ref)][:, :]
 
     u = rhou/rho
     v = rhov/rho
@@ -65,18 +78,19 @@ def rot(data, iref, nx, nz, one_dx, one_dz, a7):
             for l in range(-3, 4):
                 vort[i, j] = vort[i, j] - a7[l]*u[i, j+l]*one_dz
 
-    return vort
+    return vort.T
 
 
 class FrameGenerator:
     """ Frame Genrator """
 
-    def __init__(self, data, view, iref=20):
+    def __init__(self, data, view='p', ref=20, nt=None):
 
         self.data = data
         self.view = view
+        self.nt = nt
         self.imin = 0
-        self.iref = iref
+        self.ref = ref
         self.ns = data['ns'][...]
         self.icur = self.imin
         self.var = {'p': 'p',
@@ -94,11 +108,12 @@ class FrameGenerator:
         """ Generate the reference for min/max colormap values """
 
         if self.view == "p":
-            ref = self.p_from_rhoX(self.iref).T
+            ref = self.p_from_rhoX(self.ref).T
         elif self.view in ['rho', 'vx', 'vz', 'e']:
-            ref = self.data["{}_it{}".format(self.var[self.view], self.iref)][:, :].T
+            ref = self.data["{}_it{}".format(self.var[self.view], self.ref)][:, :].T
         elif self.view in ['vort']:
-            ref = rot(self.data, self.iref, self.nx, self.nz, self.one_dx, self.one_dz, self.a7).T
+            ref = rot(self.data, self.ref, self.nx, self.nz,
+                      self.one_dx, self.one_dz, self.a7)
         else:
             print("Only 'p', 'rho', 'vx', 'vz' and 'e' available !")
             sys.exit(1)
@@ -122,16 +137,19 @@ class FrameGenerator:
         if self.view == 'p':
             return self.p_from_rhoX(self.icur).T
 
-        elif self.view == 'rho':
+        if self.view == 'rho':
             return self.data["{}_it{}".format(self.var[self.view], self.icur)][:, :].T
 
-        elif self.view in ['vx', 'vz', 'e']:
+        if self.view in ['vx', 'vz', 'e']:
             vX = self.data["{}_it{}".format(self.var[self.view], self.icur)][:, :]
             rho = self.data["{}_it{}".format('rho', self.icur)][:, :]
-            return cdiv(vX, rho).T
+            return vX.T/rho.T
 
-        elif self.view in ['vort']:
-            return rot(self.data, self.icur, self.nx, self.nz, self.one_dx, self.one_dz, self.a7).T
+        if self.view in ['vort']:
+            return rot(self.data, self.icur, self.nx, self.nz,
+                       self.one_dx, self.one_dz, self.a7)
+
+        return None
 
     def __iter__(self):
         """ Iterator """
@@ -143,7 +161,92 @@ class FrameGenerator:
 
         try:
             self.icur += self.ns
-            self.item = self.next_item()
-            return self.icur, self.item
+            if self.nt:
+                if self.icur > self.nt:
+                    raise StopIteration
+
+            return self.icur, self.next_item()
+
         except KeyError:
             raise StopIteration
+
+
+def get_data(filename):
+    """ Get data from filename. """
+
+    try:
+        data = h5py.File(filename, 'r')
+    except OSError:
+        print('You must provide a valid hdf5 file : moviemaker mydir/myfile.hdf5')
+        sys.exit(1)
+    else:
+        return data
+
+
+def make_movie(filename, view='p', ref=None, nt=None, quiet=False):
+    """ Movie maker main. """
+
+    path = os.path.dirname(filename) + '/'
+    data = get_data(filename)
+
+    # Mesh and time parameters
+    x = data['x'][...]
+    z = data['z'][...]
+    obstacles = data['obstacles'][...]
+    if not nt:
+        nt = data['nt'][...]
+    if not ref:
+        ref = int(nt/2)
+
+    # Movie Parameters
+    title = os.path.basename(filename).split('.')[0]
+    metadata = dict(title=title, artist=getpass.getuser(), comment='From nsfds2')
+    writer = ani.FFMpegWriter(fps=24, metadata=metadata, bitrate=-1, codec="libx264")
+    movie_filename = '{}.mkv'.format(title)
+    try:
+        frames = FrameGenerator(data, view, ref=ref, nt=nt)
+        maxp, minp = frames.reference()
+    except KeyError:
+        frames = FrameGenerator(data, view, nt=nt)
+        maxp, minp = frames.reference()
+
+    # CMAP
+    mycm = modified_jet()
+    if minp < 0:
+        norm = MidpointNormalize(vmax=maxp, vmin=minp, midpoint=0)
+    else:
+        norm = None
+
+    # Progress bar
+    if not quiet:
+        widgets = [Bar('>'), ' ', ETA(), ' ', ReverseBar('<')]
+        pbar = ProgressBar(widgets=widgets, maxval=nt).start()
+
+    # 1st frame
+    _, p = next(frames)
+    movie = plt.figure(figsize=(20, 9))
+    movie.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.15)
+    axm = movie.add_subplot(111)
+    # Labels
+    title = r'{} -- iteration : {}'
+    axm.set_xlabel(r'$x$ [m]', fontsize=22)
+    axm.set_ylabel(r'$y$ [m]', fontsize=22)
+    axm.set_title(title.format(0, view))
+    axm.set_aspect('equal')
+    # plot
+    movie_plt = axm.pcolorfast(x, z, p, cmap=mycm, norm=norm)
+    plt.colorbar(movie_plt)
+    plot_obstacles(x, z, axm, obstacles)
+
+    # Start Video
+    with writer.saving(movie, path + movie_filename, dpi=100):
+        for i, var in frames:
+            axm.set_title(r'{} -- iteration : {}'.format(view, i))
+            movie_plt.set_data(var)
+            plot_obstacles(x, z, axm, obstacles)
+            writer.grab_frame()
+            if not quiet:
+                pbar.update(i)
+        if not quiet:
+            pbar.finish()
+    plt.show()

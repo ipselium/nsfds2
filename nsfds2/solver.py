@@ -29,24 +29,58 @@ Navier Stokes Finite Differences Solver
 """
 
 import os
+import argparse
 from fdgrid import mesh
 from nsfds2.init import CfgSetup, Fields
 from nsfds2.lib import FDTD
-from nsfds2.utils import figures, files
+from nsfds2.utils import figures, files, headers, post
 
 
-def main():
-    """ Main """
+def parse_args():
+    """ Parse arguments. """
 
-    # Parse Config
-    cfg = CfgSetup()
+    parser = argparse.ArgumentParser(prog='nsfds',
+                                     description='A Navier-Stokes Finite Difference Solver')
 
-    # Geometry
-    obstacles = files.get_obstacle(cfg)
+    subparsers = parser.add_subparsers(dest='command')
+    solve_parser = subparsers.add_parser("solve")
+    movie_parser = subparsers.add_parser("movie")
+    show_parser = subparsers.add_parser("show")
 
-    # Mesh
-    msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0),
-                    bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml, stencil=cfg.stencil)
+    # Common
+    for p in [solve_parser, show_parser]:
+        p.add_argument('-g', '--geo-file', metavar='GF', dest='geofile', nargs=2,
+                       help='file and pattern to use')
+        p.add_argument('-c', '--cfg-file', metavar='CF', dest='cfgfile',
+                       help='path to config file')
+
+    for p in [solve_parser, movie_parser]:
+        p.add_argument('-q', '--quiet', action="store_true", help='Quiet mode')
+        p.add_argument('-i', dest='nt', type=int,
+                       help='Number of time iterations')
+        p.add_argument('-d', '--dat-file', metavar='DF', dest='datafile',
+                       help='path to hdf5 data file')
+
+
+    # Movie parser
+    movie_parser.add_argument('view', nargs='?', default='p',
+                              choices=['p', 'rho', 'vx', 'vz', 'e'])
+    movie_parser.add_argument('-r', dest='ref', type=int,
+                              help='Reference frame for colormap')
+
+    # Show parser
+    show_parser.add_argument('view', nargs='?', default='grid',
+                             choices=['grid', 'domains', 'all'])
+
+    # Solver parser
+    solve_parser.add_argument('-t', '--timings', action="store_true", default=None,
+                              help='Display complete timings')
+
+    return parser.parse_args()
+
+
+def solve(cfg, msh):
+    """ Solve NS equations. """
 
     # Simulation parameters
     fld = Fields(msh, cfg)
@@ -59,6 +93,54 @@ def main():
     figures.fields(cfg)
     figures.probes(cfg)
     figures.show()
+
+
+def show(cfg, msh):
+    """ Show simulation parameters and grid. """
+
+    headers.check_geo(cfg)
+    headers.parameters(cfg)
+
+    if cfg.args.view == 'grid':
+        msh.plot_grid()
+
+    elif cfg.args.view == 'domains':
+        print('\n')
+        msh.plot_domains(legend=True)
+
+    elif cfg.args.view == 'all':
+        print('\n')
+        msh.plot_grid()
+        msh.plot_domains(legend=True)
+
+    msh.show_figures()
+
+
+def movie(cfg, _):
+    """ Create a movie from dataset. """
+
+    post.make_movie(cfg.datafile, view=cfg.args.view,
+                    ref=cfg.args.ref, nt=cfg.nt, quiet=cfg.quiet)
+
+
+def main():
+    """ Main """
+
+    # Parse arguments
+    args = parse_args()
+
+    # Parse config file
+    cfg = CfgSetup(args=args)
+
+    # Geometry
+    obstacles = files.get_obstacle(cfg)
+
+    # Mesh
+    msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0),
+                    bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml, stencil=cfg.stencil)
+
+
+    globals()[args.command](cfg, msh)
 
 
 if __name__ == "__main__":

@@ -51,7 +51,7 @@ def fields(cfg):
     if not cfg.figures or not cfg.save:
         return None
 
-    with h5py.File(cfg.savepath + cfg.filename + '.hdf5', 'r') as sfile:
+    with h5py.File(cfg.datafile, 'r') as sfile:
 
         nt = sfile['nt'][...]
         x = sfile['x'][...]
@@ -114,7 +114,7 @@ def probes(cfg):
 
     if cfg.figures and cfg.probes:
 
-        with h5py.File(cfg.savepath + cfg.filename + '.hdf5', 'r') as sfile:
+        with h5py.File(cfg.datafile, 'r') as sfile:
 
             nt = sfile['nt'][...]
             dt = sfile['dt'][...]

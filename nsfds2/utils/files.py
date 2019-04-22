@@ -34,27 +34,20 @@ from fdgrid import templates as _tplt
 def get_obstacle(cfg):
     """ Get obstacle from custom file or fdgrid templates. """
 
-    if cfg.geofile not in ['None']:
+    if cfg.geofile != 'None':
         try:
             sys.path.append(os.path.dirname(cfg.geofile))
             custom = __import__(os.path.basename(cfg.geofile).split('.')[0])
             obstacle = getattr(custom, cfg.geoname)(cfg.nx, cfg.nz)
-        except AttributeError:
-            print('{} not found in {}'.format(cfg.geoname, cfg.geofile))
-            print('Computation with an empty domain...')
-            cfg.geoname = 'Empty'
-            obstacle = []
-        except ImportError:
-            print('{} file not found'.format(cfg.geofile))
-            print('Computation with an empty domain...')
-            cfg.geoname = 'Empty'
+            cfg.geoflag = True
+        except (AttributeError, ImportError):
+            cfg.geoflag = False
             obstacle = []
     else:
         try:
             obstacle = getattr(_tplt, cfg.geoname)(cfg.nx, cfg.nz)
+            cfg.geoflag = True
         except AttributeError:
-            print('{} not found'.format(cfg.geoname))
-            print('Computation with an empty domain...')
-            cfg.geoname = 'Empty'
+            cfg.geoflag = False
             obstacle = []
     return obstacle

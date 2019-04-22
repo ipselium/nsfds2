@@ -149,7 +149,7 @@ class Fields:
     def init_save(self):
         """ Init save. """
 
-        self.sfile = h5py.File(self._cfg.savepath + self._cfg.filename + '.hdf5', 'w')
+        self.sfile = h5py.File(self._cfg.datafile, 'w')
         self.sfile.create_dataset('x', data=self._msh.x, compression=self._cfg.comp)
         self.sfile.create_dataset('z', data=self._msh.z, compression=self._cfg.comp)
         self.sfile.create_dataset('dx', data=self._msh.dx)
