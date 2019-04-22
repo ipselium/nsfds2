@@ -140,7 +140,10 @@ def main():
                     bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml, stencil=cfg.stencil)
 
 
-    globals()[args.command](cfg, msh)
+    if args.command:
+        globals()[args.command](cfg, msh)
+    else:
+        print('Must specify action among solve/movie/show')
 
 
 if __name__ == "__main__":
