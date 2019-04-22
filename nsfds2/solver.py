@@ -143,6 +143,7 @@ def main():
     if args.command:
         globals()[args.command](cfg, msh)
     else:
+        headers.copyright()
         print('Must specify action among solve/movie/show')
 
 
