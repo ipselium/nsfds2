@@ -20,6 +20,3 @@
 #
 #
 # Creation Date : 2019-03-07 - 23:07:58
-
-
-from .fdtd import FDTD

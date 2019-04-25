@@ -20,6 +20,8 @@
 #
 #
 # Creation Date : 2018-04-13 - 00:48:58
+#
+# pylint: disable=too-few-public-methods
 """
 -----------
 
@@ -29,11 +31,9 @@ Compute viscous fluxes
 """
 
 
-import numpy as np
-import ofdlib2.fdtd as fdtd
+from ofdlib2 import fdtd
 import ofdlib2.derivation as drv
 import ofdlib2.vflux as vf
-from ofdlib2.utils import cmult, cdiv
 
 
 class ViscousFluxes:
@@ -46,7 +46,7 @@ class ViscousFluxes:
         self.cfg = cfg
 
         cls = getattr(drv, 'du{}'.format(self.cfg.vsc_stencil))
-        self.du = cls(msh.nx, msh.nz, msh.one_dx, msh.one_dz)
+        self.du = cls(msh.x, msh.z)
 
         for sub in self.msh.dmdomains:
 

@@ -48,7 +48,7 @@ class ShockCapture:
         du_cls = getattr(drv, 'du{}'.format(cfg.cpt_stencil))
         sg_cls = getattr(cpt, 'sigma_{}'.format(self.cfg.cpt_meth[0]))
 
-        self.du = du_cls(msh.nx, msh.nz, msh.one_dx, msh.one_dz)
+        self.du = du_cls(msh.x, msh.z)
         self.sg = sg_cls(msh.nx, msh.nz, cfg.rth, cfg.gamma)
         self.lpl = lpl.lplf3(msh.nx, msh.nz)
         self.cpt = cpt.capture(msh.nx, msh.nz)

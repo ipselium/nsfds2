@@ -32,7 +32,7 @@ import os
 import argparse
 from fdgrid import mesh
 from nsfds2.init import CfgSetup, Fields
-from nsfds2.lib import FDTD
+from nsfds2.fdtd import FDTD
 from nsfds2.utils import figures, files, headers, post
 
 
@@ -117,7 +117,7 @@ def show(cfg, msh):
 
 
 def movie(cfg, _):
-    """ Create a movie from dataset. """
+    """ Create a movie from a dataset. """
 
     post.make_movie(cfg.datafile, view=cfg.args.view,
                     ref=cfg.args.ref, nt=cfg.nt, quiet=cfg.quiet)
@@ -144,7 +144,8 @@ def main():
         globals()[args.command](cfg, msh)
     else:
         headers.copyright()
-        print('Must specify action among solve/movie/show')
+        print('Must specify an action among solve/movie/show')
+        print('See nsfds2 -h for help')
 
 
 if __name__ == "__main__":

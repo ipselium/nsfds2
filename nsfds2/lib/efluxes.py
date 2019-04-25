@@ -181,7 +181,7 @@ class EulerianFluxes:
     def init_pml(self):
         """ Initialize PMLs. """
 
-        self.du = drv.du11pml(self.msh.nx, self.msh.nz, self.msh.one_dx, self.msh.one_dz,
+        self.du = drv.du11pml(self.msh.x, self.msh.z,
                               self.fld.sx, self.fld.sz, self.cfg.beta)
         for sub in self.msh.adomains:
             sub.pml_method = getattr(self.du, f'du_{sub.bc}')

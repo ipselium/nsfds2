@@ -36,12 +36,11 @@ import time
 import numpy as np
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
 from ofdlib2 import fdtd
-from nsfds2.utils import headers
-from .utils import disp_bench, timed, Check
-from .efluxes import EulerianFluxes
-from .vfluxes import ViscousFluxes
-from .sfilter import SelectiveFilter
-from .scapture import ShockCapture
+from nsfds2.utils import headers, check, timing
+from nsfds2.lib.efluxes import EulerianFluxes
+from nsfds2.lib.vfluxes import ViscousFluxes
+from nsfds2.lib.sfilter import SelectiveFilter
+from nsfds2.lib.scapture import ShockCapture
 
 
 class FDTD:
@@ -59,7 +58,7 @@ class FDTD:
             headers.version()
 
         # Check some of the simulation parameters
-        Check(self.cfg, self.msh)
+        check.Check(self.cfg, self.msh)
 
         # Init libs
         self.efluxes = EulerianFluxes(self.msh, self.fld, self.cfg)
@@ -81,9 +80,9 @@ class FDTD:
         self.res = 0
         self.it = 0
         self.tt = 0
-        timing = ['total', 'efluxes', 'vfluxes', 'sfilt',
-                  'scapt', 'save', 'pressure', 'probe']
-        self.bench = {i: [] for i in timing}
+        timed_methods = ['total', 'efluxes', 'vfluxes', 'sfilt',
+                         'scapt', 'save', 'pressure', 'probe']
+        self.bench = {i: [] for i in timed_methods}
         self.tloopi = time.perf_counter()
 
     @property
@@ -143,31 +142,31 @@ class FDTD:
             print(msg.format(time.perf_counter() - self.tloopi, self.cfg.dt*self.it))
             print('-'*int(self.columns))
 
-    @timed('efluxes')
+    @timing.proceed('efluxes')
     def eulerian_fluxes(self):
         """ Compute Eulerian fluxes. """
 
         self.efluxes.rk4()
 
-    @timed('vfluxes')
+    @timing.proceed('vfluxes')
     def viscous_flux(self):
         """ Viscous flux """
         if self.cfg.vsc:
             self.vfluxes.integrate()
 
-    @timed('sfilt')
+    @timing.proceed('sfilt')
     def selective_filter(self):
         """ Selective filter """
         if self.cfg.flt:
             self.sfilter.apply()
 
-    @timed('scapt')
+    @timing.proceed('scapt')
     def shock_capture(self):
         """ Shock Capture """
         if self.cfg.cpt:
             self.scapture.apply()
 
-    @timed('save')
+    @timing.proceed('save')
     def save(self):
         """ Save data """
 
@@ -188,14 +187,14 @@ class FDTD:
             self.fld.sfile.create_dataset('rhoe_it' + str(self.it),
                                           data=self.fld.re, compression=self.cfg.comp)
 
-    @timed('pressure')
+    @timing.proceed('pressure')
     def update_pressure(self):
         """ Update pressure field """
 
         fdtd.p(self.fld.p, self.fld.r, self.fld.ru,
                self.fld.rv, self.fld.re, self.cfg.gamma)
 
-    @timed('probe')
+    @timing.proceed('probe')
     def update_probes(self):
         """ Update probes. """
 
@@ -221,7 +220,7 @@ class FDTD:
             self.save()
             if self.cfg.timings and not self.cfg.quiet:
                 self.bench['total'].append(time.perf_counter() - self.tt)
-                self.bench = disp_bench(self.bench, self.it, self.res)
+                self.bench = timing.disp(self.bench, self.it, self.res)
         elif self.cfg.timings and not self.cfg.quiet:
             self.bench['total'].append(time.perf_counter() - self.tt)
 

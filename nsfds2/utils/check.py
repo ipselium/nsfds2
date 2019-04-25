@@ -42,7 +42,6 @@ class Check:
         self.obstacles()
         self.domain()
 
-
     def source(self):
         """ Check if source is not in an obstacle. """
         for o in self.msh.obstacles:

@@ -28,52 +28,11 @@ Some tools
 @author: Cyril Desjouy
 """
 
-import re
 import time
-import warnings
 import numpy as np
 
 
-class Check:
-    """ Check FDTD parameters. """
-
-    def __init__(self, cfg, msh):
-
-        self.cfg = cfg
-        self.msh = msh
-
-        self.source()
-        self.obstacles()
-        self.domain()
-
-
-    def source(self):
-        """ Check if source is not in an obstacle. """
-        for o in self.msh.obstacles:
-            if o.ix[0] < self.cfg.ixS < o.ix[1] and o.iz[0] < self.cfg.izS < o.iz[1]:
-                raise ValueError('source cannot be in an obstacle')
-
-    def obstacles(self):
-        """ Check validity of obstacles boundary conditions. """
-
-        for obs in self.msh.obstacles:
-            if obs.bc != 'RRRR':
-                s = "Obstacles can only be 'RRRR' for now. "
-                s += "Fix bcs to 'RRRR'."
-                warnings.warn(s, stacklevel=8)
-                obs.bc = 'RRRR'
-
-    def domain(self):
-        """ Check validity of the bcs. """
-
-        if not re.match(r'[PRA][PRA][PRA][PRA]', self.msh.bc):
-            s = "Only 'R', 'P', and 'A' bc are implemented for now. "
-            s += "Fix bcs to 'RRRR'."
-            warnings.warn(s, stacklevel=8)
-            self.msh.bc = 'RRRR'
-
-
-def timed(name):
+def proceed(name):
     """ Time method of a class containing 'bench' attribute. """
     def layer(func):
         def wrapper(*args, **kwargs):
@@ -84,7 +43,7 @@ def timed(name):
     return layer
 
 
-def disp_bench(bench, it, residu):
+def disp(bench, it, residu):
     """ Display time spent at each step. """
 
     template = "Iteration : {0:5} | Res. : {1:.8f} | Time : {2:.4f} s."

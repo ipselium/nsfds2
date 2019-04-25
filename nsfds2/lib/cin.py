@@ -41,7 +41,7 @@ class Cin:
         self.msh = msh
         self.fld = fld
         cls = getattr(drv, 'du{}'.format(msh.stencil))
-        self.du = cls(msh.nx, msh.nz, msh.one_dx, msh.one_dz)
+        self.du = cls(msh.x, msh.z)
 
         for sub in self.msh.dmdomains:
             fname = self.cin_id(sub)

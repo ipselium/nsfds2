@@ -238,10 +238,13 @@ class CfgSetup:
             self.probes = SAVE.getboolean('probes', False)
             self.probes_loc = json.loads(SAVE.get('probes_locations', '[]'))
 
+            # datapath and datafile
             if self.comp == 'None':
                 self.comp = None
+
             if self.savepath and not self.savepath.endswith('/'):
                 self.savepath += '/'
+
             # if self.savepath does not exist, create it
             self.check_dir(self.savepath)
 
