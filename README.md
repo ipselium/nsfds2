@@ -1,11 +1,12 @@
 # nsfds2 : 2D Navier-Stokes Finite Differences Solver
 
+nsfds2 is a 2D Navier-Stokes Solver that uses finite difference method.
 
 # Dependencies
 
 * numpy
-* matplotlib
 * cython
+* matplotlib
 * h5py
 * progressbar33
 * ofdlib
@@ -14,11 +15,14 @@
 # Config file
 
 ```
+[configuration]
+timings = True
+quiet = False
+
 [simulation]
-nt = 150
+nt = 500
 ns = 10
 cfl = 0.5
-npml = 15
 
 [geometry]
 file = None
@@ -31,11 +35,18 @@ iz0 = 0
 dx = 1
 dz = 1
 
+[PML]
+beta = 0.0
+alpha = 4.0
+sigmax = 20
+sigmaz = 20
+npml = 15
+
 [source]
 type = pulse
 ixs = 32
-izs = 32
-s0 = 1e3
+izs = 128
+s0 = 1e6
 
 [eulerian fluxes]
 stencil = 11
@@ -55,16 +66,17 @@ stencil = 7
 method = pressure
 
 [probes]
-probes = False
 
 [figures]
 figures = True
 
 [save]
 save = True
+path = results
 filename = tmp
 compression = lzf
 only p = False
-view = p
+probes = True
+probes_locations = [[128, 128], [128, 192]]
 ```
 
