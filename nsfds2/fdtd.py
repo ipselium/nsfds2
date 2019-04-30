@@ -85,12 +85,6 @@ class FDTD:
         self.bench = {i: [] for i in timed_methods}
         self.tloopi = time.perf_counter()
 
-    @property
-    def columns(self):
-        """ Return max terminal width. """
-        _, col = os.popen('stty size', 'r').read().split()
-        return int(col) if int(col) < 81 else 80
-
     def run(self):
         """ Main loop. """
 
@@ -110,8 +104,16 @@ class FDTD:
             # FDTD
             self.eulerian_fluxes()
             self.viscous_flux()
+
+            if self.cfg.mesh == 'curvilinear':
+                self.num2phys()
+
             self.selective_filter()
             self.shock_capture()
+
+            if self.cfg.mesh == 'curvilinear':
+                self.phys2num()
+
             self.update_pressure()
 
             # Break when computation diverges
@@ -204,7 +206,11 @@ class FDTD:
     def check_results(self):
         """ Check if computation diverges. """
 
-        self.res = fdtd.residual(self.fld.p, self.cfg.p0)
+        if self.cfg.mesh == 'curvilinear':
+            self.res = fdtd.residual(self.fld.p*self.msh.J, self.cfg.p0)
+        else:
+            self.res = fdtd.residual(self.fld.p, self.cfg.p0)
+
         if (abs(self.res) > 100*self.cfg.S0) or np.any(np.isnan(self.fld.p)):
             print('Stop simulation at iteration ', self.it)
             if np.any(np.isnan(self.fld.p)):
@@ -212,6 +218,22 @@ class FDTD:
             if self.cfg.save:
                 self.fld.sfile.close()
             sys.exit(1)
+
+    def phys2num(self):
+        """ Convert curvilinear coordinates : from physical to numeric. """
+
+        self.fld.r = self.fld.r/self.msh.J
+        self.fld.ru = self.fld.ru/self.msh.J
+        self.fld.rv = self.fld.rv/self.msh.J
+        self.fld.re = self.fld.re/self.msh.J
+
+    def num2phys(self):
+        """ Convert curvilinear coordinates : from numeric to physical. """
+
+        self.fld.r = self.fld.r*self.msh.J
+        self.fld.ru = self.fld.ru*self.msh.J
+        self.fld.rv = self.fld.rv*self.msh.J
+        self.fld.re = self.fld.re*self.msh.J
 
     def log(self):
         """ Display timings. """
@@ -237,3 +259,10 @@ class FDTD:
 
     def __repr__(self):
         return self.__str__()
+
+    @property
+    def columns(self):
+        """ Return max terminal width. """
+        _, col = os.popen('stty size', 'r').read().split()
+        return int(col) if int(col) < 81 else 80
+

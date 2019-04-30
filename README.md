@@ -1,8 +1,11 @@
 # nsfds2 : 2D Navier-Stokes Finite Differences Solver
 
-nsfds2 is a 2D Navier-Stokes Solver that uses finite difference method.
+## Introducing nsfds2
 
-# Dependencies
+***nsfds2*** is a 2D Navier-Stokes Solver that uses finite difference method.
+
+
+## Dependencies
 
 * numpy
 * cython
@@ -12,7 +15,25 @@ nsfds2 is a 2D Navier-Stokes Solver that uses finite difference method.
 * ofdlib
 * fdgrid
 
-# Config file
+## Installation
+
+`python setup.py install`
+
+or
+
+`pip install nsfds2`
+
+
+## Classical use
+
+```
+nsfds2 solve|movie|show
+```
+
+## Custom Use
+
+
+## Config file
 
 ```
 [configuration]

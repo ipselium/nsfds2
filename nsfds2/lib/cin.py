@@ -29,17 +29,17 @@ Compute Derivatives
 """
 
 
-import numpy as np
-from ofdlib2.fdtd import cEuv, cEvu, cEe
+from ofdlib2 import fdtd
 import ofdlib2.derivation as drv
 
 class Cin:
     """ Dispatch domains to associated computation functions. """
 
-    def __init__(self, msh, fld):
+    def __init__(self, msh, fld, cfg):
 
         self.msh = msh
         self.fld = fld
+        self.cfg = cfg
         cls = getattr(drv, 'du{}'.format(msh.stencil))
         self.du = cls(msh.x, msh.z)
 
@@ -57,10 +57,15 @@ class Cin:
         """ Dispatch the domains to the functions. """
 
         # dE/dz ---------------------------------------------------------------
-        self.fld.E = self.fld.ru
-        self.fld.Eu = cEuv(self.fld.Eu, self.fld.r, self.fld.ru, self.fld.p)
-        self.fld.Ev = cEvu(self.fld.Ev, self.fld.r, self.fld.ru, self.fld.rv)
-        self.fld.Ee = cEe(self.fld.Ee, self.fld.r, self.fld.ru, self.fld.re, self.fld.p)
+        if self.cfg.mesh in ['regular', 'adaptative']:
+            fdtd.Eu(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
+                    self.fld.r, self.fld.ru, self.fld.rv, self.fld.re, self.fld.p)
+
+        elif self.cfg.mesh == 'curvilinear':
+            fdtd.EuJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
+                     self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
+                     self.fld.r, self.fld.ru, self.fld.rv, self.fld.re, self.fld.p,
+                     self.msh.dxn_dxp, self.msh.dxn_dzp)
 
         for sub in self.msh.dxdomains:
             sub.cin_method(self.fld.E, self.fld.K, *sub.ix, *sub.iz)
@@ -69,10 +74,15 @@ class Cin:
             sub.cin_method(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz)
 
         # dF/dz ---------------------------------------------------------------
-        self.fld.F = self.fld.rv
-        self.fld.Fu = self.fld.Ev
-        self.fld.Fv = cEuv(self.fld.Fv, self.fld.r, self.fld.rv, self.fld.p)
-        self.fld.Fe = cEe(self.fld.Fe, self.fld.r, self.fld.rv, self.fld.re, self.fld.p)
+        if self.cfg.mesh in ['regular', 'adaptative']:
+            fdtd.Fu(self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
+                    self.fld.r, self.fld.ru, self.fld.rv, self.fld.re, self.fld.p)
+
+        elif self.cfg.mesh == 'curvilinear':
+            fdtd.FuJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
+                     self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
+                     self.fld.r, self.fld.ru, self.fld.rv, self.fld.re, self.fld.p,
+                     self.msh.dzn_dxp, self.msh.dzn_dzp)
 
         for sub in self.msh.dzdomains:
             sub.cin_method(self.fld.F, self.fld.K, *sub.ix, *sub.iz)

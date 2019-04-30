@@ -32,7 +32,7 @@ Initialize all fields
 
 import h5py
 import numpy as np
-
+from ofdlib2 import fdtd
 
 class Fields:
     """ Fields initialization. """
@@ -64,11 +64,20 @@ class Fields:
         izS = self._cfg.izS
         Bx = 5*self._msh.dx                            # spatial bandwidth
         S0 = self._cfg.S0
+        p0 = self._cfg.p0
 
-        for iz in range(0, self._msh.nz):
-            self.p[:, iz] = self._cfg.p0 + \
+        for iz in range(self._msh.nz):
+            self.p[:, iz] = p0 + \
                     S0*np.exp(-np.log(2)*((self._msh.x-self._msh.x[ixS])**2 +
                                           (self._msh.z[iz]-self._msh.z[izS])**2)/Bx**2)
+
+
+        if self._cfg.mesh == 'curvilinear':
+            self.r = self.r/self._msh.J
+            self.ru = self.ru/self._msh.J
+            self.rv = self.rv/self._msh.J
+            self.p = self.p/self._msh.J
+
         self.re = self.p/(self._cfg.gamma-1.)
 
     def init_derivatives(self):
@@ -136,15 +145,34 @@ class Fields:
         self.Kez = np.zeros_like(self.p)
 
         # Initial E & F
-        self.Ei = self.ru
-        self.Eui = self.ru**2/self.r + self.p
-        self.Evi = self.ru*self.rv/self.r
-        self.Eei = self.ru/self.r*(self.re + self.p)
+        self.Ei = np.zeros_like(self.p)
+        self.Eui = np.zeros_like(self.p)
+        self.Evi = np.zeros_like(self.p)
+        self.Eei = np.zeros_like(self.p)
+        self.Fi = np.zeros_like(self.p)
+        self.Fui = np.zeros_like(self.p)
+        self.Fvi = np.zeros_like(self.p)
+        self.Fei = np.zeros_like(self.p)
 
-        self.Fi = self.rv
-        self.Fui = self.ru*self.rv/ self.r
-        self.Fvi = self.rv**2/self.r + self.p
-        self.Fei = self.rv/self.r*(self.re + self.p)
+        if self._cfg.mesh in ['regular', 'adaptative']:
+            fdtd.Eu(self.Ei, self.Eui, self.Evi, self.Eei,
+                    self.r, self.ru, self.rv, self.re, self.p)
+
+        elif self._cfg.mesh == 'curvilinear':
+            fdtd.EuJ(self.Ei, self.Eui, self.Evi, self.Eei,
+                     self.Fi, self.Fui, self.Fvi, self.Fei,
+                     self.r, self.ru, self.rv, self.re, self.p,
+                     self._msh.dxn_dxp, self._msh.dxn_dzp)
+
+        if self._cfg.mesh in ['regular', 'adaptative']:
+            fdtd.Fu(self.Fi, self.Fui, self.Fvi, self.Fei,
+                    self.r, self.ru, self.rv, self.re, self.p)
+
+        elif self._cfg.mesh == 'curvilinear':
+            fdtd.FuJ(self.Ei, self.Eui, self.Evi, self.Eei,
+                     self.Fi, self.Fui, self.Fvi, self.Fei,
+                     self.r, self.ru, self.rv, self.re, self.p,
+                     self._msh.dzn_dxp, self._msh.dzn_dzp)
 
     def init_save(self):
         """ Init save. """
@@ -163,10 +191,17 @@ class Fields:
         self.sfile.create_dataset('rho0', data=self._cfg.rho0)
         self.sfile.create_dataset('gamma', data=self._cfg.gamma)
         self.sfile.create_dataset('obstacles', data=self._msh.get_obstacles())
+        self.sfile.create_dataset('mesh', data=self._cfg.mesh)
         if self._cfg.probes and self._cfg.probes_loc:
             probes = np.zeros((len(self._cfg.probes_loc), self._cfg.nt))
             self.sfile.create_dataset('probes', data=probes, compression=self._cfg.comp)
             self.sfile.create_dataset('probes_location', data=self._cfg.probes_loc)
+        if self._cfg.mesh == 'curvilinear':
+            self.sfile.create_dataset('J', data=self._msh.J, compression=self._cfg.comp)
+            self.sfile.create_dataset('xn', data=self._msh.xn, compression=self._cfg.comp)
+            self.sfile.create_dataset('zn', data=self._msh.zn, compression=self._cfg.comp)
+            self.sfile.create_dataset('xp', data=self._msh.xp, compression=self._cfg.comp)
+            self.sfile.create_dataset('zp', data=self._msh.zp, compression=self._cfg.comp)
 
     def get(self):
         """ Get initial fields as a tuple. """

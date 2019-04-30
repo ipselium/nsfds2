@@ -47,7 +47,7 @@ class EulerianFluxes:
         self.fld = fld
         self.cfg = cfg
         self.p, self.r, self.ru, self.rv, self.re = empty_like(msh.shape, 5)
-        self.ccin = Cin(msh, fld)
+        self.ccin = Cin(msh, fld, cfg)
         self.dtrk = self.cfg.dt*coefficients.rk4o()
         if 'A' in msh.bc:
             self.init_pml()
@@ -164,6 +164,34 @@ class EulerianFluxes:
             self.fld.ru[:, -1] = 0
             self.fld.rv[:, -1] = 0
             self.fld.re[:, -1] = self.cfg.p0/(self.cfg.gamma-1)
+
+        if self.msh.bc[0] == 'A' and self.cfg.mesh == 'curvilinear':
+            self.fld.p[0, :] /= self.msh.J[0, :]
+            self.fld.r[0, :] /= self.msh.J[0, :]
+            self.fld.ru[0, :] /= self.msh.J[0, :]
+            self.fld.rv[0, :] /= self.msh.J[0, :]
+            self.fld.re[0, :] /= self.msh.J[0, :]
+
+        if self.msh.bc[1] == 'A' and self.cfg.mesh == 'curvilinear':
+            self.fld.p[:, 0] /= self.msh.J[:, 0]
+            self.fld.r[:, 0] /= self.msh.J[:, 0]
+            self.fld.ru[:, 0] /= self.msh.J[:, 0]
+            self.fld.rv[:, 0] /= self.msh.J[:, 0]
+            self.fld.re[:, 0] /= self.msh.J[:, 0]
+
+        if self.msh.bc[2] == 'A' and self.cfg.mesh == 'curvilinear':
+            self.fld.p[-1, :] /= self.msh.J[-1, :]
+            self.fld.r[-1, :] /= self.msh.J[-1, :]
+            self.fld.ru[-1, :] /= self.msh.J[-1, :]
+            self.fld.rv[-1, :] /= self.msh.J[-1, :]
+            self.fld.re[-1, :] /= self.msh.J[-1, :]
+
+        if self.msh.bc[3] == 'A' and self.cfg.mesh == 'curvilinear':
+            self.fld.p[:, -1] /= self.msh.J[:, -1]
+            self.fld.r[:, -1] /= self.msh.J[:, -1]
+            self.fld.ru[:, -1] /= self.msh.J[:, -1]
+            self.fld.rv[:, -1] /= self.msh.J[:, -1]
+            self.fld.re[:, -1] /= self.msh.J[:, -1]
 
     def cout_periodic(self):
         """ Additional rigid boundaries for periodic condition. """

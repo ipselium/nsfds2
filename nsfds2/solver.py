@@ -136,9 +136,16 @@ def main():
     obstacles = files.get_obstacle(cfg)
 
     # Mesh
-    msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0),
-                    bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml, stencil=cfg.stencil)
-
+    if cfg.mesh == 'regular':
+        msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0),
+                        bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml,
+                        stencil=cfg.stencil)
+    elif cfg.mesh == 'curvilinear':
+        fcurv = files.get_curvilinear(cfg)
+        msh = mesh.CurvilinearMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                                   origin=(cfg.ix0, cfg.iz0),
+                                   bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml,
+                                   stencil=cfg.stencil, fcurvxz=fcurv)
 
     if args.command:
         globals()[args.command](cfg, msh)

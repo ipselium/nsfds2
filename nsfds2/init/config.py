@@ -99,8 +99,10 @@ class CfgSetup:
         self.cfg.set('simulation', 'CFL', '0.5')
 
         self.cfg.add_section('geometry')
+        self.cfg.set('geometry', 'mesh', 'regular')
         self.cfg.set('geometry', 'file', 'None')
-        self.cfg.set('geometry', 'name', 'helmholtz_double')
+        self.cfg.set('geometry', 'geoname', 'helmholtz_double')
+        self.cfg.set('geometry', 'curvname', 'None')
         self.cfg.set('geometry', 'bc', 'PPPP')
         self.cfg.set('geometry', 'nx', '256')
         self.cfg.set('geometry', 'nz', '256')
@@ -177,18 +179,20 @@ class CfgSetup:
 
             SIM = self.cfg['simulation']
             self.nt = getattr(self.args, 'nt', None)
-            if not self.nt:
+            if self.nt == None:
                 self.nt = SIM.getint('nt', 500)
             self.ns = SIM.getint('ns', 10)
             self.CFL = SIM.getfloat('CFL', 0.5)
 
             GEO = self.cfg['geometry']
+            self.mesh = GEO.get('mesh', 'regular')
             self.geofile = getattr(self.args, 'geofile', None)
             if  self.geofile:
                 self.geofile, self.geoname = self.args.geofile
             else:
                 self.geofile = GEO.get('file', 'None')
-                self.geoname = GEO.get('name', 'square')
+                self.geoname = GEO.get('geoname', 'square')
+            self.curvname = GEO.get('curvname', 'None')
             self.bc = GEO.get('bc', 'RRRR')
             self.nx = GEO.getint('nx', 256)
             self.nz = GEO.getint('nz', 256)

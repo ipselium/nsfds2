@@ -57,18 +57,24 @@ def fields(cfg):
         x = sfile['x'][...]
         z = sfile['z'][...]
         obstacles = sfile['obstacles'][...]
+        if cfg.mesh == 'curvilinear':
+            J = sfile['J'][...]
+        else:
+            J = _np.ones((x.size, z.size))
+
         if cfg.onlyp:
             p = sfile[f'p_it{nt}'][...]
         else:
-            rho = sfile[f'rho_it{nt}'][...]
-            rhou = sfile[f'rhou_it{nt}'][...]
-            rhov = sfile[f'rhov_it{nt}'][...]
-            rhoe = sfile[f'rhoe_it{nt}'][...]
+            rho = sfile[f'rho_it{nt}'][...]*J
+            rhou = sfile[f'rhou_it{nt}'][...]*J
+            rhov = sfile[f'rhov_it{nt}'][...]*J
+            rhoe = sfile[f'rhoe_it{nt}'][...]*J
             u = rhou/rho
             v = rhov/rho
             e = rhoe/rho
             p = _np.empty_like(rho)
             fdtd.p(p, rho, rhou, rhov, rhoe, cfg.gamma)
+
 
     cm = modified_jet()
     norm = MidpointNormalize(midpoint=0)

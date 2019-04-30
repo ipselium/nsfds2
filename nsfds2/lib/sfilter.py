@@ -57,7 +57,7 @@ class SelectiveFilter:
         """ Dispatch filtering. """
 
         for sub in self.msh.fxdomains:
-            sub.filt_method(self.fld.r, self.fld.K,   *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
@@ -65,7 +65,7 @@ class SelectiveFilter:
         self.update(self.msh.fxdomains)
 
         for sub in self.msh.fzdomains:
-            sub.filt_method(self.fld.r, self.fld.K,   *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)

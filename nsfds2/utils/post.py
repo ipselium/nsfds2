@@ -103,14 +103,18 @@ class FrameGenerator:
         self.one_dz = 1/self.data['dz'][...]
         self.nx = self.data['nx'][...]
         self.nz = self.data['nz'][...]
+        if self.data['mesh'][...] == 'curvilinear':
+            self.J = self.data['J'][...]
+        else:
+            self.J = np.ones((self.nx, self.nz))
 
     def reference(self):
         """ Generate the reference for min/max colormap values """
 
         if self.view == "p":
-            ref = self.p_from_rhoX(self.ref).T
+            ref = self.p_from_rhoX(self.ref)
         elif self.view in ['rho', 'vx', 'vz', 'e']:
-            ref = self.data["{}_it{}".format(self.var[self.view], self.ref)][:, :].T
+            ref = self.data["{}_it{}".format(self.var[self.view], self.ref)][:, :]
         elif self.view in ['vort']:
             ref = rot(self.data, self.ref, self.nx, self.nz,
                       self.one_dx, self.one_dz, self.a7)
@@ -118,15 +122,15 @@ class FrameGenerator:
             print("Only 'p', 'rho', 'vx', 'vz' and 'e' available !")
             sys.exit(1)
 
-        return ref.max(), ref.min()
+        return (ref*self.J).max(), (ref*self.J).min()
 
     def p_from_rhoX(self, i):
         """ Compute p from rho, rhou, rhov and rhoe. """
 
-        rho = self.data["{}_it{}".format('rho', i)][:, :]
-        rhou = self.data["{}_it{}".format('rhou', i)][:, :]
-        rhov = self.data["{}_it{}".format('rhov', i)][:, :]
-        rhoe = self.data["{}_it{}".format('rhoe', i)][:, :]
+        rho = self.data["{}_it{}".format('rho', i)][:, :]*self.J
+        rhou = self.data["{}_it{}".format('rhou', i)][:, :]*self.J
+        rhov = self.data["{}_it{}".format('rhov', i)][:, :]*self.J
+        rhoe = self.data["{}_it{}".format('rhoe', i)][:, :]*self.J
         p = np.empty_like(rho)
         fdtd.p(p, rho, rhou, rhov, rhoe, self.data['gamma'][...])
         return p - self.data['p0'][...]
@@ -189,10 +193,18 @@ def make_movie(filename, view='p', ref=None, nt=None, quiet=False):
     path = os.path.dirname(filename) + '/'
     data = get_data(filename)
 
+    mesh = data['mesh'][...]
+
     # Mesh and time parameters
-    x = data['x'][...]
-    z = data['z'][...]
+    if mesh == 'curvilinear':
+        x = data['xp'][...]
+        z = data['zp'][...]
+    else:
+        x = data['x'][...]
+        z = data['z'][...]
+
     obstacles = data['obstacles'][...]
+
     if not nt:
         nt = data['nt'][...]
     if not ref:
@@ -234,16 +246,28 @@ def make_movie(filename, view='p', ref=None, nt=None, quiet=False):
     axm.set_title(title.format(0, view))
     axm.set_aspect('equal')
     # plot
-    movie_plt = axm.pcolorfast(x, z, p, cmap=mycm, norm=norm)
+    if mesh == 'curvilinear':
+        movie_plt = axm.pcolormesh(x, z, p.T, cmap=mycm, norm=norm)
+        axm.plot(x[0, :], z[0, :], 'k', linewidth=3)
+        axm.plot(x[-1, :], z[-1, :], 'k', linewidth=3)
+        axm.plot(x[:, 0], z[:, 0], 'k', linewidth=3)
+        axm.plot(x[:, -1], z[:, -1], 'k', linewidth=3)
+        plot_obstacles(x, z, axm, obstacles, edgecolor='k', curvilinear=True)
+    else:
+        movie_plt = axm.pcolorfast(x, z, p, cmap=mycm, norm=norm)
+        plot_obstacles(x, z, axm, obstacles)
+
     plt.colorbar(movie_plt)
-    plot_obstacles(x, z, axm, obstacles)
 
     # Start Video
     with writer.saving(movie, path + movie_filename, dpi=100):
         for i, var in frames:
             axm.set_title(r'{} -- iteration : {}'.format(view, i))
-            movie_plt.set_data(var)
-            plot_obstacles(x, z, axm, obstacles)
+            if mesh == 'curvilinear':
+                # StackOv : using-set-array-with-pyplot-pcolormesh-ruins-figure
+                movie_plt.set_array(var[:-1, :-1].T.ravel())
+            else:
+                movie_plt.set_data(var)
             writer.grab_frame()
             if not quiet:
                 pbar.update(i)
