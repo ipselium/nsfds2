@@ -36,7 +36,7 @@ import numpy as _np
 import matplotlib.pyplot as _plt
 from ofdlib2 import fdtd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from fdgrid.mesh import plot_obstacles
+from fdgrid.mesh import plot_subdomains
 from mpltools import modified_jet, MidpointNormalize
 
 
@@ -82,7 +82,7 @@ def fields(cfg):
     if cfg.onlyp:
         _, ax = _plt.subplots(figsize=(12, 9))
         im = ax.pcolorfast(x, z, (p-cfg.p0).T, cmap=cm, norm=norm)
-        plot_obstacles(x, z, ax, obstacles)
+        plot_subdomains(ax, x, z, obstacles)
         ax.set_xlabel(r'$x$ [m]')
         ax.set_ylabel(r'$z$ [m]')
         ax.set_aspect('equal')
@@ -102,7 +102,7 @@ def fields(cfg):
         ims = [im1, im2, im3, im4]
 
         for ax, im in zip(axes.ravel(), ims):
-            plot_obstacles(x, z, ax, obstacles)
+            plot_subdomains(ax, x, z, obstacles)
             ax.set_xlabel(r'$x$ [m]')
             ax.set_ylabel(r'$z$ [m]')
             ax.set_aspect('equal')

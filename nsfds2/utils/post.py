@@ -43,7 +43,7 @@ from ofdlib2 import fdtd
 import matplotlib.pyplot as plt
 import matplotlib.animation as ani
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
-from fdgrid.mesh import plot_obstacles
+from fdgrid.mesh import plot_subdomains
 from mpltools.custom_cmap import MidpointNormalize, modified_jet
 
 
@@ -252,10 +252,10 @@ def make_movie(filename, view='p', ref=None, nt=None, quiet=False):
         axm.plot(x[-1, :], z[-1, :], 'k', linewidth=3)
         axm.plot(x[:, 0], z[:, 0], 'k', linewidth=3)
         axm.plot(x[:, -1], z[:, -1], 'k', linewidth=3)
-        plot_obstacles(x, z, axm, obstacles, edgecolor='k', curvilinear=True)
+        plot_subdomains(axm, x, z, obstacles, edgecolor='k', curvilinear=True)
     else:
         movie_plt = axm.pcolorfast(x, z, p, cmap=mycm, norm=norm)
-        plot_obstacles(x, z, axm, obstacles)
+        plot_subdomains(axm, x, z, obstacles)
 
     plt.colorbar(movie_plt)
 
