@@ -33,7 +33,6 @@ Compute Eulerian fluxes
 
 import re
 import ofdlib2.derivation as drv
-from ofdlib2 import fdtd, coefficients
 from nsfds2.utils.array import empty_like
 from .cin import Cin
 
@@ -48,7 +47,6 @@ class EulerianFluxes:
         self.cfg = cfg
         self.p, self.r, self.ru, self.rv, self.re = empty_like(msh.shape, 5)
         self.ccin = Cin(msh, fld, cfg)
-        self.dtrk = self.cfg.dt*coefficients.rk4o()
         if 'A' in msh.bc:
             self.init_pml()
 
@@ -71,17 +69,17 @@ class EulerianFluxes:
             if 'A' in self.msh.bc:
                 self.pml()
 
-            fdtd.adtime(self.fld.r, self.r, self.fld.K, self.dtrk[irk])
-            fdtd.adtime(self.fld.ru, self.ru, self.fld.Ku, self.dtrk[irk])
-            fdtd.adtime(self.fld.rv, self.rv, self.fld.Kv, self.dtrk[irk])
-            fdtd.adtime(self.fld.re, self.re, self.fld.Ke, self.dtrk[irk])
+            self.fld.fdtools.adtime(self.fld.r, self.r, self.fld.K, irk)
+            self.fld.fdtools.adtime(self.fld.ru, self.ru, self.fld.Ku, irk)
+            self.fld.fdtools.adtime(self.fld.rv, self.rv, self.fld.Kv, irk)
+            self.fld.fdtools.adtime(self.fld.re, self.re, self.fld.Ke, irk)
 
             # Boundary conditions
             self.cout()
 
             # Compute p
-            fdtd.p(self.fld.p, self.fld.r, self.fld.ru,
-                   self.fld.rv, self.fld.re, self.cfg.gamma)
+            self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
+                               self.fld.rv, self.fld.re)
 
         if 'A' in self.msh.bc:
             self.update_pml()
@@ -210,7 +208,7 @@ class EulerianFluxes:
         """ Initialize PMLs. """
 
         self.du = drv.du11pml(self.msh.x, self.msh.z,
-                              self.fld.sx, self.fld.sz, self.cfg.beta)
+                              self.fld.sx, self.fld.sz, self.cfg.beta, self.cfg.dt)
         for sub in self.msh.adomains:
             sub.pml_method = getattr(self.du, f'du_{sub.bc}')
             sub.pml_intgrt = getattr(self.du, f'update_{sub.axname}')
@@ -257,14 +255,14 @@ class EulerianFluxes:
             for sub in self.msh.adomains:
 
                 sub.pml_intgrt(self.fld.qx, self.fld.qz, qx, qz,
-                               self.fld.Kx, self.fld.Kz, self.fld.E, self.dtrk[irk],
+                               self.fld.Kx, self.fld.Kz, self.fld.E, irk,
                                *sub.ix, *sub.iz)
                 sub.pml_intgrt(self.fld.qux, self.fld.quz, qux, quz,
-                               self.fld.Kux, self.fld.Kuz, self.fld.Eu, self.dtrk[irk],
+                               self.fld.Kux, self.fld.Kuz, self.fld.Eu, irk,
                                *sub.ix, *sub.iz)
                 sub.pml_intgrt(self.fld.qvx, self.fld.qvz, qvx, qvz,
-                               self.fld.Kvx, self.fld.Kvz, self.fld.Ev, self.dtrk[irk],
+                               self.fld.Kvx, self.fld.Kvz, self.fld.Ev, irk,
                                *sub.ix, *sub.iz)
                 sub.pml_intgrt(self.fld.qex, self.fld.qez, qex, qez,
-                               self.fld.Kex, self.fld.Kez, self.fld.Ee, self.dtrk[irk],
+                               self.fld.Kex, self.fld.Kez, self.fld.Ee, irk,
                                *sub.ix, *sub.iz)

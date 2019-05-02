@@ -23,7 +23,7 @@
 #
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-locals
-#
+# pylint: disable=too-many-branches
 """
 -----------
 
@@ -37,48 +37,12 @@ import sys
 import getpass
 import h5py
 import numpy as np
-import numba as nb
-from ofdlib2.coefficients import a7o
 from ofdlib2 import fdtd
 import matplotlib.pyplot as plt
 import matplotlib.animation as ani
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
 from fdgrid.mesh import plot_subdomains
 from mpltools.custom_cmap import MidpointNormalize, modified_jet
-
-
-@nb.jit
-def rot(data, ref, nx, nz, one_dx, one_dz, a7):
-    """ Rotational. """
-
-    name = "{}_it{}"
-    rho = data[name.format('rho', ref)][:, :]
-    rhou = data[name.format('rhou', ref)][:, :]
-    rhov = data[name.format('rhov', ref)][:, :]
-
-    u = rhou/rho
-    v = rhov/rho
-
-    vort = np.zeros_like(u)
-
-    for i in range(3, nx-3):
-        for j in range(3, nz-3):
-            for l in range(-3, 4):
-                vort[i, j] = vort[i, j] + a7[l]*v[i+l, j]*one_dx - a7[l]*u[i, j+l]*one_dz
-
-    for i in range(3):
-        for j in range(3, nz-3):
-            vort[i, j] = vort[i, j] + (v[i+1, j] - v[i, j])*one_dx
-            for l in range(-3, 4):
-                vort[i, j] = vort[i, j] - a7[l]*u[i, j+l]*one_dz
-
-    for i in range(nx-3, nx):
-        for j in range(3, nz-3):
-            vort[i, j] = vort[i, j] + (v[i, j] - v[i-1, j])*one_dx
-            for l in range(-3, 4):
-                vort[i, j] = vort[i, j] - a7[l]*u[i, j+l]*one_dz
-
-    return vort.T
 
 
 class FrameGenerator:
@@ -98,7 +62,6 @@ class FrameGenerator:
                     'vx': 'rhou',
                     'vz': 'rhov',
                     'e': 'rhoe'}
-        self.a7, _ = a7o()
         self.one_dx = 1/self.data['dx'][...]
         self.one_dz = 1/self.data['dz'][...]
         self.nx = self.data['nx'][...]
@@ -115,9 +78,6 @@ class FrameGenerator:
             ref = self.p_from_rhoX(self.ref)
         elif self.view in ['rho', 'vx', 'vz', 'e']:
             ref = self.data["{}_it{}".format(self.var[self.view], self.ref)][:, :]
-        elif self.view in ['vort']:
-            ref = rot(self.data, self.ref, self.nx, self.nz,
-                      self.one_dx, self.one_dz, self.a7)
         else:
             print("Only 'p', 'rho', 'vx', 'vz' and 'e' available !")
             sys.exit(1)
@@ -148,10 +108,6 @@ class FrameGenerator:
             vX = self.data["{}_it{}".format(self.var[self.view], self.icur)][:, :]
             rho = self.data["{}_it{}".format('rho', self.icur)][:, :]
             return vX.T/rho.T
-
-        if self.view in ['vort']:
-            return rot(self.data, self.icur, self.nx, self.nz,
-                       self.one_dx, self.one_dz, self.a7)
 
         return None
 

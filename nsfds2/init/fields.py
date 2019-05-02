@@ -32,7 +32,7 @@ Initialize all fields
 
 import h5py
 import numpy as np
-from ofdlib2 import fdtd
+from ofdlib2.fdtd import fdtools
 
 class Fields:
     """ Fields initialization. """
@@ -41,6 +41,8 @@ class Fields:
 
         self._msh = msh
         self._cfg = cfg
+        self.fdtools = fdtools(self._cfg.nx, self._cfg.nz,
+                               self._cfg.p0, self._cfg.gamma, self._cfg.dt)
 
         self.init_fields()
         self.init_derivatives()
@@ -155,24 +157,24 @@ class Fields:
         self.Fei = np.zeros_like(self.p)
 
         if self._cfg.mesh in ['regular', 'adaptative']:
-            fdtd.Eu(self.Ei, self.Eui, self.Evi, self.Eei,
-                    self.r, self.ru, self.rv, self.re, self.p)
+            self.fdtools.Eu(self.Ei, self.Eui, self.Evi, self.Eei,
+                            self.r, self.ru, self.rv, self.re, self.p)
 
         elif self._cfg.mesh == 'curvilinear':
-            fdtd.EuJ(self.Ei, self.Eui, self.Evi, self.Eei,
-                     self.Fi, self.Fui, self.Fvi, self.Fei,
-                     self.r, self.ru, self.rv, self.re, self.p,
-                     self._msh.dxn_dxp, self._msh.dxn_dzp)
+            self.fdtools.EuJ(self.Ei, self.Eui, self.Evi, self.Eei,
+                             self.Fi, self.Fui, self.Fvi, self.Fei,
+                             self.r, self.ru, self.rv, self.re, self.p,
+                             self._msh.dxn_dxp, self._msh.dxn_dzp)
 
         if self._cfg.mesh in ['regular', 'adaptative']:
-            fdtd.Fu(self.Fi, self.Fui, self.Fvi, self.Fei,
-                    self.r, self.ru, self.rv, self.re, self.p)
+            self.fdtools.Fu(self.Fi, self.Fui, self.Fvi, self.Fei,
+                            self.r, self.ru, self.rv, self.re, self.p)
 
         elif self._cfg.mesh == 'curvilinear':
-            fdtd.FuJ(self.Ei, self.Eui, self.Evi, self.Eei,
-                     self.Fi, self.Fui, self.Fvi, self.Fei,
-                     self.r, self.ru, self.rv, self.re, self.p,
-                     self._msh.dzn_dxp, self._msh.dzn_dzp)
+            self.fdtools.FuJ(self.Ei, self.Eui, self.Evi, self.Eei,
+                             self.Fi, self.Fui, self.Fvi, self.Fei,
+                             self.r, self.ru, self.rv, self.re, self.p,
+                             self._msh.dzn_dxp, self._msh.dzn_dzp)
 
     def init_save(self):
         """ Init save. """

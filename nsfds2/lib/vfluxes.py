@@ -31,7 +31,6 @@ Compute viscous fluxes
 """
 
 
-from ofdlib2 import fdtd
 import ofdlib2.derivation as drv
 import ofdlib2.vflux as vf
 
@@ -98,6 +97,6 @@ class ViscousFluxes:
 
         # Integrate in time
         for sub in self.msh.dsdomains:
-            fdtd.integrate(self.fld.ru, self.fld.Ku, self.cfg.dt, *sub.ix, *sub.iz)
-            fdtd.integrate(self.fld.rv, self.fld.Kv, self.cfg.dt, *sub.ix, *sub.iz)
-            fdtd.integrate(self.fld.re, self.fld.Ke, self.cfg.dt, *sub.ix, *sub.iz)
+            self.fld.fdtools.integrate(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+            self.fld.fdtools.integrate(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+            self.fld.fdtools.integrate(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)

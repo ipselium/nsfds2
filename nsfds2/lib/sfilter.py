@@ -29,8 +29,7 @@ oscillations.
 @author: Cyril Desjouy
 """
 
-import numpy as np
-import ofdlib2.filters as filters
+from ofdlib2 import filters
 
 class SelectiveFilter:
     """ Filter rho, rhou, rhov and rhoe. """
@@ -45,11 +44,11 @@ class SelectiveFilter:
 
 
         for subdomain in self.msh.fmdomains:
-            fname = self.filt_id(subdomain, self.msh.stencil)
+            fname = self.filt_id(subdomain)
             subdomain.filt_method = getattr(self.flt, fname)
 
     @staticmethod
-    def filt_id(sub, stencil):
+    def filt_id(sub):
         """ Identify which filter function to use for subdomain. """
         return f"f{sub.axname}_{sub.bc.replace('.', '')}"
 

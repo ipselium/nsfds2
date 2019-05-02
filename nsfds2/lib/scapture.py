@@ -29,8 +29,6 @@ procedure proposed by Bogey & al -- JCP228 -- 2009
 @author: Cyril Desjouy
 """
 
-import numpy as np
-import ofdlib2.fdtd as fdtd
 import ofdlib2.derivation as drv
 import ofdlib2.laplacian as lpl
 import ofdlib2.capture as cpt
@@ -84,8 +82,8 @@ class ShockCapture:
     def update_reference(self):
         """ Update pressure / dilatation. """
 
-        fdtd.p(self.fld.p, self.fld.r, self.fld.ru,
-               self.fld.rv, self.fld.re, self.cfg.gamma)
+        self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
+                           self.fld.rv, self.fld.re)
 
         if self.cfg.cpt_meth == 'dilatation':
             self.dilatation()

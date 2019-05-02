@@ -35,7 +35,6 @@ import sys
 import time
 import numpy as np
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
-from ofdlib2 import fdtd
 from nsfds2.utils import headers, check, timing
 from nsfds2.lib.efluxes import EulerianFluxes
 from nsfds2.lib.vfluxes import ViscousFluxes
@@ -193,8 +192,8 @@ class FDTD:
     def update_pressure(self):
         """ Update pressure field """
 
-        fdtd.p(self.fld.p, self.fld.r, self.fld.ru,
-               self.fld.rv, self.fld.re, self.cfg.gamma)
+        self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
+                           self.fld.rv, self.fld.re)
 
     @timing.proceed('probe')
     def update_probes(self):
@@ -207,9 +206,9 @@ class FDTD:
         """ Check if computation diverges. """
 
         if self.cfg.mesh == 'curvilinear':
-            self.res = fdtd.residual(self.fld.p*self.msh.J, self.cfg.p0)
+            self.res = self.fld.fdtools.residual(self.fld.p*self.msh.J)
         else:
-            self.res = fdtd.residual(self.fld.p, self.cfg.p0)
+            self.res = self.fld.fdtools.residual(self.fld.p)
 
         if (abs(self.res) > 100*self.cfg.S0) or np.any(np.isnan(self.fld.p)):
             print('Stop simulation at iteration ', self.it)
@@ -265,4 +264,3 @@ class FDTD:
         """ Return max terminal width. """
         _, col = os.popen('stty size', 'r').read().split()
         return int(col) if int(col) < 81 else 80
-
