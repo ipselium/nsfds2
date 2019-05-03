@@ -30,8 +30,7 @@ procedure proposed by Bogey & al -- JCP228 -- 2009
 """
 
 import ofdlib2.derivation as drv
-import ofdlib2.laplacian as lpl
-import ofdlib2.capture as cpt
+import ofdlib2.filters as flt
 
 
 class ShockCapture:
@@ -43,18 +42,15 @@ class ShockCapture:
         self.fld = fld
         self.cfg = cfg
 
-        du_cls = getattr(drv, 'du{}'.format(cfg.cpt_stencil))
-        sg_cls = getattr(cpt, 'sigma_{}'.format(self.cfg.cpt_meth[0]))
+        sg_cls = getattr(flt, 'sigma_{}'.format(cfg.cpt_meth[0]))
 
-        self.du = du_cls(msh.x, msh.z)
+        self.du = drv.du(msh.x, msh.z, cfg.cpt_stencil)
         self.sg = sg_cls(msh.nx, msh.nz, cfg.rth, cfg.gamma)
-        self.lpl = lpl.lplf3(msh.nx, msh.nz)
-        self.cpt = cpt.capture(msh.nx, msh.nz)
+        self.lpl = flt.lplf3(msh.nx, msh.nz)
+        self.cpt = flt.capture(msh.nx, msh.nz)
 
         for sub in self.msh.fmdomains:
-
             bc = sub.bc.replace('.', '')
-
             sub.dltn = getattr(self.du, f'dud{sub.axname}_{bc}')
             sub.lpl = getattr(self.lpl, f'lplf{sub.axname}_{bc}')
             sub.cpt = getattr(self.cpt, f'cpt{sub.axname}_{bc}')
@@ -131,7 +127,7 @@ class ShockCapture:
     def update(self, sub):
         """ Apply filter to conservative variables. """
 
-        cpt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
-        cpt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-        cpt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-        cpt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+        self.cpt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
+        self.cpt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+        self.cpt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+        self.cpt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)

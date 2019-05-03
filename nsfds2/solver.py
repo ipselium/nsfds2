@@ -33,7 +33,7 @@ import argparse
 from fdgrid import mesh
 from nsfds2.init import CfgSetup, Fields
 from nsfds2.fdtd import FDTD
-from nsfds2.utils import figures, files, headers, post
+from nsfds2.utils import files, headers, graphics
 
 
 def parse_args():
@@ -90,9 +90,9 @@ def solve(cfg, msh):
     fdtd.run()
 
     # Figures
-    figures.fields(cfg)
-    figures.probes(cfg)
-    figures.show()
+    graphics.fields(cfg)
+    graphics.probes(cfg)
+    graphics.show()
 
 
 def show(cfg, msh):
@@ -119,8 +119,9 @@ def show(cfg, msh):
 def movie(cfg, _):
     """ Create a movie from a dataset. """
 
-    post.make_movie(cfg.datafile, view=cfg.args.view,
-                    ref=cfg.args.ref, nt=cfg.nt, quiet=cfg.quiet)
+    movie = graphics.Movie(cfg.datafile, view=cfg.args.view,
+                           ref=cfg.args.ref, nt=cfg.nt, quiet=cfg.quiet)
+    movie.make()
 
 
 def main():

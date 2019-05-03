@@ -20,6 +20,8 @@
 #
 #
 # Creation Date : 2019-03-01 - 10:29:55
+#
+# pylint: disable=too-few-public-methods
 """
 -----------
 
@@ -31,6 +33,7 @@ Compute Derivatives
 
 import ofdlib2.derivation as drv
 
+
 class Cin:
     """ Dispatch domains to associated computation functions. """
 
@@ -39,18 +42,11 @@ class Cin:
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
-        cls = getattr(drv, 'du{}'.format(msh.stencil))
-        self.du = cls(msh.x, msh.z)
+        self.du = drv.du(msh.x, msh.z, msh.stencil)
 
         for sub in self.msh.dmdomains:
-            fname = self.cin_id(sub)
-            sub.cin_method = getattr(self.du, fname)
-
-    @staticmethod
-    def cin_id(sub):
-        """ Identify which computation function to use for subdomain. """
-
-        return 'dud{}_{}'.format(sub.axname, sub.bc.replace('.', ''))
+            bc = sub.bc.replace('.', '')
+            sub.cin_method = getattr(self.du, f'dud{sub.axname}_{bc}')
 
     def dispatch(self):
         """ Dispatch the domains to the functions. """

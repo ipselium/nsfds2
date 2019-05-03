@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright © 2016-2019 Cyril Desjouy <ipselium@free.fr>
+# Copyright © 2016-2019 Cyril Desjouy <cyril.desjouy@univ-lemans.fr>
 #
 # This file is part of nsfds2
 #
@@ -29,7 +29,7 @@ oscillations.
 @author: Cyril Desjouy
 """
 
-from ofdlib2 import filters
+import ofdlib2.filters as flt
 
 class SelectiveFilter:
     """ Filter rho, rhou, rhov and rhoe. """
@@ -39,18 +39,11 @@ class SelectiveFilter:
 
         self.msh = msh
         self.fld = fld
-        cls = getattr(filters, f'f{cfg.flt_stencil}')
-        self.flt = cls(msh.nx, msh.nz, cfg.xnu)
+        self.flt = flt.sfilter(msh.nx, msh.nz, cfg.xnu, stencil=cfg.flt_stencil)
 
-
-        for subdomain in self.msh.fmdomains:
-            fname = self.filt_id(subdomain)
-            subdomain.filt_method = getattr(self.flt, fname)
-
-    @staticmethod
-    def filt_id(sub):
-        """ Identify which filter function to use for subdomain. """
-        return f"f{sub.axname}_{sub.bc.replace('.', '')}"
+        for sub in self.msh.fmdomains:
+            bc = sub.bc.replace('.', '')
+            sub.filt_method = getattr(self.flt, f"f{sub.axname}_{bc}")
 
     def apply(self):
         """ Dispatch filtering. """
