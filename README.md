@@ -140,8 +140,11 @@ probes_locations = [[128, 128], [128, 192]]
 
 ## Changelog
 
-### 0.8.2
+### 0.8.3
 * new: harmonic pressure source
+
+### 0.8.2
+* fix: compatibility with jupyter notebook
 
 ### 0.8.1
 * chg: mpltools to mplutils
