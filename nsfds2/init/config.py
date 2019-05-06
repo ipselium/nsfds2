@@ -90,7 +90,7 @@ class CfgSetup:
         """ Write default configuration file. """
 
         self.cfg.add_section('configuration')
-        self.cfg.set('configuration', 'timings', 'True')
+        self.cfg.set('configuration', 'timings', 'False')
         self.cfg.set('configuration', 'quiet', 'False')
 
         self.cfg.add_section('simulation')
@@ -171,7 +171,7 @@ class CfgSetup:
 
             self.timings = getattr(self.args, 'timings', None)
             if not isinstance(self.timings, bool):
-                self.timings = CFG.getboolean('timings', True)
+                self.timings = CFG.getboolean('timings', False)
 
             self.quiet = getattr(self.args, 'quiet', None)
             if not isinstance(self.quiet, bool):
@@ -179,14 +179,16 @@ class CfgSetup:
 
             SIM = self.cfg['simulation']
             self.nt = getattr(self.args, 'nt', None)
-            if self.nt == None:
+            if self.nt is None:
                 self.nt = SIM.getint('nt', 500)
             self.ns = SIM.getint('ns', 10)
             self.CFL = SIM.getfloat('CFL', 0.5)
 
             GEO = self.cfg['geometry']
             self.mesh = GEO.get('mesh', 'regular')
+            self.curvflag = True if self.mesh == 'curvilinear' else False
             self.geofile = getattr(self.args, 'geofile', None)
+            self.geoflag = True
             if  self.geofile:
                 self.geofile, self.geoname = self.args.geofile
             else:

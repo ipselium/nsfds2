@@ -262,5 +262,8 @@ class FDTD:
     @property
     def columns(self):
         """ Return max terminal width. """
-        _, col = os.popen('stty size', 'r').read().split()
-        return int(col) if int(col) < 81 else 80
+        try:
+            _, col = os.popen('stty size', 'r').read().split()
+            return int(col) if int(col) < 81 else 80
+        except ValueError:
+            return 80

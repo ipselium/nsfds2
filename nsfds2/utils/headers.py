@@ -40,8 +40,11 @@ import nsfds2
 
 
 def _columns():
-    _, col = os.popen('stty size', 'r').read().split()
-    return int(col) if int(col) < 81 else 80
+    try:
+        _, col = os.popen('stty size', 'r').read().split()
+        return int(col) if int(col) < 81 else 80
+    except ValueError:
+        return 80
 
 
 def copyright():
