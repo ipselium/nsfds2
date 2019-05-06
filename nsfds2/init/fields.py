@@ -55,25 +55,18 @@ class Fields:
     def init_fields(self):
         """ Setup initial fields. """
 
-        self.p = np.zeros(self._msh.shape)
+        # Fields
+        self.p = np.zeros(self._msh.shape) + self._cfg.p0
         self.r = np.zeros_like(self.p) + self._cfg.rho0
         self.ru = np.zeros_like(self.p)
         self.rv = np.zeros_like(self.p)
         self.dltn = np.zeros_like(self.p)
 
-        # Location
-        ixS = self._cfg.ixS
-        izS = self._cfg.izS
-        Bx = 5*self._msh.dx                            # spatial bandwidth
-        S0 = self._cfg.S0
-        p0 = self._cfg.p0
+        # Source
+        self.S = np.empty_like(self.p)
+        self.source_select()
 
-        for iz in range(self._msh.nz):
-            self.p[:, iz] = p0 + \
-                    S0*np.exp(-np.log(2)*((self._msh.x-self._msh.x[ixS])**2 +
-                                          (self._msh.z[iz]-self._msh.z[izS])**2)/Bx**2)
-
-
+        # Curvilinear
         if self._cfg.mesh == 'curvilinear':
             self.r = self.r/self._msh.J
             self.ru = self.ru/self._msh.J
@@ -204,6 +197,46 @@ class Fields:
             self.sfile.create_dataset('zn', data=self._msh.zn, compression=self._cfg.comp)
             self.sfile.create_dataset('xp', data=self._msh.xp, compression=self._cfg.comp)
             self.sfile.create_dataset('zp', data=self._msh.zp, compression=self._cfg.comp)
+
+    def source_select(self):
+        """ Source selection. """
+
+        if self._cfg.typ == "pulse":
+            self.pulse()
+        elif self._cfg.typ == "harmonic":
+            self.harmonic()
+        else:
+            raise ValueError('Only pulse supported for now')
+
+    def pulse(self):
+        """ Pulse source. """
+
+        # Location
+        ixS = self._cfg.ixS
+        izS = self._cfg.izS
+        Bx = 5*self._msh.dx                            # spatial bandwidth
+
+        for iz, z in enumerate(self._msh.z):
+            self.p[:, iz] += self._cfg.S0*np.exp(-np.log(2)*((self._msh.x-self._msh.x[ixS])**2 +
+                                                             (z - self._msh.z[izS])**2)/Bx**2)
+
+    def harmonic(self):
+        """ Harmonic mass source Q(x, z, t). """
+
+        # Location
+        ixS = self._cfg.ixS
+        izS = self._cfg.izS
+        Bx = 2*self._msh.dx                            # spatial bandwidth
+
+        for iz, z in enumerate(self._msh.z):
+            self.S[:, iz] = self._cfg.S0*np.exp(-np.log(2)*((self._msh.x-self._msh.x[ixS])**2 +
+                                                            (z - self._msh.z[izS])**2)/Bx**2)
+
+    def update_harmonic(self, t):
+        """ Harmonic source time evolution. """
+
+        return self.S*np.sin(2*np.pi*self._cfg.f0*t)
+
 
     def get(self):
         """ Get initial fields as a tuple. """

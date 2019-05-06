@@ -109,8 +109,8 @@ def fields(cfg):
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
         _plt.colorbar(im, cax=cax)
-        if cfg.probes:
-            ax.plot(*cfg.probes_loc, 'ro')
+        if cfg.probes and cfg.probes_loc:
+            ax.plot(*[[x[i], z[j]] for i, j in cfg.probes_loc], 'ro')
 
     else:
         _, axes = _plt.subplots(2, 2, figsize=(12, 9))
@@ -130,7 +130,7 @@ def fields(cfg):
             cax = divider.append_axes("right", size="5%", pad=0.05)
             _plt.colorbar(im, cax=cax)
             if cfg.probes and cfg.probes_loc:
-                ax.plot(*cfg.probes_loc, 'ro')
+                ax.plot(*[[x[i], z[j]] for i, j in cfg.probes_loc], 'ro')
 
     return None
 
@@ -202,7 +202,9 @@ class FrameGenerator:
             print("Only 'p', 'rho', 'vx', 'vz' and 'e' available !")
             sys.exit(1)
 
-        return (ref*self.J).max(), (ref*self.J).min()
+        ref = ref*self.J
+
+        return ref[ref > 0].mean()*2, ref[ref < 0].mean()*2
 
     def compute_p(self, it):
         """ Compute p from rho, rhou, rhov and rhoe at iteration it. """

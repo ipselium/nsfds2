@@ -106,6 +106,7 @@ type = pulse
 ixs = 64
 izs = 128
 s0 = 1e6
+f0 = 60000
 
 [eulerian fluxes]
 stencil = 11
@@ -138,6 +139,9 @@ probes_locations = [[128, 128], [128, 192]]
 ```
 
 ## Changelog
+
+### 0.8.2
+* new: harmonic pressure source
 
 ### 0.8.1
 * chg: mpltools to mplutils

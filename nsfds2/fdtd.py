@@ -77,7 +77,6 @@ class FDTD:
 
         # Init timings and residuals
         self.res = 0
-        self.it = 0
         self.tt = 0
         timed_methods = ['total', 'efluxes', 'vfluxes', 'sfilt',
                          'scapt', 'save', 'pressure', 'probe']
@@ -96,7 +95,7 @@ class FDTD:
             pbar = ProgressBar(widgets=widgets, maxval=self.cfg.nt,
                                term_width=self.columns).start()
 
-        for self.it in range(self.cfg.nt+1):
+        for self.cfg.it in range(self.cfg.nt+1):
 
             self.tt = time.perf_counter()
 
@@ -127,7 +126,7 @@ class FDTD:
 
             # Progress bar
             if not self.cfg.timings and not self.cfg.quiet:
-                pbar.update(self.it)
+                pbar.update(self.cfg.it)
 
 
         if self.cfg.save:
@@ -140,7 +139,7 @@ class FDTD:
             print('-'*int(self.columns))
             msg = '# Simulation completed in {:.2f} s.\n'
             msg += '# End at t = {:.4f} sec.'
-            print(msg.format(time.perf_counter() - self.tloopi, self.cfg.dt*self.it))
+            print(msg.format(time.perf_counter() - self.tloopi, self.cfg.dt*self.cfg.it))
             print('-'*int(self.columns))
 
     @timing.proceed('efluxes')
@@ -172,20 +171,20 @@ class FDTD:
         """ Save data """
 
         if self.cfg.save and self.cfg.probes:
-            self.fld.sfile['probes'][:, self.it-self.cfg.ns:self.it] = self.probes
+            self.fld.sfile['probes'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
 
         if self.cfg.save and self.cfg.onlyp:
-            self.fld.sfile.create_dataset('p_it' + str(self.it),
+            self.fld.sfile.create_dataset('p_it' + str(self.cfg.it),
                                           data=self.fld.p, compression=self.cfg.comp)
 
         elif self.cfg.save:
-            self.fld.sfile.create_dataset('rho_it' + str(self.it),
+            self.fld.sfile.create_dataset('rho_it' + str(self.cfg.it),
                                           data=self.fld.r, compression=self.cfg.comp)
-            self.fld.sfile.create_dataset('rhou_it' + str(self.it),
+            self.fld.sfile.create_dataset('rhou_it' + str(self.cfg.it),
                                           data=self.fld.ru, compression=self.cfg.comp)
-            self.fld.sfile.create_dataset('rhov_it' + str(self.it),
+            self.fld.sfile.create_dataset('rhov_it' + str(self.cfg.it),
                                           data=self.fld.rv, compression=self.cfg.comp)
-            self.fld.sfile.create_dataset('rhoe_it' + str(self.it),
+            self.fld.sfile.create_dataset('rhoe_it' + str(self.cfg.it),
                                           data=self.fld.re, compression=self.cfg.comp)
 
     @timing.proceed('pressure')
@@ -200,7 +199,7 @@ class FDTD:
         """ Update probes. """
 
         for n, c in enumerate(self.cfg.probes_loc):
-            self.probes[n, self.it%self.cfg.ns] = self.fld.p[c[0], c[1]]
+            self.probes[n, self.cfg.it%self.cfg.ns] = self.fld.p[c[0], c[1]]
 
     def check_results(self):
         """ Check if computation diverges. """
@@ -211,7 +210,7 @@ class FDTD:
             self.res = self.fld.fdtools.residual(self.fld.p)
 
         if (abs(self.res) > 100*self.cfg.S0) or np.any(np.isnan(self.fld.p)):
-            print('Stop simulation at iteration ', self.it)
+            print('Stop simulation at iteration ', self.cfg.it)
             if np.any(np.isnan(self.fld.p)):
                 print('Nan : {}'.format(np.argwhere(np.isnan(self.fld.p))))
             if self.cfg.save:
@@ -237,11 +236,11 @@ class FDTD:
     def log(self):
         """ Display timings. """
 
-        if self.it % self.cfg.ns == 0:
+        if self.cfg.it % self.cfg.ns == 0:
             self.save()
             if self.cfg.timings and not self.cfg.quiet:
                 self.bench['total'].append(time.perf_counter() - self.tt)
-                self.bench = timing.disp(self.bench, self.it, self.res)
+                self.bench = timing.disp(self.bench, self.cfg.it, self.res)
         elif self.cfg.timings and not self.cfg.quiet:
             self.bench['total'].append(time.perf_counter() - self.tt)
 

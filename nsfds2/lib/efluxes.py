@@ -80,6 +80,8 @@ class EulerianFluxes:
             # Compute p
             self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
                                self.fld.rv, self.fld.re)
+            if self.cfg.typ == 'harmonic':
+                self.fld.p += self.fld.update_harmonic(self.cfg.it*self.cfg.dt)
 
         if 'A' in self.msh.bc:
             self.update_pml()

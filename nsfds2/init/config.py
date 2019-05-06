@@ -123,6 +123,7 @@ class CfgSetup:
         self.cfg.set('source', 'ixS', '32')
         self.cfg.set('source', 'izS', '128')
         self.cfg.set('source', 'S0', '1e6')
+        self.cfg.set('source', 'f0', '20000')
 
         self.cfg.add_section('eulerian fluxes')
         self.cfg.set('eulerian fluxes', 'stencil', '11')
@@ -158,6 +159,9 @@ class CfgSetup:
 
     def run(self):
         """ Run configuration. """
+
+        # Simulation parameters
+        self.it = 0
 
         # Thermophysic parameters
         self.gamma = 1.4
@@ -216,6 +220,7 @@ class CfgSetup:
             self.ixS = SRC.getint('ixS', 32)
             self.izS = SRC.getint('izS', 32)
             self.S0 = SRC.getfloat('S0', 1e3)
+            self.f0 = SRC.getfloat('f0', 20000)
 
             EUL = self.cfg['eulerian fluxes']
             self.stencil = EUL.getint('stencil', 11)
