@@ -30,7 +30,6 @@ setup file for nsfds2
 """
 
 from setuptools import setup, find_packages
-import nsfds2
 
 setup(
 
@@ -38,14 +37,15 @@ setup(
     description="Finite difference solver for Navier-Stokes equations",
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    version=nsfds2.__version__,
+    version="0.8.0",
     license="GPL",
     url='https://github.com/ipselium/nsfds2',
     author="Cyril Desjouy",
     author_email="ipselium@free.fr",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["cython", "numpy", "matplotlib", "ofdlib2", "progressbar33", "mpltools", "h5py"],
+    install_requires=["numpy", "matplotlib", "ofdlib2",
+                      "progressbar33", "mplutils", "h5py", "fdgrid"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",

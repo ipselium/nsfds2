@@ -41,7 +41,7 @@ import matplotlib.animation as _ani
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from ofdlib2 import fdtd as _fdtd
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
-from mpltools import modified_jet, MidpointNormalize
+from mplutils import modified_jet, MidpointNormalize
 from fdgrid.mesh import plot_subdomains as _plt_subdomains
 
 
