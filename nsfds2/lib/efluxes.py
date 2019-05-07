@@ -81,7 +81,7 @@ class EulerianFluxes:
             self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
                                self.fld.rv, self.fld.re)
 
-            if self.cfg.typ in ['harmonic', 'white']:
+            if self.cfg.stype in ['harmonic', 'white']:
                 self.fld.p += self.fld.update_source(self.cfg.it)
 
         if 'A' in self.msh.bc:
@@ -141,29 +141,29 @@ class EulerianFluxes:
         if self.msh.bc[0] == 'A':
             self.fld.p[0, :] = self.cfg.p0
             self.fld.r[0, :] = self.cfg.rho0
-            self.fld.ru[0, :] = 0
-            self.fld.rv[0, :] = 0
+            self.fld.ru[0, :] = self.cfg.U0
+            self.fld.rv[0, :] = self.cfg.V0
             self.fld.re[0, :] = self.cfg.p0/(self.cfg.gamma-1)
 
         if self.msh.bc[1] == 'A':
             self.fld.p[:, 0] = self.cfg.p0
             self.fld.r[:, 0] = self.cfg.rho0
-            self.fld.ru[:, 0] = 0
-            self.fld.rv[:, 0] = 0
+            self.fld.ru[:, 0] = self.cfg.U0
+            self.fld.rv[:, 0] = self.cfg.V0
             self.fld.re[:, 0] = self.cfg.p0/(self.cfg.gamma-1)
 
         if self.msh.bc[2] == 'A':
             self.fld.p[-1, :] = self.cfg.p0
             self.fld.r[-1, :] = self.cfg.rho0
-            self.fld.ru[-1, :] = 0
-            self.fld.rv[-1, :] = 0
+            self.fld.ru[-1, :] = self.cfg.U0
+            self.fld.rv[-1, :] = self.cfg.V0
             self.fld.re[-1, :] = self.cfg.p0/(self.cfg.gamma-1)
 
         if self.msh.bc[3] == 'A':
             self.fld.p[:, -1] = self.cfg.p0
             self.fld.r[:, -1] = self.cfg.rho0
-            self.fld.ru[:, -1] = 0
-            self.fld.rv[:, -1] = 0
+            self.fld.ru[:, -1] = self.cfg.U0
+            self.fld.rv[:, -1] = self.cfg.V0
             self.fld.re[:, -1] = self.cfg.p0/(self.cfg.gamma-1)
 
         if self.msh.bc[0] == 'A' and self.cfg.mesh == 'curvilinear':

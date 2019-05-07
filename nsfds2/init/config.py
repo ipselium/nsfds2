@@ -98,6 +98,12 @@ class CfgSetup:
         self.cfg.set('simulation', 'ns', '10')
         self.cfg.set('simulation', 'CFL', '0.5')
 
+        self.cfg.add_section('thermophysic')
+        self.cfg.set('thermophysic', 'rho0', '1.2')
+        self.cfg.set('thermophysic', 'c0', '340')
+        self.cfg.set('thermophysic', 'gamma', '1.4')
+        self.cfg.set('thermophysic', 'nu', '1.5e-5')
+
         self.cfg.add_section('geometry')
         self.cfg.set('geometry', 'mesh', 'regular')
         self.cfg.set('geometry', 'file', 'None')
@@ -125,6 +131,11 @@ class CfgSetup:
         self.cfg.set('source', 'S0', '1e6')
         self.cfg.set('source', 'B0', '5')
         self.cfg.set('source', 'f0', '20000')
+
+        self.cfg.add_section('flow')
+        self.cfg.set('flow', 'type', 'None')
+        self.cfg.set('flow', 'U0', '5')
+        self.cfg.set('flow', 'V0', '5')
 
         self.cfg.add_section('eulerian fluxes')
         self.cfg.set('eulerian fluxes', 'stencil', '11')
@@ -164,13 +175,6 @@ class CfgSetup:
         # Simulation parameters
         self.it = 0
 
-        # Thermophysic parameters
-        self.gamma = 1.4
-        self.nu = 1.5e-5
-        self.c0 = 340.
-        self.rho0 = 1.22
-        self.p0 = self.rho0*self.c0**2/self.gamma
-
         try:
             CFG = self.cfg['configuration']
 
@@ -188,6 +192,12 @@ class CfgSetup:
                 self.nt = SIM.getint('nt', 500)
             self.ns = SIM.getint('ns', 10)
             self.CFL = SIM.getfloat('CFL', 0.5)
+
+            THP = self.cfg['thermophysic']
+            self.rho0 = THP.getfloat('rho0', 1.22)
+            self.c0 = THP.getfloat('c0', 340)
+            self.gamma = THP.getfloat('gamma', 1.4)
+            self.nu = THP.getfloat('nu', 1.5e-5)
 
             GEO = self.cfg['geometry']
             self.mesh = GEO.get('mesh', 'regular')
@@ -217,12 +227,17 @@ class CfgSetup:
             self.Npml = PML.getint('Npml', 15)
 
             SRC = self.cfg['source']
-            self.typ = SRC.get('type', 'pulse')
+            self.stype = SRC.get('type', 'pulse')
             self.ixS = SRC.getint('ixS', 32)
             self.izS = SRC.getint('izS', 32)
             self.S0 = SRC.getfloat('S0', 1e3)
             self.B0 = SRC.getfloat('B0', 5)
             self.f0 = SRC.getfloat('f0', 20000)
+
+            FLW = self.cfg['flow']
+            self.ftype = FLW.get('type', 'None')
+            self.U0 = FLW.getfloat('U0', 5)
+            self.V0 = FLW.getfloat('V0', 5)
 
             EUL = self.cfg['eulerian fluxes']
             self.stencil = EUL.getint('stencil', 11)
@@ -271,3 +286,8 @@ class CfgSetup:
         except configparser.Error as err:
             print('Bad cfg file : ', err)
             sys.exit(1)
+
+        if self.ftype == 'isentropic':
+            self.p0 = self.rho0**self.gamma/self.gamma
+        else:
+            self.p0 = self.rho0*self.c0**2/self.gamma

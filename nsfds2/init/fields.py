@@ -58,8 +58,8 @@ class Fields:
         # Fields
         self.p = np.zeros(self._msh.shape) + self._cfg.p0
         self.r = np.zeros_like(self.p) + self._cfg.rho0
-        self.ru = np.zeros_like(self.p)
-        self.rv = np.zeros_like(self.p)
+        self.ru = np.zeros_like(self.p) + self._cfg.U0
+        self.rv = np.zeros_like(self.p) + self._cfg.V0
         self.dltn = np.zeros_like(self.p)
 
         # Source
@@ -67,6 +67,9 @@ class Fields:
         self.src = np.empty_like(self.p)
         self.update_source = None
         self.source_select()
+
+        # Flow
+        self.flow_select()
 
         # Curvilinear
         if self._cfg.mesh == 'curvilinear':
@@ -203,16 +206,26 @@ class Fields:
     def source_select(self):
         """ Source selection. """
 
-        if self._cfg.typ == "pulse":
+        if self._cfg.stype in ["", "None", "none"]:
+            pass
+        elif self._cfg.stype == "pulse":
             self.pulse()
-        elif self._cfg.typ == "harmonic":
+        elif self._cfg.stype == "harmonic":
             self.update_source = self.update_harmonic
             self.harmonic()
-        elif self._cfg.typ == "white":
+        elif self._cfg.stype == "white":
             self.update_source = self.update_white
             self.white()
         else:
             raise ValueError('Only pulse, harmonic and white supported for now')
+
+    def flow_select(self):
+        """ Flow selection. """
+
+        if self._cfg.ftype in ["", "None", "none"]:
+            pass
+        elif self._cfg.ftype == "isentropic":
+            self.isentropic_vortex()
 
     def pulse(self):
         """ Pulse source. """
@@ -253,6 +266,36 @@ class Fields:
         """ White noise time evolution. """
 
         return self.src*self.noise[it-1]
+
+    def isentropic_vortex(self):
+        """ Initialize fields with an isentropic vortex [Hu, JCP, 2008] """
+
+        Umax = 0.5*self._cfg.U0
+        b = 0.2
+
+        theta = np.zeros(self._cfg.nx)
+
+        # initialisation des fluctuations
+        for iz in range(self._cfg.nz):
+
+            r = np.sqrt(self._msh.x**2 + self._msh.z[iz]**2)
+
+            for ix in range(self._cfg.nx):
+                if self._msh.x[ix] == 0 and self._msh.z[iz] == 0:
+                    theta[ix] = 0
+                elif self._msh.x[ix] >= 0:
+                    theta[ix] = np.arcsin(self._msh.z[iz]/r[ix])
+                elif self._msh.x[ix] < 0:
+                    theta[ix] = - np.arcsin(self._msh.z[iz]/r[ix]) + np.pi
+
+            self.r[:, iz] = (1 - 0.5*(self._cfg.gamma - 1)*Umax**2 \
+                             * np.exp(1-r**2/b**2))**(1/(self._cfg.gamma - 1))
+            self.ru[:, iz] -= Umax*r*np.exp(0.5*(1-r**2/b**2))/b*np.sin(theta)
+            self.rv[:, iz] += Umax*r*np.exp(0.5*(1-r**2/b**2))/b*np.cos(theta)
+
+        self.p = self.r**self._cfg.gamma/self._cfg.gamma
+        self.ru *= self.r
+        self.rv *= self.r
 
     def get(self):
         """ Get initial fields as a tuple. """

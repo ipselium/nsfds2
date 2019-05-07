@@ -45,7 +45,7 @@ from mplutils import modified_jet, MidpointNormalize
 from fdgrid.mesh import plot_subdomains as _plt_subdomains
 
 
-__all__ = ['get_data', 'show', 'fields', 'probes', 'FrameGenerator', 'Movie']
+__all__ = ['get_data', 'show', 'fields', 'probes', 'DataGenerator', 'Movie']
 
 
 def get_data(filename):
@@ -160,8 +160,8 @@ def probes(cfg):
         ax.grid()
 
 
-class FrameGenerator:
-    """ Frame Genrator
+class DataGenerator:
+    """ Data Generator
 
     Parameters
     ----------
@@ -180,6 +180,7 @@ class FrameGenerator:
         else:
             self.data = data
         self.view = view
+        self.var = {'p':'p', 'rho':'rho', 'vx':'rhou', 'vz':'rhov', 'e':'rhoe'}
         self.ref = ref
         self.nt = nt
         self.ns = data['ns'][...]
@@ -195,16 +196,15 @@ class FrameGenerator:
         """ Generate the reference for min/max colormap values """
 
         if self.view == "p":
-            ref = self.compute_p(self.ref)
-        elif self.view in ['rho', 'vx', 'vz', 'e']:
-            ref = self.data[f"{self.view}_it{self.ref}"][...]
-        else:
-            print("Only 'p', 'rho', 'vx', 'vz' and 'e' available !")
-            sys.exit(1)
+            ref = self.compute_p(self.ref)*self.J
+            return ref[ref > 0].mean()*2, ref[ref < 0].mean()*2
 
-        ref = ref*self.J
+        if self.view in ['rho', 'vx', 'vz', 'e']:
+            ref = self.data[f"{self.var[self.view]}_it{self.ref}"][...]*self.J
+            return ref.min(), ref.max()
 
-        return ref[ref > 0].mean()*2, ref[ref < 0].mean()*2
+        print("Only 'p', 'rho', 'vx', 'vz' and 'e' available !")
+        sys.exit(1)
 
     def compute_p(self, it):
         """ Compute p from rho, rhou, rhov and rhoe at iteration it. """
@@ -228,7 +228,7 @@ class FrameGenerator:
             return self.data[f"{self.view}_it{self.icur}"][...].T
 
         if self.view in ['vx', 'vz', 'e']:
-            vx = self.data[f"{self.view}_it{self.icur}"][...].T
+            vx = self.data[f"{self.var[self.view]}_it{self.icur}"][...].T
             rho = self.data[f"rho_it{self.icur}"][...].T
             return vx/rho
 
@@ -306,13 +306,13 @@ class Movie:
             self.z = self.data['z'][...]
 
     def _init_generator(self):
-        """ Init FrameGenerator. """
+        """ Init DataGenerator. """
 
         try:
-            self.frames = FrameGenerator(self.data, self.view, ref=self.ref, nt=self.nt)
+            self.frames = DataGenerator(self.data, self.view, ref=self.ref, nt=self.nt)
             self.maxp, self.minp = self.frames.reference()
         except KeyError:
-            self.frames = FrameGenerator(self.data, self.view, nt=self.nt)
+            self.frames = DataGenerator(self.data, self.view, nt=self.nt)
             self.maxp, self.minp = self.frames.reference()
 
     def _init_cmap(self):

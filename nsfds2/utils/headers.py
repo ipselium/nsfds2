@@ -99,7 +99,7 @@ def parameters(cfg):
     s = "geometry : '{}' ({}x{})".format(cfg.geoname, cfg.nx, cfg.nz)
     s += "\n\t* {} points PML : ".format(cfg.Npml)
     s += "sigma=({}, {}) and beta={}".format(cfg.sigmax, cfg.sigmaz, cfg.beta)
-    s += "\n\t* source : {} at ({}, {}).".format(cfg.typ, cfg.ixS, cfg.izS)
+    s += "\n\t* source : {} at ({}, {}).".format(cfg.stype, cfg.ixS, cfg.izS)
     s += "\n\t* bc = {} (PML: {} points)".format(cfg.bc, cfg.Npml)
     s += "\n\t* dx = {} m\tdz = {} m.".format(cfg.dx, cfg.dz)
     s += "\n\t* dt = {} s\tnt = {}.".format(cfg.dt, cfg.nt)
