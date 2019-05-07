@@ -63,7 +63,9 @@ class Fields:
         self.dltn = np.zeros_like(self.p)
 
         # Source
-        self.S = np.empty_like(self.p)
+        self.Bx = self._cfg.B0*self._cfg.dx
+        self.src = np.empty_like(self.p)
+        self.update_source = None
         self.source_select()
 
         # Curvilinear
@@ -204,9 +206,13 @@ class Fields:
         if self._cfg.typ == "pulse":
             self.pulse()
         elif self._cfg.typ == "harmonic":
+            self.update_source = self.update_harmonic
             self.harmonic()
+        elif self._cfg.typ == "white":
+            self.update_source = self.update_white
+            self.white()
         else:
-            raise ValueError('Only pulse supported for now')
+            raise ValueError('Only pulse, harmonic and white supported for now')
 
     def pulse(self):
         """ Pulse source. """
@@ -214,29 +220,39 @@ class Fields:
         # Location
         ixS = self._cfg.ixS
         izS = self._cfg.izS
-        Bx = 5*self._msh.dx                            # spatial bandwidth
 
         for iz, z in enumerate(self._msh.z):
             self.p[:, iz] += self._cfg.S0*np.exp(-np.log(2)*((self._msh.x-self._msh.x[ixS])**2 +
-                                                             (z - self._msh.z[izS])**2)/Bx**2)
+                                                             (z - self._msh.z[izS])**2)/self.Bx**2)
 
     def harmonic(self):
-        """ Harmonic mass source Q(x, z, t). """
-
-        # Location
-        ixS = self._cfg.ixS
-        izS = self._cfg.izS
-        Bx = 2*self._msh.dx                            # spatial bandwidth
+        """ Harmonic source. """
 
         for iz, z in enumerate(self._msh.z):
-            self.S[:, iz] = self._cfg.S0*np.exp(-np.log(2)*((self._msh.x-self._msh.x[ixS])**2 +
-                                                            (z - self._msh.z[izS])**2)/Bx**2)
+            self.src[:, iz] = np.exp(-np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
+                                                 (z - self._msh.z[self._cfg.izS])**2)/self.Bx**2)
+        self.src = self._cfg.S0*self.src
 
-    def update_harmonic(self, t):
+    def white(self):
+        """ white noise. """
+
+        for iz, z in enumerate(self._msh.z):
+            tmp = (1 - np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
+                                  (z - self._msh.z[self._cfg.izS])**2)/self.Bx**2)
+            self.src[:, iz] = tmp*np.exp(-np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
+                                                     (z - self._msh.z[self._cfg.izS])**2)/self.Bx**2)
+        self.src = self._cfg.S0*self.src
+        self.noise = np.random.normal(size=self._cfg.nt)
+
+    def update_harmonic(self, it):
         """ Harmonic source time evolution. """
 
-        return self.S*np.sin(2*np.pi*self._cfg.f0*t)
+        return self.src*np.sin(2*np.pi*self._cfg.f0*it*self._cfg.dt)
 
+    def update_white(self, it):
+        """ White noise time evolution. """
+
+        return self.src*self.noise[it-1]
 
     def get(self):
         """ Get initial fields as a tuple. """

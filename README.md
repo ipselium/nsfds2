@@ -69,76 +69,80 @@ plt.show()
 ```
 
 
-## Sample Config file
+## Config file
 
-```
+```python
 [configuration]
-timings = True
-quiet = False
+timings = True|False 			# Display timings
+quiet = True|False 			# Quiet mode
 
 [simulation]
-nt = 500
-ns = 10
-cfl = 0.5
+nt = 500 				# Number of time iterations
+ns = 10 				# Save each ns iterations
+cfl = 0.5 				# Courant–Friedrichs–Lewy number
 
 [geometry]
-mesh = regular
-file = None
-geoname = helmholtz_double
-curvname = curvz
-bc = ARRA
-nx = 256
-nz = 256
-ix0 = 128
-iz0 = 0
-dx = 1e-4
-dz = 1e-4
+mesh = regular|curvilinear		# Mesh type
+file = None|path 			# Path to python file (geometry)
+geoname = helmholtz_double 		# Python function for geometry
+curvname = curvz			# Python function for curvilinear coordinates
+bc = ARRA 				# Boundary conditions. Must be a mix of ARP
+nx = 256				# Number of grid points along x-axis
+nz = 256				# Number of grid points along z-axis
+ix0 = 128 				# Origin of the grid
+iz0 = 0					# Origin of the grid
+dx = 1e-4				# Spatial x-step
+dz = 1e-4 				# Spatial z-step
 
 [PML]
-beta = 0.0
-alpha = 4.0
-sigmax = 20
-sigmaz = 20
-npml = 15
+beta = 0.0 				# Depends on pseudo mean flow profile
+alpha = 4.0 				# Order of the spatial repartition law
+sigmax = 20 				# Filter strength along x
+sigmaz = 20 				# Filter strength along z
+npml = 15				# Number of points of the PML
 
 [source]
-type = pulse
-ixs = 64
-izs = 128
-s0 = 1e6
-f0 = 60000
+type = pulse|harmonic|white 		# Source type
+ixs = 64				# Source x-location
+izs = 128 				# Source z-location
+s0 = 1e6 				# Sources strength
+B0 = 2 					# Half spatial bandwidth
+f0 = 60000 				# Frequency (only for harmonic)
 
 [eulerian fluxes]
-stencil = 11
+stencil = 3|7|11 			# Number of points of stencil
 
 [filtering]
-filter = True
-stencil = 11
-stength = 0.75
+filter = True|False 			# Activate selective filter
+stencil = 11 				# Number of points of stencil used by filter
+stength = 0.75 				# Strength of the filter
 
 [viscous fluxes]
-viscosity = True
-stencil = 7
+viscosity = True|False 			# Activate viscosity
+stencil = 7 				# Number of points of stencil
 
 [shock capture]
-shock capture = True
-stencil = 7
-method = pressure
+shock capture = True|False 		# Activate shock capture procedure
+stencil = 7 				# Number of points of stencil
+method = pressure|dilatation 		# Capture based on pressure or dilatation
 
 [figures]
-figures = True
+figures = True|False 			# Activate figures
 
 [save]
-save = True
-path = results
-filename = tmp
-compression = lzf
-only p = False
-probes = False
-probes_locations = [[128, 128], [128, 192]]
+save = True|False 			# Activate save
+path = results 				# Path to data file
+filename = tmp 				# Data filename
+compression = None|lzf 			# Activate compression
+only p = True|False			# Save only pressure
+probes = True|False                     # Activate probes
+probes_locations = [[128, 128], [128, 192]] # Probe locations. Must be list of lists
 ```
 
 ## Changelog
+
+### 0.8.4
+* new: white noise pressure source
 
 ### 0.8.3
 * new: harmonic pressure source

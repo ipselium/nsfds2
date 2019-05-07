@@ -123,6 +123,7 @@ class CfgSetup:
         self.cfg.set('source', 'ixS', '32')
         self.cfg.set('source', 'izS', '128')
         self.cfg.set('source', 'S0', '1e6')
+        self.cfg.set('source', 'B0', '5')
         self.cfg.set('source', 'f0', '20000')
 
         self.cfg.add_section('eulerian fluxes')
@@ -220,6 +221,7 @@ class CfgSetup:
             self.ixS = SRC.getint('ixS', 32)
             self.izS = SRC.getint('izS', 32)
             self.S0 = SRC.getfloat('S0', 1e3)
+            self.B0 = SRC.getfloat('B0', 5)
             self.f0 = SRC.getfloat('f0', 20000)
 
             EUL = self.cfg['eulerian fluxes']
