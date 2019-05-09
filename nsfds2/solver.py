@@ -119,9 +119,9 @@ def show(cfg, msh):
 def movie(cfg, _):
     """ Create a movie from a dataset. """
 
-    movie = graphics.Movie(cfg.datafile, view=cfg.args.view,
-                           ref=cfg.args.ref, nt=cfg.nt, quiet=cfg.quiet)
-    movie.make()
+    mv = graphics.Movie(cfg.datafile, view=cfg.args.view,
+                        ref=cfg.args.ref, nt=cfg.nt, quiet=cfg.quiet)
+    mv.make()
 
 
 def main():

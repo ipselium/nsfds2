@@ -71,37 +71,32 @@ def fields(cfg):
     if not cfg.figures or not cfg.save:
         return None
 
-    with h5py.File(cfg.datafile, 'r') as sfile:
+    data = get_data(cfg.datafile)
+    var = DataGenerator(data)
+    nt = data['nt'][...]
+    x = data['x'][...]
+    z = data['z'][...]
+    obstacles = data['obstacles'][...]
 
-        nt = sfile['nt'][...]
-        x = sfile['x'][...]
-        z = sfile['z'][...]
-        obstacles = sfile['obstacles'][...]
-        if cfg.mesh == 'curvilinear':
-            J = sfile['J'][...]
-        else:
-            J = _np.ones((x.size, z.size))
-
-        if cfg.onlyp:
-            p = sfile[f'p_it{nt}'][...]
-        else:
-            rho = sfile[f'rho_it{nt}'][...]*J
-            rhou = sfile[f'rhou_it{nt}'][...]*J
-            rhov = sfile[f'rhov_it{nt}'][...]*J
-            rhoe = sfile[f'rhoe_it{nt}'][...]*J
-            u = rhou/rho
-            v = rhov/rho
-            e = rhoe/rho
-            p = _np.empty_like(rho)
-            _fdtd.p(p, rho, rhou, rhov, rhoe, cfg.gamma)
-
+    p = var.get(view='p', iteration=nt)
+    pmin, pmax = var.reference(view='p')
+    if not cfg.onlyp:
+        u = var.get(view='vx', iteration=nt)
+        umin, umax = var.reference(view='vx')
+        v = var.get(view='vz', iteration=nt)
+        vmin, vmax = var.reference(view='vz')
+        e = var.get(view='e', iteration=nt)
+        emin, emax = var.reference(view='e')
 
     cm = modified_jet()
-    norm = MidpointNormalize(midpoint=0)
+    unorm = MidpointNormalize(vmin=umin, vmax=umax, midpoint=0)
+    vnorm = MidpointNormalize(vmin=vmin, vmax=vmax, midpoint=0)
+    pnorm = MidpointNormalize(vmin=pmin, vmax=pmax, midpoint=0)
+    enorm = MidpointNormalize(vmin=emin, vmax=emax, midpoint=0)
 
     if cfg.onlyp:
         _, ax = _plt.subplots(figsize=(12, 9))
-        im = ax.pcolorfast(x, z, (p-cfg.p0).T, cmap=cm, norm=norm)
+        im = ax.pcolorfast(x, z, p, cmap=cm, norm=pnorm)
         _plt_subdomains(ax, x, z, obstacles)
         ax.set_xlabel(r'$x$ [m]')
         ax.set_ylabel(r'$z$ [m]')
@@ -115,10 +110,10 @@ def fields(cfg):
     else:
         _, axes = _plt.subplots(2, 2, figsize=(12, 9))
 
-        im1 = axes[0, 0].pcolorfast(x, z, (p-cfg.p0).T, cmap=cm, norm=norm)
-        im2 = axes[0, 1].pcolorfast(x, z, u.T, cmap=cm)
-        im3 = axes[1, 0].pcolorfast(x, z, v.T, cmap=cm)
-        im4 = axes[1, 1].pcolorfast(x, z, e.T, cmap=cm)
+        im1 = axes[0, 0].pcolorfast(x, z, p, cmap=cm, norm=pnorm)
+        im2 = axes[0, 1].pcolorfast(x, z, u, cmap=cm, norm=unorm)
+        im3 = axes[1, 0].pcolorfast(x, z, v, cmap=cm, norm=vnorm)
+        im4 = axes[1, 1].pcolorfast(x, z, e, cmap=cm, norm=enorm)
         ims = [im1, im2, im3, im4]
 
         for ax, im in zip(axes.ravel(), ims):
@@ -173,7 +168,7 @@ class DataGenerator:
 
     """
 
-    def __init__(self, data, view='p', ref=20, nt=None):
+    def __init__(self, data, view='p', ref=None, nt=None):
 
         if isinstance(data, str):
             self.data = get_data(data)
@@ -192,19 +187,84 @@ class DataGenerator:
         else:
             self.J = _np.ones((self.nx, self.nz))
 
-    def reference(self):
+    def reference(self, view=None, ref=None):
         """ Generate the reference for min/max colormap values """
 
-        if self.view == "p":
-            ref = self.compute_p(self.ref)*self.J
-            return ref[ref > 0].mean()*2, ref[ref < 0].mean()*2
+        if not view:
+            view = self.view
 
-        if self.view in ['rho', 'vx', 'vz', 'e']:
-            ref = self.data[f"{self.var[self.view]}_it{self.ref}"][...]*self.J
-            return ref.min(), ref.max()
+        if ref is None:
+            ref = self.autoref(view=view)
+
+        if view == "p" and isinstance(ref, int):
+            var = self.compute_p(ref)*self.J
+            return var.min(), var.max()
+
+        if view == "p" and isinstance(ref, tuple):
+            varmin = self.compute_p(ref[0])*self.J
+            varmax = self.compute_p(ref[1])*self.J
+            return varmin.min(), varmax.max()
+
+        if view in ['rho', 'vx', 'vz', 'e'] and isinstance(ref, int):
+            var = self.data[f"{self.var[view]}_it{ref}"][...]*self.J
+            if view != 'rho':
+                rho = self.data[f"rho_it{ref}"][...]*self.J
+                return (var/rho).min(), (var/rho).max()
+            if view == 'rho':
+                return var.min(), var.max()
+
+        if view in ['rho', 'vx', 'vz', 'e'] and isinstance(ref, tuple):
+            varmin = self.data[f"{self.var[view]}_it{ref[0]}"][...]*self.J
+            varmax = self.data[f"{self.var[view]}_it{ref[1]}"][...]*self.J
+            if view != 'rho':
+                rhomin = self.data[f"rho_it{ref[0]}"][...]*self.J
+                rhomax = self.data[f"rho_it{ref[1]}"][...]*self.J
+                return (varmin/rhomin).min(), (varmax/rhomax).max()
+            if view == 'rho':
+                return varmin.min(), varmax.max()
 
         print("Only 'p', 'rho', 'vx', 'vz' and 'e' available !")
         sys.exit(1)
+
+    def autoref(self, view='p'):
+        """ Autoset reference. """
+
+        var = DataGenerator(self.data, view=view)
+
+        maxs = []
+        mins = []
+        for _, v in var:
+            maxs.append(v.max())
+            mins.append(v.min())
+
+        maxs = _np.array(maxs)
+        mins = _np.array(mins)
+
+        refmax = abs(maxs - maxs.mean()).argmin()*self.ns
+        refmin = abs(mins - mins.mean()).argmin()*self.ns
+
+        return refmin, refmax
+
+    def close(self):
+        """ Close hdf5 file """
+
+        self.data.close()
+
+    def get(self, view='p', iteration=20):
+        """ Get data at iteration. """
+
+        if view == 'p':
+            return self.compute_p(iteration).T
+
+        if view == 'rho':
+            return (self.data[f"{view}_it{iteration}"][...]*self.J).T
+
+        if view in ['vx', 'vz', 'e']:
+            vx = (self.data[f"{self.var[view]}_it{iteration}"][...]*self.J).T
+            rho = (self.data[f"rho_it{iteration}"][...]*self.J).T
+            return vx/rho
+
+        return None
 
     def compute_p(self, it):
         """ Compute p from rho, rhou, rhov and rhoe at iteration it. """
@@ -274,6 +334,7 @@ class Movie:
         self.data = get_data(filename)
         self.view = view
         self.ref = ref
+        self.ns = self.data['ns'][...]
         self.nt = nt
         self.quiet = quiet
         self.curvilinear = True if self.data['mesh'][...] == 'curvilinear' else False
@@ -292,9 +353,6 @@ class Movie:
         if not self.nt:
             self.nt = self.data['nt'][...]
 
-        if not self.ref:
-            self.ref = int(self.nt/2)
-
     def _init_coordinates(self):
         """ Init coordinate system. """
 
@@ -310,19 +368,16 @@ class Movie:
 
         try:
             self.frames = DataGenerator(self.data, self.view, ref=self.ref, nt=self.nt)
-            self.maxp, self.minp = self.frames.reference()
+            self.pmin, self.pmax = self.frames.reference(ref=self.ref)
         except KeyError:
             self.frames = DataGenerator(self.data, self.view, nt=self.nt)
-            self.maxp, self.minp = self.frames.reference()
+            self.pmin, self.pmax = self.frames.reference()
 
     def _init_cmap(self):
         """ Init cmap. """
 
         self.mycm = modified_jet()
-        if self.minp < 0:
-            self.norm = MidpointNormalize(vmax=self.maxp, vmin=self.minp, midpoint=0)
-        else:
-            self.norm = None
+        self.norm = MidpointNormalize(vmax=self.pmax, vmin=self.pmin, midpoint=0)
 
     def _init_pbar(self):
         """ Init progress bar. """
