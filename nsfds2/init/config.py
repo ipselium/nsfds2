@@ -194,13 +194,13 @@ class CfgSetup:
             self.CFL = SIM.getfloat('CFL', 0.5)
 
             THP = self.cfg['thermophysic']
-            self.rho0 = THP.getfloat('rho0', 1.22)
             self.c0 = THP.getfloat('c0', 340)
+            self.rho0 = THP.getfloat('rho0', 1.22)
             self.gamma = THP.getfloat('gamma', 1.4)
             self.nu = THP.getfloat('nu', 1.5e-5)
 
             GEO = self.cfg['geometry']
-            self.mesh = GEO.get('mesh', 'regular')
+            self.mesh = GEO.get('mesh', 'regular').lower()
             self.curvflag = True if self.mesh == 'curvilinear' else False
             self.geofile = getattr(self.args, 'geofile', None)
             self.geoflag = True
@@ -210,14 +210,13 @@ class CfgSetup:
                 self.geofile = GEO.get('file', 'None')
                 self.geoname = GEO.get('geoname', 'square')
             self.curvname = GEO.get('curvname', 'None')
-            self.bc = GEO.get('bc', 'RRRR')
+            self.bc = GEO.get('bc', 'RRRR').upper()
             self.nx = GEO.getint('nx', 256)
             self.nz = GEO.getint('nz', 256)
             self.ix0 = GEO.getint('ix0', 0)
             self.iz0 = GEO.getint('iz0', 0)
             self.dx = GEO.getfloat('dx', 1)
             self.dz = GEO.getfloat('dz', 1)
-            self.dt = min(self.dx, self.dz)*self.CFL/self.c0
 
             PML = self.cfg['PML']
             self.beta = PML.getfloat('beta', 0.)
@@ -227,17 +226,21 @@ class CfgSetup:
             self.Npml = PML.getint('Npml', 15)
 
             SRC = self.cfg['source']
-            self.stype = SRC.get('type', 'pulse')
+            self.stype = SRC.get('type', 'pulse').lower()
             self.ixS = SRC.getint('ixS', 32)
             self.izS = SRC.getint('izS', 32)
             self.S0 = SRC.getfloat('S0', 1e3)
             self.B0 = SRC.getfloat('B0', 5)
             self.f0 = SRC.getfloat('f0', 20000)
+            if self.stype in ['none', '']:
+                self.S0 = 0
 
             FLW = self.cfg['flow']
-            self.ftype = FLW.get('type', 'None')
+            self.ftype = FLW.get('type', 'None').lower()
             self.U0 = FLW.getfloat('U0', 5)
             self.V0 = FLW.getfloat('V0', 5)
+            if self.ftype in ['none', '']:
+                self.U0, self.V0 = 0., 0.
 
             EUL = self.cfg['eulerian fluxes']
             self.stencil = EUL.getint('stencil', 11)
@@ -254,7 +257,7 @@ class CfgSetup:
             CPT = self.cfg['shock capture']
             self.cpt = CPT.getboolean('shock capture', True)
             self.cpt_stencil = CPT.getint('stencil', 7)
-            self.cpt_meth = CPT.get('method', 'pressure')
+            self.cpt_meth = CPT.get('method', 'pressure').lower()
             self.rth = 1e-6
 
             SAVE = self.cfg['save']
@@ -291,3 +294,9 @@ class CfgSetup:
             self.p0 = self.rho0**self.gamma/self.gamma
         else:
             self.p0 = self.rho0*self.c0**2/self.gamma
+
+        if self.stype in ['none', '']:
+            self.dt = min(self.dx, self.dz)*self.CFL/(max(abs(self.U0), abs(self.V0)))
+        else:
+            self.dt = min(self.dx, self.dz)*self.CFL/(self.c0 +
+                                                      max(abs(self.U0), abs(self.V0)))

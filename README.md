@@ -102,12 +102,17 @@ sigmaz = 20 				# Filter strength along z
 npml = 15				# Number of points of the PML
 
 [source]
-type = pulse|harmonic|white 		# Source type
+type = None|pulse|harmonic|white 	# Source type
 ixs = 64				# Source x-location
 izs = 128 				# Source z-location
 s0 = 1e6 				# Sources strength
 B0 = 2 					# Half spatial bandwidth
 f0 = 60000 				# Frequency (only for harmonic)
+
+[flow]
+type = None 				# Flow type
+U0 = 5 					# Flow velocity following x
+V0 = 5 					# Flow velocity following z
 
 [eulerian fluxes]
 stencil = 3|7|11 			# Number of points of stencil

@@ -75,6 +75,10 @@ class FDTD:
         if not self.cfg.quiet:
             headers.start(cfg)
 
+        # Max pressure
+        self.pmax = - 0.5*self.cfg.rho0*(self.cfg.U0**2 + self.cfg.V0**2) \
+                    *(self.cfg.gamma - 2)/(self.cfg.gamma - 1) + self.cfg.S0
+
         # Init timings and residuals
         self.res = 0
         self.tt = 0
@@ -209,7 +213,7 @@ class FDTD:
         else:
             self.res = self.fld.fdtools.residual(self.fld.p)
 
-        if (abs(self.res) > 100*self.cfg.S0) or np.any(np.isnan(self.fld.p)):
+        if (abs(self.res) > 100*self.pmax) or np.any(np.isnan(self.fld.p)):
             print('Stop simulation at iteration ', self.cfg.it)
             if np.any(np.isnan(self.fld.p)):
                 print('Nan : {}'.format(np.argwhere(np.isnan(self.fld.p))))

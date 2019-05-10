@@ -51,6 +51,7 @@ class Fields:
             self.init_save()
         if 'A' in self._msh.bc:
             self.init_pml()
+        self.zero_obstacles()
 
     def init_fields(self):
         """ Setup initial fields. """
@@ -296,6 +297,13 @@ class Fields:
         self.p = self.r**self._cfg.gamma/self._cfg.gamma
         self.ru *= self.r
         self.rv *= self.r
+
+    def zero_obstacles(self):
+        """ Set velocity to 0 in obstacles. """
+
+        for sub in self._msh.obstacles:
+            self.ru[sub.sx, sub.sz] = 0
+            self.rv[sub.sx, sub.sz] = 0
 
     def get(self):
         """ Get initial fields as a tuple. """
