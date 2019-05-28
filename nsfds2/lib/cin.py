@@ -58,10 +58,10 @@ class Cin:
                                 self.fld.p)
 
         elif self.cfg.mesh == 'curvilinear':
-            self.fld.EuJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
-                         self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
-                         self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
-                         self.fld.p, self.msh.dxn_dxp, self.msh.dxn_dzp)
+            self.fld.fdtools.EuJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
+                                 self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
+                                 self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
+                                 self.fld.p, self.msh.dxn_dxp, self.msh.dxn_dzp)
 
         for sub in self.msh.dxdomains:
             sub.cin_method(self.fld.E, self.fld.K, *sub.ix, *sub.iz)
