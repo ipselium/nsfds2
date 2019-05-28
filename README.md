@@ -27,6 +27,12 @@ or
 `pip install nsfds2`
 
 
+**Note:** MAC users may recquire :
+
+```
+xcode-select --install
+```
+
 ## Classical use
 
 **nsfds2** can be used from a terminal with :
