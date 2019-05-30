@@ -134,7 +134,7 @@ def fields(cfg):
 
     if cfg.onlyp:
         _, ax = _plt.subplots(figsize=(12, 9))
-        im = ax.pcolorfast(x, z, p, cmap=cm, norm=pnorm)
+        im = ax.pcolormesh(x, z, p, cmap=cm, norm=pnorm)
         _graphics.plot_subdomains(ax, x, z, obstacles)
         ax.set_xlabel(r'$x$ [m]')
         ax.set_ylabel(r'$z$ [m]')
@@ -149,10 +149,10 @@ def fields(cfg):
     else:
         _, axes = _plt.subplots(2, 2, figsize=(12, 9))
 
-        im1 = axes[0, 0].pcolorfast(x, z, p, cmap=cm, norm=pnorm)
-        im2 = axes[0, 1].pcolorfast(x, z, e, cmap=cm, norm=enorm)
-        im3 = axes[1, 0].pcolorfast(x, z, u, cmap=cm, norm=unorm)
-        im4 = axes[1, 1].pcolorfast(x, z, v, cmap=cm, norm=vnorm)
+        im1 = axes[0, 0].pcolormesh(x, z, p, cmap=cm, norm=pnorm)
+        im2 = axes[0, 1].pcolormesh(x, z, e, cmap=cm, norm=enorm)
+        im3 = axes[1, 0].pcolormesh(x, z, u, cmap=cm, norm=unorm)
+        im4 = axes[1, 1].pcolormesh(x, z, v, cmap=cm, norm=vnorm)
         ims = [im1, im2, im3, im4]
 
         axes[0, 0].set_title(r'$p_a$ [Pa]')
