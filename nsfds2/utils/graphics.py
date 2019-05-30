@@ -23,7 +23,8 @@
 # pylint: disable=too-many-locals
 # pylint: disable=too-many-statements
 # pylint: disable=too-many-instance-attributes
-
+# pylint: disable=no-member
+# pylint: disable=invalid-unary-operand-type
 """
 -----------
 DOCSTRING
@@ -42,7 +43,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from ofdlib2 import fdtd as _fdtd
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
 from mplutils import modified_jet, MidpointNormalize
-from fdgrid.mesh import plot_subdomains as _plt_subdomains
+import fdgrid.graphics as _graphics
 
 
 __all__ = ['get_data', 'show', 'fields', 'probes', 'DataGenerator', 'Movie']
@@ -65,6 +66,39 @@ def show():
     _plt.show()
 
 
+def initial_fields(cfg, msh, fld):
+    """ Show initial fields. """
+
+    _, axes = _plt.subplots(2, 2, figsize=(12, 9))
+
+    cm = modified_jet()
+
+    im1 = axes[0, 0].pcolormesh(msh.x, msh.z, fld.p.T, cmap=cm)
+    im2 = axes[0, 1].pcolormesh(msh.x, msh.z, fld.re.T, cmap=cm)
+    im3 = axes[1, 0].pcolormesh(msh.x, msh.z, fld.ru.T, cmap=cm)
+    im4 = axes[1, 1].pcolormesh(msh.x, msh.z, fld.rv.T, cmap=cm)
+    ims = [im1, im2, im3, im4]
+
+    axes[0, 0].set_title(r'$p_a$ [Pa]')
+    axes[0, 1].set_title(r'$\rho e$ [kg.m$^2$.s$^{-2}$]')
+    axes[1, 0].set_title(r'$\rho v_x$ [m/s]')
+    axes[1, 1].set_title(r'$\rho v_z$ [m/s]')
+
+    for ax, im in zip(axes.ravel(), ims):
+        _graphics.plot_subdomains(ax, msh.x, msh.z, msh.obstacles)
+        if cfg.show_pml:
+            _graphics.plot_pml(ax, msh.x, msh.z, msh.bc, msh.Npml)
+
+        ax.set_xlabel(r'$x$ [m]')
+        ax.set_ylabel(r'$z$ [m]')
+        ax.set_aspect('equal')
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        _plt.colorbar(im, cax=cax)
+
+    _plt.tight_layout()
+
+
 def fields(cfg):
     """ Make figure """
 
@@ -73,10 +107,14 @@ def fields(cfg):
 
     data = get_data(cfg.datafile)
     var = DataGenerator(data)
-    nt = data['nt'][...]
+
+    obstacles = data.attrs['obstacles']
+    nt = data.attrs['nt']
+
+    Npml = data.attrs['Npml']
+    bc = data.attrs['bc']
     x = data['x'][...]
     z = data['z'][...]
-    obstacles = data['obstacles'][...]
 
     p = var.get(view='p', iteration=nt)
     pmin, pmax = var.reference(view='p')
@@ -97,9 +135,10 @@ def fields(cfg):
     if cfg.onlyp:
         _, ax = _plt.subplots(figsize=(12, 9))
         im = ax.pcolorfast(x, z, p, cmap=cm, norm=pnorm)
-        _plt_subdomains(ax, x, z, obstacles)
+        _graphics.plot_subdomains(ax, x, z, obstacles)
         ax.set_xlabel(r'$x$ [m]')
         ax.set_ylabel(r'$z$ [m]')
+        ax.set_title('Pressure')
         ax.set_aspect('equal')
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="5%", pad=0.05)
@@ -111,13 +150,21 @@ def fields(cfg):
         _, axes = _plt.subplots(2, 2, figsize=(12, 9))
 
         im1 = axes[0, 0].pcolorfast(x, z, p, cmap=cm, norm=pnorm)
-        im2 = axes[0, 1].pcolorfast(x, z, u, cmap=cm, norm=unorm)
-        im3 = axes[1, 0].pcolorfast(x, z, v, cmap=cm, norm=vnorm)
-        im4 = axes[1, 1].pcolorfast(x, z, e, cmap=cm, norm=enorm)
+        im2 = axes[0, 1].pcolorfast(x, z, e, cmap=cm, norm=enorm)
+        im3 = axes[1, 0].pcolorfast(x, z, u, cmap=cm, norm=unorm)
+        im4 = axes[1, 1].pcolorfast(x, z, v, cmap=cm, norm=vnorm)
         ims = [im1, im2, im3, im4]
 
+        axes[0, 0].set_title(r'$p_a$ [Pa]')
+        axes[0, 1].set_title(r'$e$ [kg.m$^2$.s$^{-2}$]')
+        axes[1, 0].set_title(r'$v_x$ [m/s]')
+        axes[1, 1].set_title(r'$v_z$ [m/s]')
+
         for ax, im in zip(axes.ravel(), ims):
-            _plt_subdomains(ax, x, z, obstacles)
+            _graphics.plot_subdomains(ax, x, z, obstacles)
+            if cfg.show_pml:
+                _graphics.plot_pml(ax, x, z, bc, Npml)
+
             ax.set_xlabel(r'$x$ [m]')
             ax.set_ylabel(r'$z$ [m]')
             ax.set_aspect('equal')
@@ -126,6 +173,8 @@ def fields(cfg):
             _plt.colorbar(im, cax=cax)
             if cfg.probes and cfg.probes_loc:
                 ax.plot(*[[x[i], z[j]] for i, j in cfg.probes_loc], 'ro')
+
+        _plt.tight_layout()
 
     return None
 
@@ -137,9 +186,9 @@ def probes(cfg):
 
         with h5py.File(cfg.datafile, 'r') as sfile:
 
-            nt = sfile['nt'][...]
-            dt = sfile['dt'][...]
-            p0 = sfile['p0'][...]
+            nt = sfile.attrs['nt']
+            dt = sfile.attrs['dt']
+            p0 = sfile.attrs['p0']
             pressure = sfile['probes'][...] - p0
             probes_loc = sfile['probes_location'][...]
 
@@ -178,11 +227,11 @@ class DataGenerator:
         self.var = {'p':'p', 'rho':'rho', 'vx':'rhou', 'vz':'rhov', 'e':'rhoe'}
         self.ref = ref
         self.nt = nt
-        self.ns = data['ns'][...]
-        self.icur = 0
-        self.nx = self.data['nx'][...]
-        self.nz = self.data['nz'][...]
-        if self.data['mesh'][...] == 'curvilinear':
+        self.ns = self.data.attrs['ns']
+        self.icur = -self.ns
+        self.nx = self.data.attrs['nx']
+        self.nz = self.data.attrs['nz']
+        if self.data.attrs['mesh'] == 'curvilinear':
             self.J = self.data['J'][...]
         else:
             self.J = _np.ones((self.nx, self.nz))
@@ -274,9 +323,9 @@ class DataGenerator:
         rhov = self.data[f"rhov_it{it}"][...]*self.J
         rhoe = self.data[f"rhoe_it{it}"][...]*self.J
         p = _np.empty_like(rho)
-        _fdtd.p(p, rho, rhou, rhov, rhoe, self.data['gamma'][...])
+        _fdtd.p(p, rho, rhou, rhov, rhoe, self.data.attrs['gamma'])
 
-        return p - self.data['p0'][...]
+        return p - self.data.attrs['p0']
 
     def _next_item(self):
         """ Generate next value of variable """
@@ -334,11 +383,14 @@ class Movie:
         self.data = get_data(filename)
         self.view = view
         self.ref = ref
-        self.ns = self.data['ns'][...]
+        self.ns = self.data.attrs['ns']
         self.nt = nt
         self.quiet = quiet
-        self.curvilinear = True if self.data['mesh'][...] == 'curvilinear' else False
-        self.obstacles = self.data['obstacles'][...]
+        self.obstacles = self.data.attrs['obstacles']
+
+        self.Npml = self.data.attrs['Npml']
+        self.mesh = self.data.attrs['mesh']
+        self.bc = self.data.attrs['bc']
 
         self.check()
         self._init_coordinates()
@@ -351,12 +403,12 @@ class Movie:
         """ Check parameters. """
 
         if not self.nt:
-            self.nt = self.data['nt'][...]
+            self.nt = self.data.attrs['nt']
 
     def _init_coordinates(self):
         """ Init coordinate system. """
 
-        if self.curvilinear:
+        if self.mesh == 'curvilinear':
             self.x = self.data['xp'][...]
             self.z = self.data['zp'][...]
         else:
@@ -394,7 +446,7 @@ class Movie:
         self.writer = _ani.FFMpegWriter(fps=24, metadata=metadata, bitrate=-1, codec="libx264")
         self.movie_filename = '{}.mkv'.format(title)
 
-    def make(self):
+    def make(self, show_pml=False):
         """ Make movie. """
 
         # 1st frame
@@ -408,27 +460,27 @@ class Movie:
         axm.set_ylabel(r'$y$ [m]', fontsize=22)
         axm.set_title(title.format(0, self.view))
         axm.set_aspect('equal')
-        # plot
-        if self.curvilinear:
+        if self.mesh == 'curvilinear':
             movie_plt = axm.pcolormesh(self.x, self.z, p.T, cmap=self.mycm, norm=self.norm)
-            axm.plot(self.x[0, :], self.z[0, :], 'k', linewidth=3)
-            axm.plot(self.x[-1, :], self.z[-1, :], 'k', linewidth=3)
-            axm.plot(self.x[:, 0], self.z[:, 0], 'k', linewidth=3)
-            axm.plot(self.x[:, -1], self.z[:, -1], 'k', linewidth=3)
-            _plt_subdomains(axm, self.x, self.z, self.obstacles, edgecolor='k', curvilinear=True)
+        elif self.mesh == 'adaptative':
+            movie_plt = axm.pcolormesh(self.x, self.z, p, cmap=self.mycm, norm=self.norm)
         else:
             movie_plt = axm.pcolorfast(self.x, self.z, p, cmap=self.mycm, norm=self.norm)
-            _plt_subdomains(axm, self.x, self.z, self.obstacles)
 
+        _graphics.plot_subdomains(axm, self.x, self.z, self.obstacles)
+        if show_pml:
+            _graphics.plot_pml(axm, self.x, self.z, self.bc, self.Npml)
         _plt.colorbar(movie_plt)
 
         # Start Video
         with self.writer.saving(movie, self.path + self.movie_filename, dpi=100):
             for i, var in self.frames:
-                axm.set_title(r'{} -- iteration : {}'.format(self.view, i))
-                if self.curvilinear:
+                axm.set_title(title.format(self.view, i))
+                if self.mesh == 'curvilinear':
                     # StackOv : using-set-array-with-pyplot-pcolormesh-ruins-figure
                     movie_plt.set_array(var[:-1, :-1].T.ravel())
+                elif self.mesh == 'adaptative':
+                    movie_plt.set_array(var[:-1, :-1].flatten())
                 else:
                     movie_plt.set_data(var)
                 self.writer.grab_frame()

@@ -70,7 +70,7 @@ def parse_args():
 
     # Show parser
     show_parser.add_argument('view', nargs='?', default='grid',
-                             choices=['grid', 'domains', 'all'])
+                             choices=['grid', 'domains', 'all', 'initial'])
 
     # Solver parser
     solve_parser.add_argument('-t', '--timings', action="store_true", default=None,
@@ -113,6 +113,11 @@ def show(cfg, msh):
         msh.plot_grid()
         msh.plot_domains(legend=True)
 
+    elif cfg.args.view == 'initial':
+        print('\n')
+        fld = Fields(msh, cfg)
+        graphics.initial_fields(cfg, msh, fld)
+
     msh.show_figures()
 
 
@@ -121,7 +126,7 @@ def movie(cfg, _):
 
     mv = graphics.Movie(cfg.datafile, view=cfg.args.view,
                         ref=cfg.args.ref, nt=cfg.nt, quiet=cfg.quiet)
-    mv.make()
+    mv.make(show_pml=cfg.show_pml)
 
 
 def main():
@@ -147,6 +152,12 @@ def main():
                                    origin=(cfg.ix0, cfg.iz0),
                                    bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml,
                                    stencil=cfg.stencil, fcurvxz=fcurv)
+    elif cfg.mesh == 'adaptative':
+        msh = mesh.AdaptativeMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                                  origin=(cfg.ix0, cfg.iz0),
+                                  bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml,
+                                  stencil=cfg.stencil)
+
 
     if args.command:
         globals()[args.command](cfg, msh)

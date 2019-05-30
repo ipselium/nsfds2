@@ -39,19 +39,28 @@ class Fields:
 
     def __init__(self, msh, cfg):
 
+
         self._msh = msh
         self._cfg = cfg
-        self.fdtools = fdtools(self._cfg.nx, self._cfg.nz,
-                               self._cfg.p0, self._cfg.gamma, self._cfg.dt)
 
+        # Fields
         self.init_fields()
         self.init_derivatives()
         self.init_filters()
-        if self._cfg.save:
-            self.init_save()
+
+        self.fdtools = fdtools(self._cfg.nx, self._cfg.nz,
+                               self._cfg.p0, self._cfg.gamma, self._cfg.dt)
+
+        # PMLS
         if 'A' in self._msh.bc:
             self.init_pml()
+
+        # Obstacles to 0
         self.zero_obstacles()
+
+        # Save file
+        if self._cfg.save:
+            self.init_save()
 
     def init_fields(self):
         """ Setup initial fields. """
@@ -112,14 +121,14 @@ class Fields:
         """ Init PMLs. """
 
         # sigmax
-        Dx = self._msh.Npml*self._msh.dx                      # Width of the PML
+        Dx = self._msh.x[self._msh.Npml] - self._msh.x[0]             # Width of the PML
         self.sx = np.zeros(self._msh.nx)
         self.sx[:self._msh.Npml] = self._cfg.sigmax*abs((self._msh.x[:self._msh.Npml] \
                                  - self._msh.x[self._msh.Npml])/Dx)**self._cfg.alpha
         self.sx[self._msh.nx - self._msh.Npml:] = self.sx[self._msh.Npml-1::-1]
 
         # sigmaz
-        Dz = self._msh.Npml*self._msh.dz                      # Width of the PML
+        Dz = self._msh.z[self._msh.Npml] - self._msh.z[0]             # Width of the PML
         self.sz = np.zeros(self._msh.nz)
         self.sz[:self._msh.Npml] = self._cfg.sigmaz*abs((self._msh.z[:self._msh.Npml] \
                                  - self._msh.z[self._msh.Npml])/Dz)**self._cfg.alpha
@@ -179,24 +188,34 @@ class Fields:
         """ Init save. """
 
         self.sfile = h5py.File(self._cfg.datafile, 'w')
+
         self.sfile.create_dataset('x', data=self._msh.x, compression=self._cfg.comp)
         self.sfile.create_dataset('z', data=self._msh.z, compression=self._cfg.comp)
-        self.sfile.create_dataset('dx', data=self._msh.dx)
-        self.sfile.create_dataset('dz', data=self._msh.dz)
-        self.sfile.create_dataset('dt', data=self._cfg.dt)
-        self.sfile.create_dataset('nx', data=self._cfg.nx)
-        self.sfile.create_dataset('nz', data=self._cfg.nz)
-        self.sfile.create_dataset('nt', data=self._cfg.nt)
-        self.sfile.create_dataset('ns', data=self._cfg.ns)
-        self.sfile.create_dataset('p0', data=self._cfg.p0)
-        self.sfile.create_dataset('rho0', data=self._cfg.rho0)
-        self.sfile.create_dataset('gamma', data=self._cfg.gamma)
-        self.sfile.create_dataset('obstacles', data=self._msh.get_obstacles())
-        self.sfile.create_dataset('mesh', data=self._cfg.mesh)
+        self.sfile.create_dataset('rho_init', data=self.r, compression=self._cfg.comp)
+        self.sfile.create_dataset('rhou_init', data=self.ru, compression=self._cfg.comp)
+        self.sfile.create_dataset('rhov_init', data=self.rv, compression=self._cfg.comp)
+        self.sfile.create_dataset('rhoe_init', data=self.re, compression=self._cfg.comp)
+
+        self.sfile.attrs['obstacles'] = self._msh.get_obstacles()
+        self.sfile.attrs['dx'] = self._msh.dx
+        self.sfile.attrs['dz'] = self._msh.dz
+        self.sfile.attrs['dt'] = self._cfg.dt
+        self.sfile.attrs['nx'] = self._cfg.nx
+        self.sfile.attrs['nz'] = self._cfg.nz
+        self.sfile.attrs['nt'] = self._cfg.nt
+        self.sfile.attrs['ns'] = self._cfg.ns
+        self.sfile.attrs['p0'] = self._cfg.p0
+        self.sfile.attrs['rho0'] = self._cfg.rho0
+        self.sfile.attrs['gamma'] = self._cfg.gamma
+        self.sfile.attrs['Npml'] = self._cfg.Npml
+        self.sfile.attrs['mesh'] = self._cfg.mesh
+        self.sfile.attrs['bc'] = self._cfg.bc
+
         if self._cfg.probes and self._cfg.probes_loc:
             probes = np.zeros((len(self._cfg.probes_loc), self._cfg.nt))
             self.sfile.create_dataset('probes', data=probes, compression=self._cfg.comp)
             self.sfile.create_dataset('probes_location', data=self._cfg.probes_loc)
+
         if self._cfg.mesh == 'curvilinear':
             self.sfile.create_dataset('J', data=self._msh.J, compression=self._cfg.comp)
             self.sfile.create_dataset('xn', data=self._msh.xn, compression=self._cfg.comp)
@@ -225,8 +244,16 @@ class Fields:
 
         if self._cfg.ftype in ["", "None", "none"]:
             pass
-        elif self._cfg.ftype == "isentropic":
+        elif self._cfg.ftype == "custom":
+            pass
+        elif self._cfg.ftype == "vortex":
             self.isentropic_vortex()
+        elif self._cfg.ftype == "poiseuille":
+            self.poiseuille()
+        elif self._cfg.ftype == "kh":
+            self.kelvin_helmholtz()
+        else:
+            raise ValueError('Only custom and vortex supported for now')
 
     def pulse(self):
         """ Pulse source. """
@@ -297,6 +324,38 @@ class Fields:
         self.p = self.r**self._cfg.gamma/self._cfg.gamma
         self.ru *= self.r
         self.rv *= self.r
+
+    def poiseuille(self):
+        """ Poiseuille """
+
+        # Poiseuille
+        tmp_z = np.arange(self._msh.nz)*self._msh.dz
+        self._cfg.U0 *= 0.5*(4*tmp_z/(tmp_z[-1]-tmp_z[0]) - 4*tmp_z**2/(tmp_z[-1]-tmp_z[0])**2)
+
+    def kelvin_helmholtz(self):
+        """
+            Initialize fields with a mixing layer with roll-up vortices induced
+            by the Kelvin–Helmholtz instability.
+        """
+
+        U1 = 0.8
+        U2 = 0.2
+        delta = 0.4
+        T1 = 1.
+        T2 = 0.8
+
+        T = np.zeros((self._cfg.nx, self._cfg.nz))
+
+        for iz in range(self._cfg.nz):
+            self.ru[:, iz] = 0.5*((U1+U2) +
+                                  (U1-U2)*np.tanh(2*self._msh.z[iz]/delta))
+            T[:, iz] = T1*(self.ru[:, iz] - U2)/(U1 - U2) \
+                     + T2*(U1-self.ru[:, iz])/(U1 - U2) \
+                     + 0.5*(self._cfg.gamma-1)*(U1 - self.ru[:, iz])*(self.ru[:, iz]-U2)
+            self.r[:, iz] = 1/T[:, iz]
+
+        self.p = np.ones((self._msh.nx, self._msh.nz))/self._cfg.gamma
+        self.ru = self.ru*self.r
 
     def zero_obstacles(self):
         """ Set velocity to 0 in obstacles. """
