@@ -22,6 +22,7 @@
 # Creation Date : 2016-11-29 - 23:18:27
 #
 # pylint: disable=too-many-statements
+# pylint: disable=attribute-defined-outside-init
 """
 -----------
 
@@ -48,7 +49,7 @@ class CfgSetup:
         self.args = args
 
         # Create config parser
-        self.cfg = configparser.RawConfigParser()
+        self.cfg = configparser.ConfigParser(allow_no_value=True)
         self.home = os.path.expanduser("~")
         self.path = self.home + '/.nsfds2/'
 
@@ -156,6 +157,7 @@ class CfgSetup:
 
         self.cfg.add_section('figures')
         self.cfg.set('figures', 'figures', 'True')
+        self.cfg.set('figures', 'pml', 'True')
 
         self.cfg.add_section('save')
         self.cfg.set('save', 'save', 'True')
@@ -172,131 +174,187 @@ class CfgSetup:
     def run(self):
         """ Run configuration. """
 
-        # Simulation parameters
-        self.it = 0
-
         try:
-            CFG = self.cfg['configuration']
-
-            self.timings = getattr(self.args, 'timings', None)
-            if not isinstance(self.timings, bool):
-                self.timings = CFG.getboolean('timings', False)
-
-            self.quiet = getattr(self.args, 'quiet', None)
-            if not isinstance(self.quiet, bool):
-                self.quiet = CFG.getboolean('quiet', False)
-
-            SIM = self.cfg['simulation']
-            self.nt = getattr(self.args, 'nt', None)
-            if self.nt is None:
-                self.nt = SIM.getint('nt', 500)
-            self.ns = SIM.getint('ns', 10)
-            self.CFL = SIM.getfloat('CFL', 0.5)
-
-            THP = self.cfg['thermophysic']
-            self.c0 = THP.getfloat('c0', 340)
-            self.rho0 = THP.getfloat('rho0', 1.22)
-            self.gamma = THP.getfloat('gamma', 1.4)
-            self.nu = THP.getfloat('nu', 1.5e-5)
-
-            GEO = self.cfg['geometry']
-            self.mesh = GEO.get('mesh', 'regular').lower()
-            self.curvflag = True if self.mesh == 'curvilinear' else False
-            self.geofile = getattr(self.args, 'geofile', None)
-            self.geoflag = True
-            if  self.geofile:
-                self.geofile, self.geoname = self.args.geofile
-            else:
-                self.geofile = GEO.get('file', 'None')
-                self.geoname = GEO.get('geoname', 'square')
-            self.curvname = GEO.get('curvname', 'None')
-            self.bc = GEO.get('bc', 'RRRR').upper()
-            self.nx = GEO.getint('nx', 256)
-            self.nz = GEO.getint('nz', 256)
-            self.ix0 = GEO.getint('ix0', 0)
-            self.iz0 = GEO.getint('iz0', 0)
-            self.dx = GEO.getfloat('dx', 1)
-            self.dz = GEO.getfloat('dz', 1)
-
-            PML = self.cfg['PML']
-            self.beta = PML.getfloat('beta', 0.)
-            self.alpha = PML.getfloat('alpha', 4.)
-            self.sigmax = PML.getfloat('sigmax', 20.)
-            self.sigmaz = PML.getfloat('sigmaz', 20.)
-            self.Npml = PML.getint('Npml', 15)
-
-            SRC = self.cfg['source']
-            self.stype = SRC.get('type', 'pulse').lower()
-            self.ixS = SRC.getint('ixS', 32)
-            self.izS = SRC.getint('izS', 32)
-            self.S0 = SRC.getfloat('S0', 1e3)
-            self.B0 = SRC.getfloat('B0', 5)
-            self.f0 = SRC.getfloat('f0', 20000)
-            if self.stype in ['none', '']:
-                self.S0 = 0
-
-            FLW = self.cfg['flow']
-            self.ftype = FLW.get('type', 'None').lower()
-            self.U0 = FLW.getfloat('U0', 5)
-            self.V0 = FLW.getfloat('V0', 5)
-            if self.ftype in ['none', '']:
-                self.U0, self.V0 = 0., 0.
-
-            EUL = self.cfg['eulerian fluxes']
-            self.stencil = EUL.getint('stencil', 11)
-
-            FLT = self.cfg['filtering']
-            self.flt = FLT.getboolean('filter', True)
-            self.flt_stencil = FLT.getint('stencil', 11)
-            self.xnu = FLT.getfloat('strength', 0.75)
-
-            VSC = self.cfg['viscous fluxes']
-            self.vsc = VSC.getboolean('viscosity', True)
-            self.vsc_stencil = VSC.getint('stencil', 3)
-
-            CPT = self.cfg['shock capture']
-            self.cpt = CPT.getboolean('shock capture', True)
-            self.cpt_stencil = CPT.getint('stencil', 7)
-            self.cpt_meth = CPT.get('method', 'pressure').lower()
-            self.rth = 1e-6
-
-            SAVE = self.cfg['save']
-            self.save = SAVE.getboolean('save', True)
-            self.savepath = SAVE.get('path', 'results/')
-            self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
-            self.comp = SAVE.get('compression', 'lzf')
-            self.onlyp = SAVE.getboolean('only p', False)
-            self.probes = SAVE.getboolean('probes', False)
-            self.probes_loc = json.loads(SAVE.get('probes_locations', '[]'))
-
-            # datapath and datafile
-            if self.comp == 'None':
-                self.comp = None
-
-            if self.savepath and not self.savepath.endswith('/'):
-                self.savepath += '/'
-
-            # if self.savepath does not exist, create it
-            self.check_dir(self.savepath)
-
-            self.datafile = getattr(self.args, 'datafile', None)
-            if not self.datafile:
-                self.datafile = self.savepath + self.savefile
-
-            FIGS = self.cfg['figures']
-            self.figures = FIGS.getboolean('figures', True)
+            self._cfg()
+            self._sim()
+            self._thp()
+            self._geo()
+            self._pml()
+            self._src()
+            self._flw()
+            self._eul()
+            self._flt()
+            self._vsc()
+            self._cpt()
+            self._save()
+            self._figs()
 
         except configparser.Error as err:
             print('Bad cfg file : ', err)
             sys.exit(1)
 
-        if self.ftype == 'isentropic':
-            self.p0 = self.rho0**self.gamma/self.gamma
-        else:
-            self.p0 = self.rho0*self.c0**2/self.gamma
+        self.dt = min(self.dx, self.dz)*self.CFL/(self.c0 +
+                                                  max(abs(self.U0), abs(self.V0)))
 
-        if self.stype in ['none', '']:
-            self.dt = min(self.dx, self.dz)*self.CFL/(max(abs(self.U0), abs(self.V0)))
+    def _cfg(self):
+
+        CFG = self.cfg['configuration']
+        self.timings = getattr(self.args, 'timings', None)
+        self.quiet = getattr(self.args, 'quiet', None)
+
+        if not isinstance(self.timings, bool):
+            self.timings = CFG.getboolean('timings', False)
+
+        if not isinstance(self.quiet, bool):
+            self.quiet = CFG.getboolean('quiet', False)
+
+    def _sim(self):
+
+        SIM = self.cfg['simulation']
+        self.nt = getattr(self.args, 'nt', None)
+        self.ns = SIM.getint('ns', 10)
+        self.CFL = SIM.getfloat('CFL', 0.5)
+
+        if self.nt is None:
+            self.nt = SIM.getint('nt', 500)
+
+        self.it = 0
+
+    def _thp(self):
+
+        THP = self.cfg['thermophysic']
+        self.c0 = THP.getfloat('c0', 340)
+        self.rho0 = THP.getfloat('rho0', 1.22)
+        self.gamma = THP.getfloat('gamma', 1.4)
+        self.nu = THP.getfloat('nu', 1.5e-5)
+        self.p0 = self.rho0*self.c0**2/self.gamma
+
+        if self.c0 < 1:
+            raise ValueError('c0 must be >= 1')
+
+    def _geo(self):
+
+        GEO = self.cfg['geometry']
+        self.mesh = GEO.get('mesh', 'regular').lower()
+        self.curvflag = True if self.mesh == 'curvilinear' else False
+        self.geofile = getattr(self.args, 'geofile', None)
+        self.geoflag = True
+        if self.geofile:
+            self.geofile, self.geoname = self.args.geofile
         else:
-            self.dt = min(self.dx, self.dz)*self.CFL/(self.c0 +
-                                                      max(abs(self.U0), abs(self.V0)))
+            self.geofile = GEO.get('file', 'None')
+            self.geoname = GEO.get('geoname', 'square')
+        self.curvname = GEO.get('curvname', 'None')
+        self.bc = GEO.get('bc', 'RRRR').upper()
+        self.nx = GEO.getint('nx', 256)
+        self.nz = GEO.getint('nz', 256)
+        self.ix0 = GEO.getint('ix0', 0)
+        self.iz0 = GEO.getint('iz0', 0)
+        self.dx = GEO.getfloat('dx', 1)
+        self.dz = GEO.getfloat('dz', 1)
+
+    def _pml(self):
+
+        PML = self.cfg['PML']
+        self.beta = PML.getfloat('beta', 0.)
+        self.alpha = PML.getfloat('alpha', 4.)
+        self.sigmax = PML.getfloat('sigmax', 20.)
+        self.sigmaz = PML.getfloat('sigmaz', 20.)
+        self.Npml = PML.getint('Npml', 15)
+
+    def _src(self):
+
+        SRC = self.cfg['source']
+        self.stype = SRC.get('type', 'pulse').lower()
+        self.ixS = SRC.getint('ixS', 32)
+        self.izS = SRC.getint('izS', 32)
+        self.S0 = SRC.getfloat('S0', 1e3)
+        self.B0 = SRC.getfloat('B0', 5)
+        self.f0 = SRC.getfloat('f0', 20000)
+
+        if self.stype in ['none', 'false', '']:
+            self.S0 = 0
+
+    def _flw(self):
+
+        FLW = self.cfg['flow']
+        self.ftype = FLW.get('type', 'None').lower()
+        self.U0 = FLW.getfloat('U0', 5)
+        self.V0 = FLW.getfloat('V0', 5)
+
+        if self.ftype in ['none', 'false', '']:
+            self.U0, self.V0 = 0., 0.
+
+    def _eul(self):
+
+        EUL = self.cfg['eulerian fluxes']
+        self.stencil = EUL.getint('stencil', 11)
+
+        if self.stencil not in [3, 7, 11]:
+            raise ValueError('stencil must be 3, 7 or 11')
+
+    def _flt(self):
+
+        FLT = self.cfg['filtering']
+        self.flt = FLT.getboolean('filter', True)
+        self.flt_stencil = FLT.getint('stencil', 11)
+        self.xnu = FLT.getfloat('strength', 0.75)
+
+        if self.flt_stencil not in [11]:
+            raise ValueError('only 11 pts filter implemented for now')
+
+    def _vsc(self):
+
+        VSC = self.cfg['viscous fluxes']
+        self.vsc = VSC.getboolean('viscosity', True)
+        self.vsc_stencil = VSC.getint('stencil', 3)
+
+        if self.vsc_stencil not in [3, 7, 11]:
+            raise ValueError('viscous fluxes only available with 3, 7 or 11 pts')
+
+
+    def _cpt(self):
+
+        CPT = self.cfg['shock capture']
+        self.cpt = CPT.getboolean('shock capture', True)
+        self.cpt_stencil = CPT.getint('stencil', 7)
+        self.cpt_meth = CPT.get('method', 'pressure').lower()
+        self.rth = 1e-6
+
+        if self.cpt_stencil not in [3, 7, 11]:
+            raise ValueError('capture only available with 3, 7 or 11 pts')
+
+        if self.cpt_meth not in ['pressure', 'dilatation']:
+            raise ValueError('capture method must be pressure or dilatation')
+
+
+    def _save(self):
+
+        SAVE = self.cfg['save']
+        self.save = SAVE.getboolean('save', True)
+        self.savepath = SAVE.get('path', 'results/')
+        self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
+        self.comp = SAVE.get('compression', 'lzf')
+        self.onlyp = SAVE.getboolean('only p', False)
+        self.probes = SAVE.getboolean('probes', False)
+        self.probes_loc = json.loads(SAVE.get('probes_locations', '[]'))
+
+        # datapath and datafile
+        if self.comp == 'None':
+            self.comp = None
+
+        if self.savepath and not self.savepath.endswith('/'):
+            self.savepath += '/'
+
+        # if self.savepath does not exist, create it
+        self.check_dir(self.savepath)
+
+        self.datafile = getattr(self.args, 'datafile', None)
+        if not self.datafile:
+            self.datafile = self.savepath + self.savefile
+
+    def _figs(self):
+
+        FIGS = self.cfg['figures']
+        self.figures = FIGS.getboolean('figures', True)
+        self.show_pml = FIGS.getboolean('pml', True)
