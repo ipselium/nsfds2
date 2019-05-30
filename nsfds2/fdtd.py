@@ -76,7 +76,8 @@ class FDTD:
             headers.start(cfg)
 
         # Max pressure
-        self.pmax = - 0.5*self.cfg.rho0*(self.cfg.U0**2 + self.cfg.V0**2) \
+        v = (self.fld.ru.max()/self.cfg.rho0)**2 + (self.fld.rv.max()/self.cfg.rho0)**2
+        self.pmax = - 0.5*self.cfg.rho0*v \
                     *(self.cfg.gamma - 2)/(self.cfg.gamma - 1) + self.cfg.S0
 
         # Init timings and residuals
