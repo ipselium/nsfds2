@@ -93,15 +93,28 @@ def check_geo(cfg):
         cfg.geoname = 'empty'
 
 
-def parameters(cfg):
+def parameters(cfg, msh):
     """ Show simulation parameters. """
 
-    s = "geometry : '{}' ({}x{})".format(cfg.geoname, cfg.nx, cfg.nz)
-    s += "\n\t* {} points PML : ".format(cfg.Npml)
-    s += "sigma=({}, {}) and beta={}".format(cfg.sigmax, cfg.sigmaz, cfg.beta)
-    s += "\n\t* source : {} at ({}, {}).".format(cfg.stype, cfg.ixS, cfg.izS)
-    s += "\n\t* bc = {} (PML: {} points)".format(cfg.bc, cfg.Npml)
-    s += "\n\t* dx = {} m\tdz = {} m.".format(cfg.dx, cfg.dz)
-    s += "\n\t* dt = {} s\tnt = {}.".format(cfg.dt, cfg.nt)
+    s = msh.__str__()
+    if 'A' in cfg.bc:
+        nsfds2.init.fields.set_sigma(cfg, msh)
+        s += "\t* sigma=({:.3e}, {:.3e}) and beta={}\n".format(cfg.sigmax,
+                                                               cfg.sigmaz,
+                                                               cfg.beta)
+
+    s += "\t* geometry : '{}'\n".format(cfg.geoname)
+
+    s += "\t* dt = {:.5e} s and nt = {}.\n".format(cfg.dt, cfg.nt)
+
+    if cfg.stype not in cfg.none:
+        s += "\t* source : {} at ({}, {})".format(cfg.stype, cfg.ixS, cfg.izS)
+        if cfg.ftype == 'harmonic':
+            s += 'with f={}.\n'.format(cfg.f0)
+        else:
+            s += '.\n'
+
+    if cfg.ftype not in cfg.none:
+        s += "\t* flow   : {} (U0={}, V0={}).".format(cfg.ftype, cfg.U0, cfg.V0)
 
     print(s)

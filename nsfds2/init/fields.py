@@ -34,6 +34,23 @@ import h5py
 import numpy as np
 from ofdlib2.fdtd import fdtools
 
+
+def set_sigma(cfg, msh):
+    """ Set sigmax and sigmaz. """
+
+    try:
+        cfg.sigmax = float(cfg.sigmax)
+    except ValueError:
+        D = msh.x[msh.Npml] - msh.x[0]
+        cfg.sigmax = 8*cfg.c0*(cfg.alpha+1)/D
+
+    try:
+        cfg.sigmaz = float(cfg.sigmaz)
+    except ValueError:
+        D = msh.z[msh.Npml] - msh.z[0]
+        cfg.sigmaz = 8*cfg.c0*(cfg.alpha+1)/D
+
+
 class Fields:
     """ Fields initialization. """
 
@@ -119,6 +136,8 @@ class Fields:
 
     def init_pml(self):
         """ Init PMLs. """
+
+        set_sigma(self._cfg, self._msh)
 
         # sigmax
         Dx = self._msh.x[self._msh.Npml] - self._msh.x[0]             # Width of the PML

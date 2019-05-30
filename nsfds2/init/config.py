@@ -119,11 +119,11 @@ class CfgSetup:
         self.cfg.set('geometry', 'dz', '1')
 
         self.cfg.add_section('PML')
-        self.cfg.set('PML', 'beta', 0.)
-        self.cfg.set('PML', 'alpha', 4.)
-        self.cfg.set('PML', 'sigmax', 20.)
-        self.cfg.set('PML', 'sigmaz', 20.)
-        self.cfg.set('PML', 'Npml', 15)
+        self.cfg.set('PML', 'beta', '0.')
+        self.cfg.set('PML', 'alpha', '4.')
+        self.cfg.set('PML', 'sigmax', '20.')
+        self.cfg.set('PML', 'sigmaz', '20.')
+        self.cfg.set('PML', 'Npml', '15')
 
         self.cfg.add_section('source')
         self.cfg.set('source', 'type', 'pulse')
@@ -173,6 +173,8 @@ class CfgSetup:
 
     def run(self):
         """ Run configuration. """
+
+        self.none = ['none', 'false', '']
 
         try:
             self._cfg()
@@ -258,8 +260,8 @@ class CfgSetup:
         PML = self.cfg['PML']
         self.beta = PML.getfloat('beta', 0.)
         self.alpha = PML.getfloat('alpha', 4.)
-        self.sigmax = PML.getfloat('sigmax', 20.)
-        self.sigmaz = PML.getfloat('sigmaz', 20.)
+        self.sigmax = PML.get('sigmax', 'auto')
+        self.sigmaz = PML.get('sigmaz', 'auto')
         self.Npml = PML.getint('Npml', 15)
 
     def _src(self):
@@ -272,7 +274,7 @@ class CfgSetup:
         self.B0 = SRC.getfloat('B0', 5)
         self.f0 = SRC.getfloat('f0', 20000)
 
-        if self.stype in ['none', 'false', '']:
+        if self.stype in self.none:
             self.S0 = 0
 
     def _flw(self):
@@ -282,7 +284,7 @@ class CfgSetup:
         self.U0 = FLW.getfloat('U0', 5)
         self.V0 = FLW.getfloat('V0', 5)
 
-        if self.ftype in ['none', 'false', '']:
+        if self.ftype in self.none:
             self.U0, self.V0 = 0., 0.
 
     def _eul(self):

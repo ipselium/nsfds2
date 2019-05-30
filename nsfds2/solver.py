@@ -69,7 +69,7 @@ def parse_args():
                               help='Reference frame for colormap')
 
     # Show parser
-    show_parser.add_argument('view', nargs='?', default='grid',
+    show_parser.add_argument('view', nargs='?', default=None,
                              choices=['grid', 'domains', 'all', 'initial'])
 
     # Solver parser
@@ -98,23 +98,24 @@ def solve(cfg, msh):
 def show(cfg, msh):
     """ Show simulation parameters and grid. """
 
+    headers.copyright()
+    headers.version()
     headers.check_geo(cfg)
-    headers.parameters(cfg)
+    headers.parameters(cfg, msh)
 
     if cfg.args.view == 'grid':
         msh.plot_grid()
 
     elif cfg.args.view == 'domains':
-        print('\n')
-        msh.plot_domains(legend=True)
-
-    elif cfg.args.view == 'all':
-        print('\n')
-        msh.plot_grid()
         msh.plot_domains(legend=True)
 
     elif cfg.args.view == 'initial':
-        print('\n')
+        fld = Fields(msh, cfg)
+        graphics.initial_fields(cfg, msh, fld)
+
+    elif cfg.args.view == 'all':
+        msh.plot_grid()
+        msh.plot_domains(legend=True)
         fld = Fields(msh, cfg)
         graphics.initial_fields(cfg, msh, fld)
 
