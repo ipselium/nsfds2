@@ -63,14 +63,14 @@ def parse_args():
 
 
     # Movie parser
-    movie_parser.add_argument('view', nargs='?', default='p',
-                              choices=['p', 'rho', 'vx', 'vz', 'e'])
+    movie_parser.add_argument('view', nargs='*', default='p',
+                              choices=['p', 'rho', 'vx', 'vz', 'vort', 'e'])
     movie_parser.add_argument('-r', dest='ref', type=int,
                               help='Reference frame for colormap')
 
     # Show parser
     show_parser.add_argument('view', nargs='?', default=None,
-                             choices=['grid', 'domains', 'all', 'initial'])
+                             choices=['grid', 'domains', 'all'])
 
     # Solver parser
     solve_parser.add_argument('-t', '--timings', action="store_true", default=None,
@@ -89,11 +89,11 @@ def solve(cfg, msh):
     fdtd = FDTD(msh, fld, cfg)
     fdtd.run()
 
-    # Figures
-    graphics.fields(cfg)
-    graphics.probes(cfg)
-    graphics.show()
-
+    if cfg.figures and cfg.save:
+        plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
+        plt.fields(show_pml=cfg.show_pml)
+        plt.probes()
+        plt.show()
 
 def show(cfg, msh):
     """ Show simulation parameters and grid. """
@@ -104,20 +104,14 @@ def show(cfg, msh):
     headers.parameters(cfg, msh)
 
     if cfg.args.view == 'grid':
-        msh.plot_grid()
+        msh.plot_grid(axis=True, pml=cfg.show_pml)
 
     elif cfg.args.view == 'domains':
         msh.plot_domains(legend=True)
 
-    elif cfg.args.view == 'initial':
-        fld = Fields(msh, cfg)
-        graphics.initial_fields(cfg, msh, fld)
-
     elif cfg.args.view == 'all':
-        msh.plot_grid()
+        msh.plot_grid(axis=True, pml=cfg.show_pml)
         msh.plot_domains(legend=True)
-        fld = Fields(msh, cfg)
-        graphics.initial_fields(cfg, msh, fld)
 
     msh.show_figures()
 
@@ -125,10 +119,9 @@ def show(cfg, msh):
 def movie(cfg, _):
     """ Create a movie from a dataset. """
 
-    mv = graphics.Movie(cfg.datafile, view=cfg.args.view,
-                        ref=cfg.args.ref, nt=cfg.nt, quiet=cfg.quiet)
-    mv.make(show_pml=cfg.show_pml)
-
+    plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
+    plt.movie(view=cfg.args.view, show_pml=cfg.show_pml)
+    plt.show()
 
 def main():
     """ Main """
@@ -158,7 +151,6 @@ def main():
                                   origin=(cfg.ix0, cfg.iz0),
                                   bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml,
                                   stencil=cfg.stencil)
-
 
     if args.command:
         globals()[args.command](cfg, msh)
