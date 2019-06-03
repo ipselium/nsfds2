@@ -165,8 +165,7 @@ class CfgSetup:
         self.cfg.set('save', 'filename', 'tmp')
         self.cfg.set('save', 'compression', 'lzf')
         self.cfg.set('save', 'only p', 'False')
-        self.cfg.set('save', 'probes', 'False')
-        self.cfg.set('save', 'probes_locations', '[]')
+        self.cfg.set('save', 'probes', '[]')
 
         with open(self.path + 'nsfds2.conf', 'w') as cf:
             self.cfg.write(cf)
@@ -314,7 +313,6 @@ class CfgSetup:
         if self.vsc_stencil not in [3, 7, 11]:
             raise ValueError('viscous fluxes only available with 3, 7 or 11 pts')
 
-
     def _cpt(self):
 
         CPT = self.cfg['shock capture']
@@ -329,7 +327,6 @@ class CfgSetup:
         if self.cpt_meth not in ['pressure', 'dilatation']:
             raise ValueError('capture method must be pressure or dilatation')
 
-
     def _save(self):
 
         SAVE = self.cfg['save']
@@ -338,8 +335,13 @@ class CfgSetup:
         self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
         self.comp = SAVE.get('compression', 'lzf')
         self.onlyp = SAVE.getboolean('only p', False)
-        self.probes = SAVE.getboolean('probes', False)
-        self.probes_loc = json.loads(SAVE.get('probes_locations', '[]'))
+        self.probes = json.loads(SAVE.get('probes', '[]'))
+
+        # Check probes
+        if self.probes:
+            for c in self.probes:
+                if not 0 <= c[0] < self.nx or not 0 <= c[1] < self.nz:
+                    raise ValueError('probes must be in the domain')
 
         # datapath and datafile
         if self.comp == 'None':

@@ -66,10 +66,8 @@ class FDTD:
         self.scapture = ShockCapture(self.msh, self.fld, self.cfg)
 
         # Init probes
-        if cfg.probes and cfg.probes_loc:
-            self.probes = np.zeros((len(cfg.probes_loc), cfg.ns))
-        else:
-            cfg.probes = False
+        if cfg.probes:
+            self.probes = np.zeros((len(cfg.probes), cfg.ns))
 
         # Prompt user for start
         if not self.cfg.quiet:
@@ -176,7 +174,7 @@ class FDTD:
         """ Save data """
 
         if self.cfg.save and self.cfg.probes:
-            self.fld.sfile['probes'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
+            self.fld.sfile['probes_value'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
 
         if self.cfg.save and self.cfg.onlyp:
             self.fld.sfile.create_dataset('p_it' + str(self.cfg.it),
@@ -203,7 +201,7 @@ class FDTD:
     def update_probes(self):
         """ Update probes. """
 
-        for n, c in enumerate(self.cfg.probes_loc):
+        for n, c in enumerate(self.cfg.probes):
             self.probes[n, self.cfg.it%self.cfg.ns] = self.fld.p[c[0], c[1]]
 
     def check_results(self):

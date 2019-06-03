@@ -230,10 +230,11 @@ class Fields:
         self.sfile.attrs['mesh'] = self._cfg.mesh
         self.sfile.attrs['bc'] = self._cfg.bc
 
-        if self._cfg.probes and self._cfg.probes_loc:
-            probes = np.zeros((len(self._cfg.probes_loc), self._cfg.nt))
-            self.sfile.create_dataset('probes', data=probes, compression=self._cfg.comp)
-            self.sfile.create_dataset('probes_location', data=self._cfg.probes_loc)
+        if self._cfg.probes:
+            probes = np.zeros((len(self._cfg.probes), self._cfg.nt))
+            self.sfile.create_dataset('probes_location', data=self._cfg.probes)
+            self.sfile.create_dataset('probes_value', data=probes,
+                                      compression=self._cfg.comp)
 
         if self._cfg.mesh == 'curvilinear':
             self.sfile.create_dataset('J', data=self._msh.J, compression=self._cfg.comp)

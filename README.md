@@ -139,6 +139,7 @@ method = pressure|dilatation 		# Capture based on pressure or dilatation
 
 [figures]
 figures = True|False 			# Activate figures
+pml = True|False 			# Show PML
 
 [save]
 save = True|False 			# Activate save
@@ -151,6 +152,10 @@ probes_locations = [[128, 128], [128, 192]] # Probe locations. Must be list of l
 ```
 
 ## Changelog
+
+### 0.8.5
+
+
 
 ### 0.8.4
 * new: white noise pressure source
