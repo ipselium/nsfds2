@@ -44,7 +44,7 @@ from mplutils import modified_jet, MidpointNormalize, set_figsize, get_subplot_s
 import fdgrid.graphics as _graphics
 
 
-__all__ = ['get_data', 'DataIterator', 'DataGenerator', 'Plot']
+__all__ = ['get_data', 'DataIterator', 'DataExtractor', 'Plot']
 
 
 def get_data(filename):
@@ -65,20 +65,22 @@ class DataIterator:
     Parameters
     ----------
 
-    data : Path to hdf5 file (str) or data from hdf5 file
+    data : DataExtractor instance
     view : The variable to display. string.
-    ref : The reference frame for colormap. int.
     nt : The last frame to consider. int
 
     """
 
-    def __init__(self, data_generator, view=('p')):
+    def __init__(self, data_extractor, view=('p'), nt=None):
 
-        self.data = data_generator
+        self.data = data_extractor
         self.view = view
-        self.nt = self.data.get_attr('nt')
         self.ns = self.data.get_attr('ns')
-        self.icur = -self.data.get_attr('ns')
+        self.icur = -self.ns
+        if nt is None:
+            self.nt = self.data.get_attr('nt')
+        else:
+            self.nt = nt
 
     def __iter__(self):
         """ Iterator """
@@ -104,16 +106,13 @@ class DataIterator:
             raise StopIteration
 
 
-class DataGenerator:
-    """ Data Generator
+class DataExtractor:
+    """ Extract data from hdf5 file
 
     Parameters
     ----------
 
     data : Path to hdf5 file (str) or data from hdf5 file
-    view : The variable to display. string.
-    ref : The reference frame for colormap. int.
-    nt : The last frame to consider. int
 
     """
 
@@ -214,7 +213,7 @@ class DataGenerator:
 
 
 class Plot:
-    """ Make movie from nsfds2 hdf5 ouput file.
+    """ Helper class to plot results from nsfds2.
 
     Parameters
     ----------
@@ -229,7 +228,7 @@ class Plot:
         self.path = os.path.dirname(filename) + '/'
         self.quiet = quiet
 
-        self.data = DataGenerator(self.filename)
+        self.data = DataExtractor(self.filename)
         self.nt = self.data.get_attr('nt')
 
         self._init_geo()
@@ -263,7 +262,7 @@ class Plot:
                        'rho': r'$\rho$ [kg.m$^3$]',
                        'vort': r'$\omega$ [m/s]'}
 
-    def movie(self, view=('p', 'e', 'vx', 'vz'),
+    def movie(self, view=('p', 'e', 'vx', 'vz'), nt=None, ref=None,
               figsize='auto', show_pml=False, show_probes=False, dpi=100):
         """ Make movie. """
 
@@ -278,10 +277,14 @@ class Plot:
         writer = _ani.FFMpegWriter(fps=24, metadata=metadata, bitrate=-1, codec="libx264")
         movie_filename = f'{title}.mkv'
 
+        # Nb of iterations
+        if nt is None:
+            nt = self.nt
+
         # Create Iterator and make 1st frame
-        data = DataIterator(self.data, view=view)
+        data = DataIterator(self.data, view=view, nt=nt)
         i, *var = next(data)
-        fig, axes, ims = self.fields(view=view, iteration=i,
+        fig, axes, ims = self.fields(view=view, iteration=i, ref=ref,
                                      show_pml=show_pml,
                                      show_probes=show_probes,
                                      figsize=figsize)
@@ -313,16 +316,12 @@ class Plot:
         if not probes:
             return None
 
-        nt = self.data.get_attr('nt')
-        dt = self.data.get_attr('dt')
-        p0 = self.data.get_attr('p0')
-        pressure = self.data.get_dataset('probes_value') - p0
-
-        t = _np.arange(nt)*dt
+        p = self.data.get_dataset('probes_value') - self.data.get_attr('p0')
+        t = _np.arange(self.nt)*self.data.get_attr('dt')
 
         _, ax = _plt.subplots(figsize=(9, 4))
         for i, c in enumerate(probes):
-            ax.plot(t, pressure[i, :], label=f'@{tuple(c)}')
+            ax.plot(t, p[i, :], label=f'@{tuple(c)}')
         ax.set_xlim(t.min(), t.max())
         ax.set_xlabel('Time [s]')
         ax.set_ylabel('Pressure [Pa]')
@@ -331,8 +330,8 @@ class Plot:
 
         return None
 
-    def fields(self, view=('p', 'e', 'vx', 'vz'),
-               iteration=None, show_pml=False, show_probes=True, figsize='auto'):
+    def fields(self, view=('p', 'e', 'vx', 'vz'), iteration=None, ref=None,
+               show_pml=False, show_probes=True, figsize='auto'):
         """ Make figure """
 
         if iteration is None:
@@ -344,7 +343,7 @@ class Plot:
 
         for v in view:
             var.append(self.data.get(view=v, iteration=iteration).T)
-            vmin, vmax = self.data.reference(view=v)
+            vmin, vmax = self.data.reference(view=v, ref=ref)
             norm.append(MidpointNormalize(vmin=vmin, vmax=vmax, midpoint=0))
 
         fig, axes = _plt.subplots(*get_subplot_shape(len(var)))
@@ -354,7 +353,8 @@ class Plot:
 
         for i, ax in enumerate(axes.ravel()):
             if i < len(var):
-                ims.append(ax.pcolormesh(self.x, self.z, var[i], cmap=self.cm, norm=norm[i]))
+                ims.append(ax.pcolormesh(self.x, self.z, var[i],
+                                         cmap=self.cm, norm=norm[i]))
                 ax.set_title(self.titles[view[i]] + f' (n={iteration})')
                 ax.set_xlabel(r'$x$ [m]')
                 ax.set_ylabel(r'$z$ [m]')

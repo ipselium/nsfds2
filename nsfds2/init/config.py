@@ -158,6 +158,7 @@ class CfgSetup:
         self.cfg.add_section('figures')
         self.cfg.set('figures', 'figures', 'True')
         self.cfg.set('figures', 'pml', 'True')
+        self.cfg.set('figures', 'probes', 'True')
 
         self.cfg.add_section('save')
         self.cfg.set('save', 'save', 'True')
@@ -362,3 +363,4 @@ class CfgSetup:
         FIGS = self.cfg['figures']
         self.figures = FIGS.getboolean('figures', True)
         self.show_pml = FIGS.getboolean('pml', True)
+        self.show_probes = FIGS.getboolean('probes', True)

@@ -39,44 +39,65 @@ from nsfds2.utils import files, headers, graphics
 def parse_args():
     """ Parse arguments. """
 
-    parser = argparse.ArgumentParser(prog='nsfds',
-                                     description='A Navier-Stokes Finite Difference Solver')
+    # Options gathered in some parsers
+    commons = argparse.ArgumentParser(add_help=False)
+    commons.add_argument('-q', '--quiet', action="store_true", help='quiet mode')
+    commons.add_argument('-c', '--cfg-file', metavar='CF', dest='cfgfile',
+                         help='path to config file')
 
-    subparsers = parser.add_subparsers(dest='command')
-    solve_parser = subparsers.add_parser("solve")
-    movie_parser = subparsers.add_parser("movie")
-    show_parser = subparsers.add_parser("show")
+    view = argparse.ArgumentParser(add_help=False)
+    view.add_argument('-i', dest='nt', type=int, help='number of time iterations')
+    view.add_argument('-r', dest='ref', type=int, help='reference frame for colormap')
+    view.add_argument('view', nargs='*', default='p',
+                      choices=['p', 'rho', 'vx', 'vz', 'vort', 'e'],
+                      help='variable(s) to plot')
 
-    # Common
-    for p in [solve_parser, show_parser]:
-        p.add_argument('-g', '--geo-file', metavar='GF', dest='geofile', nargs=2,
-                       help='file and pattern to use')
-        p.add_argument('-c', '--cfg-file', metavar='CF', dest='cfgfile',
-                       help='path to config file')
+    data = argparse.ArgumentParser(add_help=False)
+    data.add_argument('-d', '--dat-file', metavar='DF', dest='datafile',
+                      help='path to hdf5 data file')
 
-    for p in [solve_parser, movie_parser]:
-        p.add_argument('-q', '--quiet', action="store_true", help='Quiet mode')
-        p.add_argument('-i', dest='nt', type=int,
-                       help='Number of time iterations')
-        p.add_argument('-d', '--dat-file', metavar='DF', dest='datafile',
-                       help='path to hdf5 data file')
+    time = argparse.ArgumentParser(add_help=False)
+    time.add_argument('-t', '--timings', action="store_true", default=None,
+                      help='Display complete timings')
+
+    description = 'A Navier-Stokes Finite Difference Solver'
+    root = argparse.ArgumentParser(prog='nsfds2', description=description)
+
+    # Subparsers : solve/movie/show commands
+    commands = root.add_subparsers(dest='command',
+                                   help='see nsfds2 `command` -h for further help')
 
 
-    # Movie parser
-    movie_parser.add_argument('view', nargs='*', default='p',
-                              choices=['p', 'rho', 'vx', 'vz', 'vort', 'e'])
-    movie_parser.add_argument('-r', dest='ref', type=int,
-                              help='Reference frame for colormap')
+    commands.add_parser("solve", parents=[commons, view, data, time],
+                        description="Navier-Stokes equation solver",
+                        help="solve NS equations with given configuration")
+    commands.add_parser("movie", parents=[commons, view, data],
+                        description="Make a movie from existing results",
+                        help="make movie from existing results")
+    shw = commands.add_parser("show",
+                              description="Helper commands for parameters/results analysis",
+                              help="show results and simulation configuration")
 
-    # Show parser
-    show_parser.add_argument('view', nargs='?', default=None,
-                             choices=['grid', 'domains', 'all'])
+    # show section subsubparsers : frame/probe/
+    shw_cmds = shw.add_subparsers(dest='show_command',
+                                  help='see -h for further help')
+    shw_cmds.add_parser('frame', parents=[commons, view, data],
+                        description="Extract frame from hdf5 file and display it",
+                        help="show results at a given iteration")
+    shw_cmds.add_parser('probes', parents=[commons, data],
+                        description="Display pressure at probe locations",
+                        help="plot pressure at probes locations")
+    shw_cmds.add_parser('grid', parents=[commons],
+                        description="Display grid mesh",
+                        help="show grid mesh")
+    shw_cmds.add_parser('domains', parents=[commons],
+                        description="Display subdomains",
+                        help="show domain decomposition")
+    shw_cmds.add_parser('parameters', parents=[commons],
+                        description="Display some simulation parameters",
+                        help="display some simulation parameters")
 
-    # Solver parser
-    solve_parser.add_argument('-t', '--timings', action="store_true", default=None,
-                              help='Display complete timings')
-
-    return parser.parse_args()
+    return root.parse_args()
 
 
 def solve(cfg, msh):
@@ -91,27 +112,42 @@ def solve(cfg, msh):
 
     if cfg.figures and cfg.save:
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
-        plt.fields(show_pml=cfg.show_pml)
+        plt.fields(view=cfg.args.view, ref=cfg.args.ref,
+                   show_pml=cfg.show_pml, show_probes=cfg.show_probes)
         plt.probes()
         plt.show()
+
 
 def show(cfg, msh):
     """ Show simulation parameters and grid. """
 
-    headers.copyright()
-    headers.version()
-    headers.check_geo(cfg)
-    headers.parameters(cfg, msh)
 
-    if cfg.args.view == 'grid':
+    if cfg.args.show_command == 'parameters':
+        headers.version()
+        headers.check_geo(cfg)
+        headers.parameters(cfg, msh)
+
+    elif cfg.args.show_command == 'grid':
         msh.plot_grid(axis=True, pml=cfg.show_pml)
 
-    elif cfg.args.view == 'domains':
-        msh.plot_domains(legend=True)
+    elif cfg.args.show_command == 'domains':
+        if cfg.quiet:
+            msh.plot_domains(legend=False)
+        else:
+            msh.plot_domains(legend=True)
 
-    elif cfg.args.view == 'all':
-        msh.plot_grid(axis=True, pml=cfg.show_pml)
-        msh.plot_domains(legend=True)
+    elif cfg.args.show_command == 'frame':
+        plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
+        plt.fields(view=cfg.args.view, iteration=cfg.args.nt, ref=cfg.args.ref,
+                   show_pml=cfg.show_pml, show_probes=cfg.show_probes)
+
+    elif cfg.args.show_command == 'probes':
+        plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
+        plt.probes()
+
+    else:
+        headers.copyright()
+        headers.version()
 
     msh.show_figures()
 
@@ -120,8 +156,10 @@ def movie(cfg, _):
     """ Create a movie from a dataset. """
 
     plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
-    plt.movie(view=cfg.args.view, show_pml=cfg.show_pml)
+    plt.movie(view=cfg.args.view, nt=cfg.args.nt, ref=cfg.args.ref,
+              show_pml=cfg.show_pml, show_probes=cfg.show_probes)
     plt.show()
+
 
 def main():
     """ Main """
