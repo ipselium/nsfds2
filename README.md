@@ -155,7 +155,18 @@ probes_locations = [[128, 128], [128, 192]] # Probe locations. Must be list of l
 
 ### 0.8.5
 
+* fix: raise ValueError when using old version of config file
+* fix: Some bugs in graphics chg: argparse improved in solver
 
+* chg: pcolorfast replaced by pcolormesh
+* chg: graphics module rewritten
+* chg: Probe definied with only 1 entry in cfg file
+
+* fix: residual calculation now also based on flow
+* fix: config parser improved
+* fix: Bug in cin
+* fix: CFL with flow
+* fix: Graphic improvements : colormaps
 
 ### 0.8.4
 * new: white noise pressure source

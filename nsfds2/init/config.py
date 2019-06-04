@@ -165,7 +165,6 @@ class CfgSetup:
         self.cfg.set('save', 'path', 'results/')
         self.cfg.set('save', 'filename', 'tmp')
         self.cfg.set('save', 'compression', 'lzf')
-        self.cfg.set('save', 'only p', 'False')
         self.cfg.set('save', 'probes', '[]')
 
         with open(self.path + 'nsfds2.conf', 'w') as cf:
@@ -335,7 +334,6 @@ class CfgSetup:
         self.savepath = SAVE.get('path', 'results/')
         self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
         self.comp = SAVE.get('compression', 'lzf')
-        self.onlyp = SAVE.getboolean('only p', False)
         try:
             self.probes = json.loads(SAVE.get('probes', '[]'))
         except:

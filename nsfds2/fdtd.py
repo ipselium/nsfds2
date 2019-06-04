@@ -173,14 +173,7 @@ class FDTD:
     def save(self):
         """ Save data """
 
-        if self.cfg.save and self.cfg.probes:
-            self.fld.sfile['probes_value'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
-
-        if self.cfg.save and self.cfg.onlyp:
-            self.fld.sfile.create_dataset('p_it' + str(self.cfg.it),
-                                          data=self.fld.p, compression=self.cfg.comp)
-
-        elif self.cfg.save:
+        if self.cfg.save:
             self.fld.sfile.create_dataset('rho_it' + str(self.cfg.it),
                                           data=self.fld.r, compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhou_it' + str(self.cfg.it),
@@ -189,6 +182,9 @@ class FDTD:
                                           data=self.fld.rv, compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhoe_it' + str(self.cfg.it),
                                           data=self.fld.re, compression=self.cfg.comp)
+        if self.cfg.save and self.cfg.probes:
+            self.fld.sfile['probes_value'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
+
 
     @timing.proceed('pressure')
     def update_pressure(self):
