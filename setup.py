@@ -44,8 +44,8 @@ setup(
     author_email="ipselium@free.fr",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["numpy", "matplotlib", "ofdlib2",
-                      "progressbar33", "mplutils", "h5py", "fdgrid"],
+    install_requires=["numpy", "matplotlib", "ofdlib2>=0.9.3",
+                      "progressbar33", "mplutils>=0.3.0", "h5py", "fdgrid>=0.7.1"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
