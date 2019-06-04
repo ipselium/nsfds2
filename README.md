@@ -161,6 +161,7 @@ probes_locations = [[128, 128], [128, 192]] # Probe locations. Must be list of l
 * chg: pcolorfast replaced by pcolormesh
 * chg: graphics module rewritten
 * chg: Probe definied with only 1 entry in cfg file
+* chg: only_p option removed
 
 * fix: residual calculation now also based on flow
 * fix: config parser improved
