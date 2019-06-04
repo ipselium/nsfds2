@@ -240,11 +240,6 @@ class CfgSetup:
         self.curvflag = True if self.mesh == 'curvilinear' else False
         self.geofile = getattr(self.args, 'geofile', None)
         self.geoflag = True
-        if self.geofile:
-            self.geofile, self.geoname = self.args.geofile
-        else:
-            self.geofile = GEO.get('file', 'None')
-            self.geoname = GEO.get('geoname', 'square')
         self.curvname = GEO.get('curvname', 'None')
         self.bc = GEO.get('bc', 'RRRR').upper()
         self.nx = GEO.getint('nx', 256)
@@ -253,6 +248,17 @@ class CfgSetup:
         self.iz0 = GEO.getint('iz0', 0)
         self.dx = GEO.getfloat('dx', 1)
         self.dz = GEO.getfloat('dz', 1)
+
+        if self.geofile:
+            self.geofile, self.geoname = self.args.geofile
+        else:
+            self.geofile = GEO.get('file', 'None')
+            self.geoname = GEO.get('geoname', 'square')
+
+        self.geofile = self.geofile.replace('~', self.home)
+
+        if self.mesh not in ['regular', 'adaptative', 'curvilinear']:
+            raise ValueError('mesh must be regular, adaptative, or curvilinear')
 
     def _pml(self):
 
