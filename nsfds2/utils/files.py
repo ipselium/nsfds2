@@ -60,7 +60,7 @@ def get_curvilinear(cfg):
         try:
             sys.path.append(os.path.dirname(cfg.geofile))
             custom = __import__(os.path.basename(cfg.geofile).split('.')[0])
-            fcurv = getattr(custom, cfg.curvname)(cfg.nx, cfg.nz)
+            fcurv = getattr(custom, cfg.curvname)
             cfg.curvflag = True
         except (AttributeError, ImportError):
             cfg.curvflag = False
