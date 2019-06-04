@@ -157,8 +157,8 @@ class CfgSetup:
 
         self.cfg.add_section('figures')
         self.cfg.set('figures', 'figures', 'True')
-        self.cfg.set('figures', 'pml', 'True')
         self.cfg.set('figures', 'probes', 'True')
+        self.cfg.set('figures', 'pml', 'True')
 
         self.cfg.add_section('save')
         self.cfg.set('save', 'save', 'True')
@@ -336,7 +336,10 @@ class CfgSetup:
         self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
         self.comp = SAVE.get('compression', 'lzf')
         self.onlyp = SAVE.getboolean('only p', False)
-        self.probes = json.loads(SAVE.get('probes', '[]'))
+        try:
+            self.probes = json.loads(SAVE.get('probes', '[]'))
+        except:
+            raise ValueError('probe and probe_location have been merged. Update config file.')
 
         # Check probes
         if self.probes:
@@ -362,5 +365,5 @@ class CfgSetup:
 
         FIGS = self.cfg['figures']
         self.figures = FIGS.getboolean('figures', True)
-        self.show_pml = FIGS.getboolean('pml', True)
         self.show_probes = FIGS.getboolean('probes', True)
+        self.show_pml = FIGS.getboolean('pml', True)
