@@ -88,8 +88,11 @@ def parse_args():
                         description="Display pressure at probe locations",
                         help="plot pressure at probes locations")
     shw_cmds.add_parser('grid', parents=[commons],
-                        description="Display grid mesh",
-                        help="show grid mesh")
+                        description="Display numerical grid mesh",
+                        help="show numerical grid mesh")
+    shw_cmds.add_parser('pgrid', parents=[commons],
+                        description="Display physical grid mesh",
+                        help="show physical grid mesh")
     shw_cmds.add_parser('domains', parents=[commons],
                         description="Display subdomains",
                         help="show domain decomposition")
@@ -129,6 +132,9 @@ def show(cfg, msh):
 
     elif cfg.args.show_command == 'grid':
         msh.plot_grid(axis=True, pml=cfg.show_pml)
+
+    elif cfg.args.show_command == 'pgrid':
+        msh.plot_physical(pml=cfg.show_pml)
 
     elif cfg.args.show_command == 'domains':
         if cfg.quiet:
