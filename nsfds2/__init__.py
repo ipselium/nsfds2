@@ -22,5 +22,5 @@
 # Creation Date : 2019-03-07 - 23:02:29
 
 
-__version__ = "0.9.0"
+__version__ = "0.9.1"
 __all__ = ['fdtd', 'init', 'utils']
