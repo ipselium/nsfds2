@@ -30,7 +30,7 @@ Examples of obstacle arangements.
 
 
 import numpy as _np
-from fdgrid import Domain, Subdomain
+from fdgrid import Domain, Obstacle
 
 
 def logo(xn, zn):
@@ -56,9 +56,31 @@ def letter_a(nx, nz, size=10):
     xmin, xmax = int(xc-size*nx), int(xc+size*nx)
     zmin, zmax = int(zc-2*size*nz), int(zc+2*size*nz)
 
-    geo = [Subdomain([xmin, zc-6, xmax, zc+6], 'RRRR'),
-           Subdomain([xmin, zmax-12, xmax, zmax], 'RRRR'),
-           Subdomain([xmin-12, zmin, xmin, zmax], 'RRRR'),
-           Subdomain([xmax, zmin, xmax+12, zmax], 'RRRR')]
+    geo = [Obstacle([xmin, zc-6, xmax, zc+6], 'RRRR'),
+           Obstacle([xmin, zmax-12, xmax, zmax], 'RRRR'),
+           Obstacle([xmin-12, zmin, xmin, zmax], 'RRRR'),
+           Obstacle([xmax, zmin, xmax+12, zmax], 'RRRR')]
 
     return Domain((nx, nz), data=geo)
+
+
+def moving_square(nx, nz, size_percent=20):
+    """ Square in the middle.
+
+    Parameters:
+    -----------
+
+    size_percent (float): size of the square in percent of the largest
+    dimension of the domain.
+    """
+
+    size = int(min(nx, nz)*size_percent/100)
+    obs1 = Obstacle([int(nx/2)-size, int(nz/2)-size,
+                     int(nx/2)+size, int(nz/2)+size], 'URRR')
+    obs2 = Obstacle([nx-11, 0, nx-1, nz-1], 'URRR')
+
+    obs1.set_moving_bc({'f': 70000, 'A': 1, 'func': 'sine'})
+    obs2.set_moving_bc({'f': 73000, 'A': 1, 'func': 'sine'})
+
+    return Domain((nx, nz), data=[obs1, obs2])
+

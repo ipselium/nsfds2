@@ -2,9 +2,9 @@
 
 ## Introducing ***nsfds2***
 
-***nsfds2*** is 2D Navier-Stokes Solver that uses finite difference method.
+***nsfds2*** is 2D Navier-Stokes Solver that uses finite difference method. In particular, ***nsfds2*** is specialized in acoustic simulations.
 
-***nsfds2*** is still in developpement.
+***nsfds2*** is still in developpement. It is still full of bugs and comes with ***ABSOLUTELY NO WARRANTY***.
 
 
 ## Dependencies
@@ -15,19 +15,23 @@
 * h5py
 * progressbar33
 * ofdlib2 >= 0.9.3
-* fdgrid >= 0.7.2
+* fdgrid >= 0.8.0
 * mplutils >= 0.3.0
 
 ## Installation
 
-`python setup.py install`
+```
+python setup.py install
+```
 
 or
 
-`pip install nsfds2`
+```
+pip install nsfds2
+```
 
 
-**Note:** MAC users may recquire :
+**Note:** To compile *ofdlib2*, OS X users may recquire :
 
 ```
 xcode-select --install
@@ -35,7 +39,7 @@ xcode-select --install
 
 ## Classical use
 
-**nsfds2** can be used from a terminal with :
+***nsfds2*** can be used from a terminal with :
 
 ```
 nsfds2 solve|movie|show
@@ -43,7 +47,7 @@ nsfds2 solve|movie|show
 
 * *solve* : solves Navier-Stokes equation using default config file *~/.nsfds2/nsfds.conf*
 * *movie* : makes movie from results obtained with *solve* subcommand
-* *show* : shows simulations parameters and grid
+* *show* : set of commands for simulations parameters and grid inspection
 
 See `-h` option for further help :
 
@@ -56,8 +60,20 @@ nsfds2 show -h
 
 ## Custom Use
 
-**nsfds2** can also be used as a classical Python package. The following
-example gives the general philosophy :
+***nsfds2*** can also be used as a classical Python package. It provides several main objects to perform numerical simulations :
+
+* `init` package povides :
+
+	* `CfgSetup` class : Parses all simulation parameters from
+		*~/.nsfds2/nsfds2.conf* file.
+	* `Fields` class : Initialize all simulation parameters and fields
+
+* `fdtd` module provides `FDTD` class : Execute simulation
+
+* `utils` package provides in paricular `graphics` module to make result post-treatment
+
+
+ The following example gives the general philosophy to use ***nsfds2*** :
 
 
 ```python
@@ -89,7 +105,7 @@ plt.show()
 ## Config file
 
 By default, ***nsfds2*** create the config file `~/.nfds2/nsfds2.conf`. This
-file contains simulation paremeters that are used by the solver.
+file contains simulation parameters that are used by the solver.
 
 
 ```python
@@ -126,41 +142,56 @@ npml = 15				# Number of points of the PML
 type = None|pulse|harmonic|white 	# Source type
 ixs = 64				# Source x-location
 izs = 128 				# Source z-location
-s0 = 1e6 				# Sources strength
+s0 = 1e6 				# Sources strength [Pa]
 B0 = 2 					# Half spatial bandwidth
-f0 = 60000 				# Frequency (only for harmonic)
+f0 = 60000 				# Frequency (only for harmonic) [Hz]
 
 [flow]
 type = None 				# Flow type
-U0 = 5 					# Flow velocity following x
-V0 = 5 					# Flow velocity following z
+U0 = 5 					# Flow velocity following x [m/s]
+V0 = 5 					# Flow velocity following z [m/s]
 
 [eulerian fluxes]
 stencil = 3|7|11 			# Number of points of stencil
 
 [filtering]
 filter = True|False 			# Activate selective filter
-stencil = 11 				# Number of points of stencil used by filter
+stencil = 11 				# Number of points of stencil used by filters
 stength = 0.75 				# Strength of the filter
 
 [viscous fluxes]
 viscosity = True|False 			# Activate viscosity
-stencil = 7 				# Number of points of stencil
+stencil = 7 				# Number of points of stencil used for viscosity
 
 [shock capture]
 shock capture = True|False 		# Activate shock capture procedure
-stencil = 7 				# Number of points of stencil
+stencil = 7 				# Number of points of stencil for capture
 method = pressure|dilatation 		# Capture based on pressure or dilatation
 
 [figures]
 figures = True|False 			# Activate figures
-probes = True|False 			# Show probes
-pml = True|False 			# Show PML
+probes = True|False 			# Show probes in maps
+pml = True|False 			# Show PML in maps
 
 [save]
 save = True|False 			# Activate save
 path = results 				# Path to data file
 filename = tmp 				# Data filename
 compression = None|lzf 			# Activate compression
-probes = [[128, 128], [128, 192]] # Probe locations. Must be list of lists
+probes = [[128, 128], [128, 192]] 	# Probe locations. Must be a list of lists
 ```
+
+## Examples
+
+The *docs* directory gathers some configuration files example.
+Copy one of these files to *.nsfds2/nsfds2.conf* and :
+
+```
+nsfds2 solve
+```
+
+## Known Bugs
+
+* Mean flows are not yet fully supported.
+* When using Curvilinear meshes, PML, viscous flux, and moving boundaries are
+  not properly calculated. Be careful with the validity of the results !
