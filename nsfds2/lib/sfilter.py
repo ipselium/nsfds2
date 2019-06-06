@@ -42,7 +42,7 @@ class SelectiveFilter:
         self.flt = flt.sfilter(msh.nx, msh.nz, cfg.xnu, stencil=cfg.flt_stencil)
 
         for sub in self.msh.fmdomains:
-            bc = sub.bc.replace('.', '')
+            bc = sub.bc.replace('.', '').replace('U', 'R').replace('V', 'R').replace('W', 'R')
             sub.filt_method = getattr(self.flt, f"f{sub.axname}_{bc}")
 
     def apply(self):

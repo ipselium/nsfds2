@@ -97,6 +97,7 @@ class EulerianFluxes:
         self.cout_obstacles()
         self.cout_bc()
         self.cout_periodic()
+        self.cout_source()
 
     def cout_obstacles(self):
         """ Obstacle walls. """
@@ -155,6 +156,16 @@ class EulerianFluxes:
             for s in self.msh.dzdomains.additional_rigid_bc:
                 self.fld.ru[s] = 0
                 self.fld.rv[s] = 0
+
+    def cout_source(self):
+        """ Wall sources. """
+
+        for obs in self.msh.obstacles:
+            for bc in obs.edges:
+                if bc.type == 'U':
+                    self.fld.ru[bc.sx, bc.sz] = bc.prf*self.fld.update_wall(self.cfg.it, bc.f)
+                elif bc.type == 'V':
+                    self.fld.rv[bc.sx, bc.sz] = bc.prf*self.fld.update_wall(self.cfg.it, bc.f)
 
     def init_pml(self):
         """ Initialize PMLs. """

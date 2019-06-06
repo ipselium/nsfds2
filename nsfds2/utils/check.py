@@ -52,11 +52,9 @@ class Check:
         """ Check validity of obstacles boundary conditions. """
 
         for obs in self.msh.obstacles:
-            if obs.bc != 'RRRR':
-                s = "Obstacles can only be 'RRRR' for now. "
-                s += "Fix bcs to 'RRRR'."
-                warnings.warn(s, stacklevel=8)
-                obs.bc = 'RRRR'
+            if not re.match(r'^[RUVW]+$', obs.bc):
+                s = "Obstacles can only be combination of 'RUVW' for now. "
+                raise ValueError(s)
 
     def domain(self):
         """ Check validity of the bcs. """

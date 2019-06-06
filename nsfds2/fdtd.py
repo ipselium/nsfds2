@@ -61,9 +61,12 @@ class FDTD:
 
         # Init libs
         self.efluxes = EulerianFluxes(self.msh, self.fld, self.cfg)
-        self.vfluxes = ViscousFluxes(self.msh, self.fld, self.cfg)
-        self.sfilter = SelectiveFilter(self.msh, self.fld, self.cfg)
-        self.scapture = ShockCapture(self.msh, self.fld, self.cfg)
+        if self.cfg.vsc:
+            self.vfluxes = ViscousFluxes(self.msh, self.fld, self.cfg)
+        if self.cfg.flt:
+            self.sfilter = SelectiveFilter(self.msh, self.fld, self.cfg)
+        if self.cfg.cpt:
+            self.scapture = ShockCapture(self.msh, self.fld, self.cfg)
 
         # Init probes
         if cfg.probes:
@@ -185,7 +188,6 @@ class FDTD:
         if self.cfg.save and self.cfg.probes:
             self.fld.sfile['probes_value'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
 
-
     @timing.proceed('pressure')
     def update_pressure(self):
         """ Update pressure field """
@@ -208,7 +210,9 @@ class FDTD:
         else:
             self.res = self.fld.fdtools.residual(self.fld.p)
 
-        if (abs(self.res) > 100*self.pmax) or np.any(np.isnan(self.fld.p)):
+#        if (abs(self.res) > 100*self.pmax) or np.any(np.isnan(self.fld.p)):
+        if np.any(np.isnan(self.fld.p)):
+
             print('Stop simulation at iteration ', self.cfg.it)
             if np.any(np.isnan(self.fld.p)):
                 print('Nan : {}'.format(np.argwhere(np.isnan(self.fld.p))))

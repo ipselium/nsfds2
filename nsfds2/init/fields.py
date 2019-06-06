@@ -247,14 +247,18 @@ class Fields:
 
         if self._cfg.stype in ["", "None", "none"]:
             pass
+
         elif self._cfg.stype == "pulse":
             self.pulse()
+
         elif self._cfg.stype == "harmonic":
             self.update_source = self.update_harmonic
             self.harmonic()
+
         elif self._cfg.stype == "white":
             self.update_source = self.update_white
             self.white()
+
         else:
             raise ValueError('Only pulse, harmonic and white supported for now')
 
@@ -286,7 +290,7 @@ class Fields:
                                                              (z - self._msh.z[izS])**2)/self.Bx**2)
 
     def harmonic(self):
-        """ Harmonic source. """
+        """ Harmonic ponctual source. """
 
         for iz, z in enumerate(self._msh.z):
             self.src[:, iz] = np.exp(-np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
@@ -308,6 +312,14 @@ class Fields:
         """ Harmonic source time evolution. """
 
         return self.src*np.sin(2*np.pi*self._cfg.f0*it*self._cfg.dt)
+
+    def update_wall(self, it, f0=None):
+        """ Harmonic source time evolution for walls. """
+
+        if not f0:
+            f0 = self._cfg.f0
+
+        return np.sin(2*np.pi*f0*it*self._cfg.dt)
 
     def update_white(self, it):
         """ White noise time evolution. """
