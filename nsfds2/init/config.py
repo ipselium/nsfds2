@@ -35,7 +35,10 @@ import json
 import time
 import sys
 import os
+import shutil
+import datetime
 import configparser
+import nsfds2
 
 
 class CfgSetup:
@@ -44,6 +47,9 @@ class CfgSetup:
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, args=None):
+
+        # Minimal version of the config file
+        self.base_version = '0.9.0'
 
         # Command line arguments
         self.args = args
@@ -58,6 +64,9 @@ class CfgSetup:
 
         # Check if config file exist. If not create it
         self.init_cfg()
+
+        # Check if config file version is ok
+        self.check_config_file()
 
         # Read config file (can be overridden by command line)
         cf = getattr(self.args, 'cfgfile', None)
@@ -78,6 +87,35 @@ class CfgSetup:
             print("Create directory :", directory)
             time.sleep(0.5)
 
+    def check_config_file(self):
+        """ Check version of the config file. Overwrite it if too old. """
+
+        cfg = configparser.ConfigParser(allow_no_value=True)
+        cfg.read(self.path + 'nsfds2.conf')
+
+        try:
+            CFG = cfg['configuration']
+            version = CFG.get('version')
+            if version < self.base_version:
+                self._overwrite_config_file()
+
+        except (KeyError, TypeError):
+            self._overwrite_config_file()
+
+    def _overwrite_config_file(self):
+
+        # Backup old config file
+        now = datetime.datetime.now()
+        name = f'{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}'
+        shutil.move(self.path + 'nsfds2.conf', self.path + f'nsfds2_{name}.conf')
+
+        print('Bad config file found...')
+        print(f'Current configfile backup : nsfds2_{name}.conf')
+        time.sleep(1)
+
+        # Create new config file
+        self.init_cfg()
+
     def init_cfg(self):
         """ Check if nsfds2.conf exists. If not create it. """
 
@@ -91,6 +129,7 @@ class CfgSetup:
         """ Write default configuration file. """
 
         self.cfg.add_section('configuration')
+        self.cfg.set('configuration', 'version', str(nsfds2.__version__))
         self.cfg.set('configuration', 'timings', 'False')
         self.cfg.set('configuration', 'quiet', 'False')
 
