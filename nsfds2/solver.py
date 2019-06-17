@@ -29,7 +29,6 @@ Navier Stokes Finite Differences Solver
 """
 
 import os
-import sys
 import argparse
 from fdgrid import mesh
 from nsfds2.init import CfgSetup, Fields
@@ -206,10 +205,6 @@ def main():
 
 
 if __name__ == "__main__":
-
-    if sys.platform == 'darwin':
-        import matplotlib
-        matplotlib.use("TkAgg")
 
     os.nice(20)
     main()
