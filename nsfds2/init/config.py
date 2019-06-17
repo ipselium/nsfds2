@@ -160,8 +160,8 @@ class CfgSetup:
         self.cfg.add_section('PML')
         self.cfg.set('PML', 'beta', '0.')
         self.cfg.set('PML', 'alpha', '4.')
-        self.cfg.set('PML', 'sigmax', '20.')
-        self.cfg.set('PML', 'sigmaz', '20.')
+        self.cfg.set('PML', 'sigmax', 'auto')
+        self.cfg.set('PML', 'sigmaz', 'auto')
         self.cfg.set('PML', 'Npml', '15')
 
         self.cfg.add_section('source')
@@ -198,6 +198,7 @@ class CfgSetup:
         self.cfg.set('figures', 'figures', 'True')
         self.cfg.set('figures', 'probes', 'True')
         self.cfg.set('figures', 'pml', 'True')
+        self.cfg.set('figures', 'bc_profiles', 'True')
 
         self.cfg.add_section('save')
         self.cfg.set('save', 'save', 'True')
@@ -410,3 +411,4 @@ class CfgSetup:
         self.figures = FIGS.getboolean('figures', True)
         self.show_probes = FIGS.getboolean('probes', True)
         self.show_pml = FIGS.getboolean('pml', True)
+        self.bc_profiles = FIGS.getboolean('bc_profiles', True)
