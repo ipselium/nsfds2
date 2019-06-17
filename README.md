@@ -60,7 +60,8 @@ nsfds2 show -h
 
 ## Custom Use
 
-***nsfds2*** can also be used as a classical Python package. It provides several main objects to perform numerical simulations :
+***nsfds2*** can also be used as a classical Python package. It provides
+several main objects to perform numerical simulations :
 
 * `init` package povides :
 
@@ -101,6 +102,10 @@ plt.imshow(fld.p)
 plt.show()
 ```
 
+## Customize geometry
+
+To customize geometry, one can provide a custom obstacle to the `Mesh`
+constructor. To learn more about this, see [`fdgrid` documentation](https://github.com/ipselium/fdgrid).
 
 ## Config file
 
@@ -183,7 +188,7 @@ probes = [[128, 128], [128, 192]] 	# Probe locations. Must be a list of lists
 
 ## Examples
 
-The *docs* directory gathers some configuration files example.
+The *docs* folder gathers some configuration examples.
 Copy one of these files to *.nsfds2/nsfds2.conf* and :
 
 ```

@@ -82,11 +82,17 @@ class Fields:
     def init_fields(self):
         """ Setup initial fields. """
 
-        # Fields
-        self.p = np.zeros(self._msh.shape) + self._cfg.p0
-        self.r = np.zeros_like(self.p) + self._cfg.rho0
-        self.ru = np.zeros_like(self.p) + self._cfg.U0
-        self.rv = np.zeros_like(self.p) + self._cfg.V0
+        if self._cfg.mesh == 'curvilinear':
+            self.p = np.zeros(self._msh.shape) + self._cfg.p0/self._msh.J
+            self.r = np.zeros_like(self.p) + self._cfg.rho0/self._msh.J
+            self.ru = np.zeros_like(self.p) + self._cfg.U0/self._msh.J
+            self.rv = np.zeros_like(self.p) + self._cfg.V0/self._msh.J
+        else:
+            self.p = np.zeros(self._msh.shape) + self._cfg.p0
+            self.r = np.zeros_like(self.p) + self._cfg.rho0
+            self.ru = np.zeros_like(self.p) + self._cfg.U0
+            self.rv = np.zeros_like(self.p) + self._cfg.V0
+
         self.dltn = np.zeros_like(self.p)
 
         # Source
@@ -98,13 +104,7 @@ class Fields:
         # Flow
         self.flow_select()
 
-        # Curvilinear
-        if self._cfg.mesh == 'curvilinear':
-            self.r = self.r/self._msh.J
-            self.ru = self.ru/self._msh.J
-            self.rv = self.rv/self._msh.J
-            self.p = self.p/self._msh.J
-
+        # Update rho.e
         self.re = self.p/(self._cfg.gamma-1.)
 
     def init_derivatives(self):
@@ -189,7 +189,6 @@ class Fields:
 
         elif self._cfg.mesh == 'curvilinear':
             self.fdtools.EuJ(self.Ei, self.Eui, self.Evi, self.Eei,
-                             self.Fi, self.Fui, self.Fvi, self.Fei,
                              self.r, self.ru, self.rv, self.re, self.p,
                              self._msh.dxn_dxp, self._msh.dxn_dzp)
 
@@ -198,8 +197,7 @@ class Fields:
                             self.r, self.ru, self.rv, self.re, self.p)
 
         elif self._cfg.mesh == 'curvilinear':
-            self.fdtools.FuJ(self.Ei, self.Eui, self.Evi, self.Eei,
-                             self.Fi, self.Fui, self.Fvi, self.Fei,
+            self.fdtools.FuJ(self.Fi, self.Fui, self.Fvi, self.Fei,
                              self.r, self.ru, self.rv, self.re, self.p,
                              self._msh.dzn_dxp, self._msh.dzn_dzp)
 
@@ -285,9 +283,18 @@ class Fields:
         ixS = self._cfg.ixS
         izS = self._cfg.izS
 
-        for iz, z in enumerate(self._msh.z):
-            self.p[:, iz] += self._cfg.S0*np.exp(-np.log(2)*((self._msh.x-self._msh.x[ixS])**2 +
-                                                             (z - self._msh.z[izS])**2)/self.Bx**2)
+        if self._cfg.mesh == 'curvilinear':
+            for iz in range(self._msh.nz):
+                for ix in range(self._msh.nx):
+                    self.p[ix, iz] = self._cfg.p0/self._msh.J[ix, iz] \
+                             + self._cfg.S0*np.exp(-np.log(2) \
+                             * ((self._msh.xp[ix, iz] - self._msh.xp[ixS, izS])**2 +
+                                (self._msh.zp[ix, iz] - self._msh.zp[ixS, izS])**2)/self.Bx**2)
+        else:
+            for iz, z in enumerate(self._msh.z):
+                self.p[:, iz] += self._cfg.S0*np.exp(-np.log(2) \
+                            * ((self._msh.x-self._msh.x[ixS])**2 +
+                               (z - self._msh.z[izS])**2)/self.Bx**2)
 
     def harmonic(self):
         """ Harmonic ponctual source. """
@@ -313,13 +320,13 @@ class Fields:
 
         return self.src*np.sin(2*np.pi*self._cfg.f0*it*self._cfg.dt)
 
-    def update_wall(self, it, f0=None):
+    def update_wall(self, it, f=None, phi=0):
         """ Harmonic source time evolution for walls. """
 
-        if not f0:
-            f0 = self._cfg.f0
+        if not f:
+            f = self._cfg.f0
 
-        return np.sin(2*np.pi*f0*it*self._cfg.dt)
+        return np.sin(2*np.pi*f*it*self._cfg.dt + phi)
 
     def update_white(self, it):
         """ White noise time evolution. """

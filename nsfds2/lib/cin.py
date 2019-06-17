@@ -45,7 +45,8 @@ class Cin:
         self.du = drv.du(msh.x, msh.z, msh.stencil)
 
         for sub in self.msh.dmdomains:
-            bc = sub.bc.replace('.', '').replace('U', 'R').replace('V', 'R').replace('W', 'R')
+            bc = sub.bc.replace('.', '').replace('U', 'R')
+            bc = bc.replace('V', 'R').replace('W', 'R')
             sub.cin_method = getattr(self.du, f'dud{sub.axname}_{bc}')
 
     def dispatch(self):
@@ -59,7 +60,6 @@ class Cin:
 
         elif self.cfg.mesh == 'curvilinear':
             self.fld.fdtools.EuJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
-                                 self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
                                  self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
                                  self.fld.p, self.msh.dxn_dxp, self.msh.dxn_dzp)
 
@@ -76,8 +76,7 @@ class Cin:
                                 self.fld.p)
 
         elif self.cfg.mesh == 'curvilinear':
-            self.fld.fdtools.FuJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
-                                 self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
+            self.fld.fdtools.FuJ(self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
                                  self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
                                  self.fld.p, self.msh.dzn_dxp, self.msh.dzn_dzp)
 

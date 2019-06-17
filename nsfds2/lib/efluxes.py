@@ -163,9 +163,13 @@ class EulerianFluxes:
         for obs in self.msh.obstacles:
             for bc in obs.edges:
                 if bc.type == 'U':
-                    self.fld.ru[bc.sx, bc.sz] = bc.prf*self.fld.update_wall(self.cfg.it, bc.f)
+                    self.fld.ru[bc.sx, bc.sz] = bc.prf*self.fld.update_wall(self.cfg.it,
+                                                                            f=bc.f,
+                                                                            phi=bc.phi)
                 elif bc.type == 'V':
-                    self.fld.rv[bc.sx, bc.sz] = bc.prf*self.fld.update_wall(self.cfg.it, bc.f)
+                    self.fld.rv[bc.sx, bc.sz] = bc.prf*self.fld.update_wall(self.cfg.it,
+                                                                            f=bc.f,
+                                                                            phi=bc.phi)
 
     def init_pml(self):
         """ Initialize PMLs. """
