@@ -316,12 +316,16 @@ class Plot:
         if not probes:
             return None
 
-        p = self.data.get_dataset('probes_value') - self.data.get_attr('p0')
+        p = self.data.get_dataset('probes_value')
         t = _np.arange(self.nt)*self.data.get_attr('dt')
 
         _, ax = _plt.subplots(figsize=(9, 4))
         for i, c in enumerate(probes):
-            ax.plot(t, p[i, :], label=f'@{tuple(c)}')
+            if self.data.get_attr('mesh') == 'curvilinear':
+                p0 = self.data.get_attr('p0')/self.data.get_dataset('J')[c[0], c[1]]
+            else:
+                p0 = self.data.get_attr('p0')
+            ax.plot(t, p[i, :] - p0, label=f'@{tuple(c)}')
         ax.set_xlim(t.min(), t.max())
         ax.set_xlabel('Time [s]')
         ax.set_ylabel('Pressure [Pa]')
