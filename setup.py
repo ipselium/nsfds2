@@ -41,11 +41,11 @@ setup(
     license="GPL",
     url='https://github.com/ipselium/nsfds2',
     author="Cyril Desjouy",
-    author_email="ipselium@free.fr",
+    author_email="cyril.desjouy@univ-lemans.fr",
     packages=find_packages(),
     include_package_data=True,
     install_requires=["numpy", "matplotlib", "ofdlib2>=0.9.4",
-                      "progressbar33", "mplutils>=0.3.0", "h5py", "fdgrid>=0.8.2"],
+                      "progressbar33", "mplutils>=0.3.0", "h5py", "fdgrid>=0.8.3"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
