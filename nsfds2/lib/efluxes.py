@@ -32,6 +32,7 @@ Compute Eulerian fluxes
 
 
 import re
+import numpy as _np
 import ofdlib2.derivation as drv
 from nsfds2.utils.array import empty_like
 from .cin import Cin
@@ -162,14 +163,61 @@ class EulerianFluxes:
 
         for obs in self.msh.obstacles:
             for bc in obs.edges:
-                if bc.type == 'U':
-                    self.fld.ru[bc.sx, bc.sz] = bc.prf*self.fld.update_wall(self.cfg.it,
-                                                                            f=bc.f,
-                                                                            phi=bc.phi)
-                elif bc.type == 'V':
-                    self.fld.rv[bc.sx, bc.sz] = bc.prf*self.fld.update_wall(self.cfg.it,
-                                                                            f=bc.f,
-                                                                            phi=bc.phi)
+
+                vn, vt = self._get_source_wall(bc)
+
+                if self.cfg.mesh == 'curvilinear':
+                    self._cout_source_curvilinear(bc, vn, vt)
+
+                else:
+                    self._cout_source_cartesian(bc, vn, vt)
+
+    def _get_source_wall(self, bc):
+
+        if bc.f0_t:
+            vt = bc.vt*self.fld.update_wall(self.cfg.it, f=bc.f0_t, phi=bc.phi_t)
+        else:
+            vt = 0
+
+        if bc.f0_n:
+            vn = bc.vn*self.fld.update_wall(self.cfg.it, f=bc.f0_n, phi=bc.phi_n)
+        else:
+            vn = 0
+
+        return vn, vt
+
+    def _cout_source_cartesian(self, bc, vn, vt):
+
+        if bc.axis == 0:
+            self.fld.ru[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vn
+            self.fld.rv[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vt
+
+        elif bc.axis == 1:
+            self.fld.ru[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vt
+            self.fld.rv[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vn
+
+    def _cout_source_curvilinear(self, bc, vn, vt):
+
+        vx = self._vx(vn, vt, bc.sx, bc.sz)
+        vz = self._vz(vn, vt, bc.sx, bc.sz)
+
+        if bc.axis == 0:
+            self.fld.ru[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vz
+            self.fld.rv[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vx
+
+        elif bc.axis == 1:
+            self.fld.ru[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vx
+            self.fld.rv[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vz
+
+    def _vx(self, vn, vt, sx, sz):
+
+        d = _np.sqrt(self.msh.dzn_dxp[sx, sz]**2 + self.msh.dzn_dzp[sx, sz]**2)
+        return  (self.msh.dxn_dzp[sx, sz]*vn + self.msh.dzn_dzp[sx, sz]*vt)/d
+
+    def _vz(self, vn, vt, sx, sz):
+
+        d = _np.sqrt(self.msh.dzn_dxp[sx, sz]**2 + self.msh.dzn_dzp[sx, sz]**2)
+        return  (self.msh.dzn_dzp[sx, sz]*vn - self.msh.dxn_dzp[sx, sz]*vt)/d
 
     def init_pml(self):
         """ Initialize PMLs. """
