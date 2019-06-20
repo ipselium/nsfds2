@@ -51,6 +51,8 @@ def get_data(filename):
     """ Get data from filename. """
 
     try:
+        home = os.path.expanduser("~")
+        filename = filename.replace('~', home)
         data = h5py.File(filename, 'r')
     except OSError:
         print('You must provide a valid hdf5 file')
