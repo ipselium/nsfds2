@@ -36,7 +36,7 @@ setup(
     description="Finite difference solver for Navier-Stokes equations",
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    version="0.9.6",
+    version="0.9.7",
     license="GPL",
     url='https://github.com/ipselium/nsfds2',
     author="Cyril Desjouy",
