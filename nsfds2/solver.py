@@ -131,10 +131,12 @@ def show(cfg, msh):
         headers.parameters(cfg, msh)
 
     elif cfg.args.show_command == 'grid':
-        msh.plot_grid(axis=True, pml=cfg.show_pml, bc_profiles=cfg.bc_profiles)
+        msh.plot_grid(axis=True, pml=cfg.show_pml, bc_profiles=cfg.bc_profiles,
+                      probes=cfg.probes if cfg.show_probes else False)
 
     elif cfg.args.show_command == 'pgrid':
-        msh.plot_physical(pml=cfg.show_pml, bc_profiles=cfg.bc_profiles)
+        msh.plot_physical(pml=cfg.show_pml, bc_profiles=cfg.bc_profiles,
+                          probes=cfg.probes if cfg.show_probes else False)
 
     elif cfg.args.show_command == 'domains':
         if cfg.quiet:
