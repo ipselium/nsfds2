@@ -45,19 +45,19 @@ xcode-select --install
 ***nsfds2*** can be used from a terminal with :
 
 ```
-nsfds2 solve|movie|show
+nsfds2 solve|make|show
 ```
 
 * *solve* : solves Navier-Stokes equation using default config file *~/.nsfds2/nsfds.conf*
-* *movie* : makes movie from results obtained with *solve* subcommand
+* *make* : makes movie or sound files from results obtained with *solve* subcommand
 * *show* : set of commands for simulations parameters and grid inspection
 
 See `-h` option for further help :
 
 ```
 nsfds2 solve -h
-nsfds2 movie -h
-nsfds2 show -h
+nsfds2 make -h 		# 'movie' and 'sound' subcommands
+nsfds2 show -h 		# 'parameters', 'grid', 'pgrid', 'frame', 'probes' subcommands
 ```
 
 

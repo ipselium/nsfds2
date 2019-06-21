@@ -133,6 +133,12 @@ class DataExtractor:
         else:
             self.J = _np.ones((self.get_attr('nx'), self.get_attr('nz')))
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
     def reference(self, view='p', ref=None):
         """ Generate the references  for min/max colormap values """
 

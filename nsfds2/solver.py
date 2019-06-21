@@ -33,7 +33,7 @@ import argparse
 from fdgrid import mesh
 from nsfds2.init import CfgSetup, Fields
 from nsfds2.fdtd import FDTD
-from nsfds2.utils import files, headers, graphics
+from nsfds2.utils import files, headers, graphics, sounds
 
 
 def parse_args():
@@ -71,12 +71,13 @@ def parse_args():
     commands.add_parser("solve", parents=[commons, view, data, time],
                         description="Navier-Stokes equation solver",
                         help="solve NS equations with given configuration")
-    commands.add_parser("movie", parents=[commons, view, data],
-                        description="Make a movie from existing results",
-                        help="make movie from existing results")
     shw = commands.add_parser("show",
                               description="Helper commands for parameters/results analysis",
                               help="show results and simulation configuration")
+    mak = commands.add_parser("make",
+                              description="Make movie/sound files",
+                              help="make movie/sound files")
+
 
     # show section subsubparsers : frame/probe/
     shw_cmds = shw.add_subparsers(dest='show_command',
@@ -99,6 +100,16 @@ def parse_args():
     shw_cmds.add_parser('parameters', parents=[commons],
                         description="Display some simulation parameters",
                         help="display some simulation parameters")
+
+    # make section subsubparsers : movie/wav
+    mak_cmds = mak.add_subparsers(dest='make_command',
+                                  help='see -h for further help')
+    mak_cmds.add_parser("movie", parents=[commons, view, data],
+                        description="Make a movie from existing results",
+                        help="make movie from existing results")
+    mak_cmds.add_parser("sound", parents=[commons, view, data],
+                        description="Make sound files from existing results",
+                        help="make sound files from existing results")
 
     return root.parse_args()
 
@@ -160,13 +171,18 @@ def show(cfg, msh):
     msh.show_figures()
 
 
-def movie(cfg, _):
+def make(cfg, _):
     """ Create a movie from a dataset. """
 
-    plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
-    plt.movie(view=cfg.args.view, nt=cfg.args.nt, ref=cfg.args.ref,
-              show_pml=cfg.show_pml, show_probes=cfg.show_probes)
-    plt.show()
+    if cfg.args.make_command == 'movie':
+
+        plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
+        plt.movie(view=cfg.args.view, nt=cfg.args.nt, ref=cfg.args.ref,
+                  show_pml=cfg.show_pml, show_probes=cfg.show_probes)
+        plt.show()
+
+    elif cfg.args.make_command == 'sound':
+        _ = sounds.probes_to_wave(cfg.datafile)
 
 
 def main():

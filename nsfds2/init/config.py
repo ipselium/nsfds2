@@ -259,6 +259,9 @@ class CfgSetup:
         if self.nt is None:
             self.nt = SIM.getint('nt', 500)
 
+        if self.nt % self.ns:
+            self.nt -= self.nt % self.ns
+
         self.it = 0
 
     def _thp(self):
@@ -319,7 +322,8 @@ class CfgSetup:
         self.B0 = SRC.getfloat('B0', 5)
         self.f0 = SRC.getfloat('f0', 20000)
         self.wavfile = SRC.get('wavfile', None)
-        self.wavfile = self.wavfile.replace('~', self.home)
+        if self.wavfile:
+            self.wavfile = self.wavfile.replace('~', self.home)
 
         if self.stype in self.none:
             self.S0 = 0

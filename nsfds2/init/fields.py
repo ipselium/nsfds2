@@ -35,8 +35,8 @@ import sys as _sys
 import h5py
 import numpy as _np
 from ofdlib2.fdtd import fdtools
-from nsfds2.utils import headers
-from nsfds2.utils.misc import resample
+from nsfds2.utils import headers, misc
+from nsfds2.utils.sounds import resample
 
 
 def set_sigma(cfg, msh):
@@ -221,7 +221,7 @@ class Fields:
 
         if _os.path.isfile(self._cfg.datafile):
             msg = f'{self._cfg.datafile} already exists. Overwrite ? [yes]/no'
-            overwrite = input(msg)
+            overwrite = input(misc.colors.RED + msg + misc.colors.END)
             if overwrite.lower() in ['n', 'no']:
                 _sys.exit(1)
 

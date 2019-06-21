@@ -28,11 +28,7 @@ DOCSTRING
 
 import re
 import itertools
-import os as _os
 import datetime as _datetime
-import numpy as _np
-import scipy.signal as _sps
-import scipy.io.wavfile as _wf
 
 
 class colors:
@@ -69,57 +65,6 @@ def bc_combinations():
     print('\n* {} with only X : {}'.format(len(pml_x), ', '.join(pml_x)))
     print('\n* {} with P : {}'.format(len(pml_p), ', '.join(pml_p)))
     print('\n* {} with only R & X : {}'.format(len(pml_r), ', '.join(pml_r)))
-
-
-def resample(file, target_rate, pad=None, write=False, force_mono=True):
-    """ Resample target wave file with target_rate. """
-
-    target_rate = int(target_rate)
-
-    if not 1 < target_rate < 4.3e6:
-        raise ValueError('Sampling rate must be 1 < rate < 4.3e6')
-
-    path = _os.path.dirname(file)
-    filename = _os.path.basename(file).split('.')
-    rate, data = _wf.read(file)
-    dtype = data.dtype
-    duration = data.shape[0]/rate
-    N = int(target_rate*duration)
-
-    if len(data.shape) == 2 and force_mono:   # stereo to mono
-        data = (data[:, 0] + data[:, 1])/2
-
-    print(colors.BLUE + f'Resampling {file} at {target_rate} kHz ({N} points)...')
-    print(colors.RED + f'Set nt > {N} to play the whole sound' + colors.END)
-    if len(data.shape) == 1:   # mono
-        data_r = _sps.resample(data, N).astype(dtype)
-        if pad:
-            data_r = get_padded(data_r, pad)
-
-
-    if len(data.shape) == 2:   # stereo
-        tmp_l = _sps.resample(data[:, 0], N).astype(dtype)
-        tmp_r = _sps.resample(data[:, 1], N).astype(dtype)
-        if pad:
-            tmp_l = get_padded(tmp_l, pad)
-            tmp_r = get_padded(tmp_r, pad)
-
-        data_r = _np.vstack([tmp_l, tmp_r]).T
-
-
-    if write:
-        print(f'Writing {N} samples at {target_rate} kHz rate...')
-        _wf.write(path + '{}_r.{}'.format(*filename), rate=target_rate, data=data_r)
-
-    return data_r/abs(data_r).max()
-
-
-def get_padded(s, N, value=0):
-    """ Pad signal with value. """
-    if N > s.shape[0]:
-        return _np.concatenate([s, value*_np.ones(N - s.shape[0])])
-
-    return s
 
 
 def secs_to_dhms(secs):
