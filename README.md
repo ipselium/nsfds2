@@ -18,7 +18,7 @@
 * fdgrid >= 0.8.0
 * mplutils >= 0.3.0
 
-***Important:*** To create animations using `nsfds2 solve`, you also need to have ***ffmpeg*** installed on your system.
+***Important:*** To create animations using `nsfds2 make movie`, you also need to have ***ffmpeg*** installed on your system.
 
 
 ## Installation
