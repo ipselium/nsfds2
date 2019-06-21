@@ -23,6 +23,7 @@
 #
 # pylint: disable=too-many-statements
 # pylint: disable=attribute-defined-outside-init
+# pylint: disable=too-many-instance-attributes
 """
 -----------
 
@@ -43,8 +44,6 @@ import nsfds2
 
 class CfgSetup:
     """ Handle configuration file. """
-
-    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, args=None):
 
@@ -171,6 +170,7 @@ class CfgSetup:
         self.cfg.set('source', 'S0', '1e6')
         self.cfg.set('source', 'B0', '5')
         self.cfg.set('source', 'f0', '20000')
+        self.cfg.set('source', 'wavfile', 'None')
 
         self.cfg.add_section('flow')
         self.cfg.set('flow', 'type', 'None')
@@ -318,6 +318,8 @@ class CfgSetup:
         self.S0 = SRC.getfloat('S0', 1e3)
         self.B0 = SRC.getfloat('B0', 5)
         self.f0 = SRC.getfloat('f0', 20000)
+        self.wavfile = SRC.get('wavfile', None)
+        self.wavfile = self.wavfile.replace('~', self.home)
 
         if self.stype in self.none:
             self.S0 = 0

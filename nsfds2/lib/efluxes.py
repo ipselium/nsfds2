@@ -82,7 +82,7 @@ class EulerianFluxes:
             self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
                                self.fld.rv, self.fld.re)
 
-            if self.cfg.stype in ['harmonic', 'white']:
+            if self.cfg.stype in ['harmonic', 'white', 'wav']:
                 self.fld.p += self.fld.update_source(self.cfg.it)
 
         if 'A' in self.msh.bc:
@@ -174,15 +174,17 @@ class EulerianFluxes:
 
     def _get_source_wall(self, bc):
 
+        if isinstance(bc.f0_n, (float, int)) and bc.f0_n > 0:
+            vn = bc.vn*self.fld.update_wall(self.cfg.it, f=bc.f0_n, phi=bc.phi_n)
+        elif isinstance(bc.f0_n, str) and hasattr(bc, 'wav'):
+            vn = bc.vn*bc.wav[self.cfg.it]
+        else:
+            vn = 0
+
         if bc.f0_t:
             vt = bc.vt*self.fld.update_wall(self.cfg.it, f=bc.f0_t, phi=bc.phi_t)
         else:
             vt = 0
-
-        if bc.f0_n:
-            vn = bc.vn*self.fld.update_wall(self.cfg.it, f=bc.f0_n, phi=bc.phi_n)
-        else:
-            vn = 0
 
         return vn, vt
 

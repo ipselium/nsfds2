@@ -18,7 +18,7 @@
 * fdgrid >= 0.8.0
 * mplutils >= 0.3.0
 
-***Important:*** To create animations, you also need to have ***ffmpeg*** installed on your system.
+***Important:*** To create animations using `nsfds2 solve`, you also need to have ***ffmpeg*** installed on your system.
 
 
 ## Installation
@@ -107,8 +107,14 @@ plt.show()
 
 ## Customize geometry
 
-To customize geometry, one can provide a custom obstacle to the `Mesh`
+To customize geometry, one can provide a set of custom obstacles to the `Mesh`
 constructor. To learn more about this, see [`fdgrid` documentation](https://github.com/ipselium/fdgrid).
+
+
+## Wav sources
+
+**Important:** When using wav source, pay attention to the spatial steps (*dx*,
+*dz*). To resolve frequencies until 20 kHz, *dx* and *dz* must be < 0.017 m.
 
 ## Config file
 
@@ -147,12 +153,13 @@ sigmaz = 20|auto 			# Filter strength along z. Can be 'auto'
 npml = 15				# Number of points of the PML
 
 [source]
-type = None|pulse|harmonic|white 	# Source type
+type = None|pulse|harmonic|white|wav 	# Source type
 ixs = 64				# Source x-location
 izs = 128 				# Source z-location
 s0 = 1e6 				# Sources strength [Pa]
 B0 = 2 					# Half spatial bandwidth
-f0 = 60000 				# Frequency (only for harmonic) [Hz]
+f0 = 60000 				# Frequency (for harmonic only) [Hz]
+wavfile = None|path 			# path to wavfile (for wav only)
 
 [flow]
 type = None 				# Flow type
@@ -201,5 +208,5 @@ nsfds2 solve
 ## Known Bugs
 
 * Mean flows are not yet fully supported.
-* When using Curvilinear meshes, PML, viscous flux, and moving boundaries are
+* Curvilinear geometries are still experimental : PML, viscous flux, and moving boundaries are
   not properly calculated. Be careful with the validity of the results !

@@ -30,13 +30,17 @@ Initialize all fields
 @author: Cyril Desjouy
 """
 
+import os as _os
+import sys as _sys
 import h5py
-import numpy as np
+import numpy as _np
 from ofdlib2.fdtd import fdtools
+from nsfds2.utils import headers
+from nsfds2.utils.misc import resample
 
 
 def set_sigma(cfg, msh):
-    """ Set sigmax and sigmaz. """
+    """ Set sigmax and sigmaz for PMLs. """
 
     try:
         cfg.sigmax = float(cfg.sigmax)
@@ -56,14 +60,19 @@ class Fields:
 
     def __init__(self, msh, cfg):
 
-
         self._msh = msh
         self._cfg = cfg
+
+        # Headers
+        if not self._cfg.quiet:
+            headers.copyright()
+            headers.version()
 
         # Fields
         self.init_fields()
         self.init_derivatives()
         self.init_filters()
+        self.init_wav_wall()
 
         self.fdtools = fdtools(self._cfg.nx, self._cfg.nz,
                                self._cfg.p0, self._cfg.gamma, self._cfg.dt)
@@ -75,30 +84,23 @@ class Fields:
         # Obstacles to 0
         self.zero_obstacles()
 
-        # Save file
-        if self._cfg.save:
-            self.init_save()
-
     def init_fields(self):
         """ Setup initial fields. """
 
         if self._cfg.mesh == 'curvilinear':
-            self.p = np.zeros(self._msh.shape) + self._cfg.p0/self._msh.J
-            self.r = np.zeros_like(self.p) + self._cfg.rho0/self._msh.J
-            self.ru = np.zeros_like(self.p) + self._cfg.U0/self._msh.J
-            self.rv = np.zeros_like(self.p) + self._cfg.V0/self._msh.J
+            self.p = _np.zeros(self._msh.shape) + self._cfg.p0/self._msh.J
+            self.r = _np.zeros_like(self.p) + self._cfg.rho0/self._msh.J
+            self.ru = _np.zeros_like(self.p) + self._cfg.U0/self._msh.J
+            self.rv = _np.zeros_like(self.p) + self._cfg.V0/self._msh.J
         else:
-            self.p = np.zeros(self._msh.shape) + self._cfg.p0
-            self.r = np.zeros_like(self.p) + self._cfg.rho0
-            self.ru = np.zeros_like(self.p) + self._cfg.U0
-            self.rv = np.zeros_like(self.p) + self._cfg.V0
+            self.p = _np.zeros(self._msh.shape) + self._cfg.p0
+            self.r = _np.zeros_like(self.p) + self._cfg.rho0
+            self.ru = _np.zeros_like(self.p) + self._cfg.U0
+            self.rv = _np.zeros_like(self.p) + self._cfg.V0
 
-        self.dltn = np.zeros_like(self.p)
+        self.dltn = _np.zeros_like(self.p)
 
         # Source
-        self.Bx = self._cfg.B0*self._cfg.dx
-        self.src = np.empty_like(self.p)
-        self.update_source = None
         self.source_select()
 
         # Flow
@@ -110,29 +112,29 @@ class Fields:
     def init_derivatives(self):
         """ Init derivatives. """
 
-        self.K = np.zeros_like(self.p)
-        self.Ku = np.zeros_like(self.p)
-        self.Kv = np.zeros_like(self.p)
-        self.Ke = np.zeros_like(self.p)
+        self.K = _np.zeros_like(self.p)
+        self.Ku = _np.zeros_like(self.p)
+        self.Kv = _np.zeros_like(self.p)
+        self.Ke = _np.zeros_like(self.p)
 
-        self.E = np.empty_like(self.p)
-        self.Eu = np.empty_like(self.p)
-        self.Ev = np.empty_like(self.p)
-        self.Ee = np.empty_like(self.p)
+        self.E = _np.empty_like(self.p)
+        self.Eu = _np.empty_like(self.p)
+        self.Ev = _np.empty_like(self.p)
+        self.Ee = _np.empty_like(self.p)
 
-        self.F = np.empty_like(self.p)
-        self.Fu = np.empty_like(self.p)
-        self.Fv = np.empty_like(self.p)
-        self.Fe = np.empty_like(self.p)
+        self.F = _np.empty_like(self.p)
+        self.Fu = _np.empty_like(self.p)
+        self.Fv = _np.empty_like(self.p)
+        self.Fe = _np.empty_like(self.p)
 
     def init_filters(self):
         """ Init variables used for filtering. """
 
-        self.dp = np.zeros_like(self.p)
-        self.sg = np.zeros_like(self.p)
-        self.tau11 = np.zeros_like(self.p)
-        self.tau22 = np.zeros_like(self.p)
-        self.tau12 = np.zeros_like(self.p)
+        self.dp = _np.zeros_like(self.p)
+        self.sg = _np.zeros_like(self.p)
+        self.tau11 = _np.zeros_like(self.p)
+        self.tau22 = _np.zeros_like(self.p)
+        self.tau12 = _np.zeros_like(self.p)
 
     def init_pml(self):
         """ Init PMLs. """
@@ -141,47 +143,47 @@ class Fields:
 
         # sigmax
         Dx = self._msh.x[self._msh.Npml] - self._msh.x[0]             # Width of the PML
-        self.sx = np.zeros(self._msh.nx)
+        self.sx = _np.zeros(self._msh.nx)
         self.sx[:self._msh.Npml] = self._cfg.sigmax*abs((self._msh.x[:self._msh.Npml] \
                                  - self._msh.x[self._msh.Npml])/Dx)**self._cfg.alpha
         self.sx[self._msh.nx - self._msh.Npml:] = self.sx[self._msh.Npml-1::-1]
 
         # sigmaz
         Dz = self._msh.z[self._msh.Npml] - self._msh.z[0]             # Width of the PML
-        self.sz = np.zeros(self._msh.nz)
+        self.sz = _np.zeros(self._msh.nz)
         self.sz[:self._msh.Npml] = self._cfg.sigmaz*abs((self._msh.z[:self._msh.Npml] \
                                  - self._msh.z[self._msh.Npml])/Dz)**self._cfg.alpha
         self.sz[self._msh.nz - self._msh.Npml:] = self.sz[self._msh.Npml-1::-1]
 
         # Init Q
-        self.qx = np.zeros_like(self.p)
-        self.qux = np.zeros_like(self.p)
-        self.qvx = np.zeros_like(self.p)
-        self.qex = np.zeros_like(self.p)
-        self.qz = np.zeros_like(self.p)
-        self.quz = np.zeros_like(self.p)
-        self.qvz = np.zeros_like(self.p)
-        self.qez = np.zeros_like(self.p)
+        self.qx = _np.zeros_like(self.p)
+        self.qux = _np.zeros_like(self.p)
+        self.qvx = _np.zeros_like(self.p)
+        self.qex = _np.zeros_like(self.p)
+        self.qz = _np.zeros_like(self.p)
+        self.quz = _np.zeros_like(self.p)
+        self.qvz = _np.zeros_like(self.p)
+        self.qez = _np.zeros_like(self.p)
 
         # Init K
-        self.Kx = np.zeros_like(self.p)
-        self.Kux = np.zeros_like(self.p)
-        self.Kvx = np.zeros_like(self.p)
-        self.Kex = np.zeros_like(self.p)
-        self.Kz = np.zeros_like(self.p)
-        self.Kuz = np.zeros_like(self.p)
-        self.Kvz = np.zeros_like(self.p)
-        self.Kez = np.zeros_like(self.p)
+        self.Kx = _np.zeros_like(self.p)
+        self.Kux = _np.zeros_like(self.p)
+        self.Kvx = _np.zeros_like(self.p)
+        self.Kex = _np.zeros_like(self.p)
+        self.Kz = _np.zeros_like(self.p)
+        self.Kuz = _np.zeros_like(self.p)
+        self.Kvz = _np.zeros_like(self.p)
+        self.Kez = _np.zeros_like(self.p)
 
         # Initial E & F
-        self.Ei = np.zeros_like(self.p)
-        self.Eui = np.zeros_like(self.p)
-        self.Evi = np.zeros_like(self.p)
-        self.Eei = np.zeros_like(self.p)
-        self.Fi = np.zeros_like(self.p)
-        self.Fui = np.zeros_like(self.p)
-        self.Fvi = np.zeros_like(self.p)
-        self.Fei = np.zeros_like(self.p)
+        self.Ei = _np.zeros_like(self.p)
+        self.Eui = _np.zeros_like(self.p)
+        self.Evi = _np.zeros_like(self.p)
+        self.Eei = _np.zeros_like(self.p)
+        self.Fi = _np.zeros_like(self.p)
+        self.Fui = _np.zeros_like(self.p)
+        self.Fvi = _np.zeros_like(self.p)
+        self.Fei = _np.zeros_like(self.p)
 
         if self._cfg.mesh in ['regular', 'adaptative']:
             self.fdtools.Eu(self.Ei, self.Eui, self.Evi, self.Eei,
@@ -201,8 +203,27 @@ class Fields:
                              self.r, self.ru, self.rv, self.re, self.p,
                              self._msh.dzn_dxp, self._msh.dzn_dzp)
 
+    def init_wav_wall(self):
+        """ Initialize wall with a time evolution built from a wavfile. """
+
+        for obs in self._msh.obstacles:
+            for bc in obs.edges:
+                if isinstance(bc.f0_n, str):
+                    filename = bc.f0_n.replace('~', self._cfg.home)
+                    if filename in self.wav_lst:
+                        bc.wav = self.wav_lst[filename]
+                    else:
+                        bc.wav = resample(filename, 1/self._cfg.dt, pad=self._cfg.nt+1)
+                        self.wav_lst[filename] = bc.wav
+
     def init_save(self):
         """ Init save. """
+
+        if _os.path.isfile(self._cfg.datafile):
+            msg = f'{self._cfg.datafile} already exists. Overwrite ? [yes]/no'
+            overwrite = input(msg)
+            if overwrite.lower() in ['n', 'no']:
+                _sys.exit(1)
 
         self.sfile = h5py.File(self._cfg.datafile, 'w')
 
@@ -228,7 +249,7 @@ class Fields:
         self.sfile.attrs['mesh'] = self._cfg.mesh
         self.sfile.attrs['bc'] = self._cfg.bc
 
-        probes = np.zeros((len(self._cfg.probes), self._cfg.nt))
+        probes = _np.zeros((len(self._cfg.probes), self._cfg.nt))
         self.sfile.create_dataset('probes_location', data=self._cfg.probes)
         self.sfile.create_dataset('probes_value', data=probes,
                                   compression=self._cfg.comp)
@@ -242,6 +263,11 @@ class Fields:
 
     def source_select(self):
         """ Source selection. """
+
+        self.Bx = self._cfg.B0*self._cfg.dx
+        self.src = _np.empty_like(self.p)
+        self.update_source = None
+        self.wav_lst = dict()
 
         if self._cfg.stype in ["", "None", "none"]:
             pass
@@ -257,8 +283,15 @@ class Fields:
             self.update_source = self.update_white
             self.white()
 
+        elif self._cfg.stype == "wav" and self._cfg.wavfile:
+            self.wav = resample(self._cfg.wavfile,
+                                    1/self._cfg.dt, pad=self._cfg.nt+1)
+            self.wav_lst[self._cfg.wavfile] = self.wav
+            self.update_source = self.update_wav
+            self.harmonic()
+
         else:
-            raise ValueError('Only pulse, harmonic and white supported for now')
+            raise ValueError('Only pulse, harmonic, white, wave supported for now')
 
     def flow_select(self):
         """ Flow selection. """
@@ -287,12 +320,12 @@ class Fields:
             for iz in range(self._msh.nz):
                 for ix in range(self._msh.nx):
                     self.p[ix, iz] = self._cfg.p0/self._msh.J[ix, iz] \
-                             + self._cfg.S0*np.exp(-np.log(2) \
+                             + self._cfg.S0*_np.exp(-_np.log(2) \
                              * ((self._msh.xp[ix, iz] - self._msh.xp[ixS, izS])**2 +
                                 (self._msh.zp[ix, iz] - self._msh.zp[ixS, izS])**2)/self.Bx**2)
         else:
             for iz, z in enumerate(self._msh.z):
-                self.p[:, iz] += self._cfg.S0*np.exp(-np.log(2) \
+                self.p[:, iz] += self._cfg.S0*_np.exp(-_np.log(2) \
                             * ((self._msh.x-self._msh.x[ixS])**2 +
                                (z - self._msh.z[izS])**2)/self.Bx**2)
 
@@ -300,7 +333,7 @@ class Fields:
         """ Harmonic ponctual source. """
 
         for iz, z in enumerate(self._msh.z):
-            self.src[:, iz] = np.exp(-np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
+            self.src[:, iz] = _np.exp(-_np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
                                                  (z - self._msh.z[self._cfg.izS])**2)/self.Bx**2)
         self.src = self._cfg.S0*self.src
 
@@ -308,17 +341,22 @@ class Fields:
         """ white noise. """
 
         for iz, z in enumerate(self._msh.z):
-            tmp = (1 - np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
+            tmp = (1 - _np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
                                   (z - self._msh.z[self._cfg.izS])**2)/self.Bx**2)
-            self.src[:, iz] = tmp*np.exp(-np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
+            self.src[:, iz] = tmp*_np.exp(-_np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
                                                      (z - self._msh.z[self._cfg.izS])**2)/self.Bx**2)
         self.src = self._cfg.S0*self.src
-        self.noise = np.random.normal(size=self._cfg.nt)
+        self.noise = _np.random.normal(size=self._cfg.nt)
+
+    def update_wav(self, it):
+        """ Wav source time evolution. """
+
+        return self.src*self.wav[it]
 
     def update_harmonic(self, it):
         """ Harmonic source time evolution. """
 
-        return self.src*np.sin(2*np.pi*self._cfg.f0*it*self._cfg.dt)
+        return self.src*_np.sin(2*_np.pi*self._cfg.f0*it*self._cfg.dt)
 
     def update_wall(self, it, f=None, phi=0):
         """ Harmonic source time evolution for walls. """
@@ -326,7 +364,7 @@ class Fields:
         if not f:
             f = self._cfg.f0
 
-        return np.sin(2*np.pi*f*it*self._cfg.dt + phi)
+        return _np.sin(2*_np.pi*f*it*self._cfg.dt + phi)
 
     def update_white(self, it):
         """ White noise time evolution. """
@@ -339,25 +377,25 @@ class Fields:
         Umax = 0.5*self._cfg.U0
         b = 0.2
 
-        theta = np.zeros(self._cfg.nx)
+        theta = _np.zeros(self._cfg.nx)
 
         # initialisation des fluctuations
         for iz in range(self._cfg.nz):
 
-            r = np.sqrt(self._msh.x**2 + self._msh.z[iz]**2)
+            r = _np.sqrt(self._msh.x**2 + self._msh.z[iz]**2)
 
             for ix in range(self._cfg.nx):
                 if self._msh.x[ix] == 0 and self._msh.z[iz] == 0:
                     theta[ix] = 0
                 elif self._msh.x[ix] >= 0:
-                    theta[ix] = np.arcsin(self._msh.z[iz]/r[ix])
+                    theta[ix] = _np.arcsin(self._msh.z[iz]/r[ix])
                 elif self._msh.x[ix] < 0:
-                    theta[ix] = - np.arcsin(self._msh.z[iz]/r[ix]) + np.pi
+                    theta[ix] = - _np.arcsin(self._msh.z[iz]/r[ix]) + _np.pi
 
             self.r[:, iz] = (1 - 0.5*(self._cfg.gamma - 1)*Umax**2 \
-                             * np.exp(1-r**2/b**2))**(1/(self._cfg.gamma - 1))
-            self.ru[:, iz] -= Umax*r*np.exp(0.5*(1-r**2/b**2))/b*np.sin(theta)
-            self.rv[:, iz] += Umax*r*np.exp(0.5*(1-r**2/b**2))/b*np.cos(theta)
+                             * _np.exp(1-r**2/b**2))**(1/(self._cfg.gamma - 1))
+            self.ru[:, iz] -= Umax*r*_np.exp(0.5*(1-r**2/b**2))/b*_np.sin(theta)
+            self.rv[:, iz] += Umax*r*_np.exp(0.5*(1-r**2/b**2))/b*_np.cos(theta)
 
         self.p = self.r**self._cfg.gamma/self._cfg.gamma
         self.ru *= self.r
@@ -367,7 +405,7 @@ class Fields:
         """ Poiseuille """
 
         # Poiseuille
-        tmp_z = np.arange(self._msh.nz)*self._msh.dz
+        tmp_z = _np.arange(self._msh.nz)*self._msh.dz
         self._cfg.U0 *= 0.5*(4*tmp_z/(tmp_z[-1]-tmp_z[0]) - 4*tmp_z**2/(tmp_z[-1]-tmp_z[0])**2)
 
     def kelvin_helmholtz(self):
@@ -382,17 +420,17 @@ class Fields:
         T1 = 1.
         T2 = 0.8
 
-        T = np.zeros((self._cfg.nx, self._cfg.nz))
+        T = _np.zeros((self._cfg.nx, self._cfg.nz))
 
         for iz in range(self._cfg.nz):
             self.ru[:, iz] = 0.5*((U1+U2) +
-                                  (U1-U2)*np.tanh(2*self._msh.z[iz]/delta))
+                                  (U1-U2)*_np.tanh(2*self._msh.z[iz]/delta))
             T[:, iz] = T1*(self.ru[:, iz] - U2)/(U1 - U2) \
                      + T2*(U1-self.ru[:, iz])/(U1 - U2) \
                      + 0.5*(self._cfg.gamma-1)*(U1 - self.ru[:, iz])*(self.ru[:, iz]-U2)
             self.r[:, iz] = 1/T[:, iz]
 
-        self.p = np.ones((self._msh.nx, self._msh.nz))/self._cfg.gamma
+        self.p = _np.ones((self._msh.nx, self._msh.nz))/self._cfg.gamma
         self.ru = self.ru*self.r
 
     def zero_obstacles(self):

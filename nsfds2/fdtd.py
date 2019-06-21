@@ -35,7 +35,7 @@ import sys
 import time
 import numpy as np
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
-from nsfds2.utils import headers, check, timing
+from nsfds2.utils import headers, check, timing, misc
 from nsfds2.lib.efluxes import EulerianFluxes
 from nsfds2.lib.vfluxes import ViscousFluxes
 from nsfds2.lib.sfilter import SelectiveFilter
@@ -50,11 +50,6 @@ class FDTD:
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
-
-        # Headers
-        if not self.cfg.quiet:
-            headers.copyright()
-            headers.version()
 
         # Check some of the simulation parameters
         check.Check(self.cfg, self.msh)
@@ -89,12 +84,20 @@ class FDTD:
         self.bench = {i: [] for i in timed_methods}
         self.tloopi = time.perf_counter()
 
-    def run(self):
-        """ Main loop. """
+    def _pre_run(self):
+
+        # Save file
+        if self.cfg.save:
+            self.fld.init_save()
 
         if not self.cfg.quiet:
             print('-'*int(self.columns))
             print('# Start main loop ')
+
+    def run(self):
+        """ Main loop. """
+
+        self._pre_run()
 
         if not self.cfg.quiet and not self.cfg.timings:
             widgets = [Bar('>'), ' ', ETA(), ' ', ReverseBar('<')]
@@ -143,9 +146,10 @@ class FDTD:
 
         if not self.cfg.quiet:
             print('-'*int(self.columns))
-            msg = '# Simulation completed in {:.2f} s.\n'
+            msg = '# Simulation completed in {}.\n'
             msg += '# End at t = {:.4f} sec.'
-            print(msg.format(time.perf_counter() - self.tloopi, self.cfg.dt*self.cfg.it))
+            print(msg.format(misc.secs_to_dhms(time.perf_counter() - self.tloopi),
+                             self.cfg.dt*self.cfg.it))
             print('-'*int(self.columns))
 
     @timing.proceed('efluxes')
