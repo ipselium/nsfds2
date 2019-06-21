@@ -1,8 +1,8 @@
 archives/
+results/
 *TODO*
 *.hdf5
 *.mkv
-*.wav
 *log*
 *bench*
 *profile.prof
