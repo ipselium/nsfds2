@@ -35,6 +35,7 @@ import sys
 import getpass
 import h5py
 import numpy as _np
+from scipy import signal as _signal
 import matplotlib.pyplot as _plt
 import matplotlib.animation as _ani
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -136,7 +137,7 @@ class DataExtractor:
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, mtype, value, traceback):
         self.close()
 
     def reference(self, view='p', ref=None):
@@ -339,6 +340,44 @@ class Plot:
         ax.set_ylabel('Pressure [Pa]')
         ax.legend()
         ax.grid()
+
+        return None
+
+    def spectrogram(self):
+        """ Plot probe spectograms. """
+
+        probes = self.data.get_dataset('probes_location').tolist()
+
+        if not probes:
+            return None
+
+        p = self.data.get_dataset('probes_value')
+
+        M = 1024
+
+        fig, ax = _plt.subplots(p.shape[0], figsize=(9, 4))
+        for i, c in enumerate(probes):
+
+            if self.data.get_attr('mesh') == 'curvilinear':
+                p0 = self.data.get_attr('p0')/self.data.get_dataset('J')[c[0], c[1]]
+            else:
+                p0 = self.data.get_attr('p0')
+
+            freqs, times, Sx = _signal.spectrogram(p[i, :] - p0,
+                                                   fs=1/self.data.get_attr('dt'),
+                                                   window='hanning',
+                                                   nperseg=M, noverlap=M-100,
+                                                   detrend=False, scaling='spectrum')
+            im = ax[i].pcolormesh(times, freqs/1000, 10*_np.log10(Sx), cmap='viridis')
+            ax[i].set_ylabel('Frequency [kHz]')
+            if i != len(probes) - 1:
+                ax[i].set_xticks([])
+
+            fig.colorbar(im, ax=ax[i], label=f'probe {i}')
+
+        ax[-1].set_xlabel('Time [s]')
+        ax[0].set_title('Square spectrum magitude')
+        _plt.tight_layout()
 
         return None
 

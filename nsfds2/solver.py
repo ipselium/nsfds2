@@ -88,6 +88,9 @@ def parse_args():
     shw_cmds.add_parser('probes', parents=[commons, data],
                         description="Display pressure at probe locations",
                         help="plot pressure at probes locations")
+    shw_cmds.add_parser('spectrogram', parents=[commons, data],
+                        description="Display spectrograms at probe locations",
+                        help="plot spectrograms at probes locations")
     shw_cmds.add_parser('grid', parents=[commons],
                         description="Display numerical grid mesh",
                         help="show numerical grid mesh")
@@ -163,6 +166,11 @@ def show(cfg, msh):
     elif cfg.args.show_command == 'probes':
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
         plt.probes()
+
+    elif cfg.args.show_command == 'spectrogram':
+        plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
+        plt.spectrogram()
+
 
     else:
         headers.copyright()
