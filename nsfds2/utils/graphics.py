@@ -181,6 +181,13 @@ class DataExtractor:
         """ Close hdf5 file """
         self.data.close()
 
+    def list(self):
+        """ List all datasets and attributes. """
+
+        datasets = [i for i in self.data.keys() if '_it' not in i]
+        print('datasets: ', *datasets)
+        print('attrs: ', *list(self.data.attrs))
+
     def get(self, view='p', iteration=0):
         """ Get data at iteration. """
 

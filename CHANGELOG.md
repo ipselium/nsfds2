@@ -1,5 +1,71 @@
 # Changelog
 
+## 0.9.8-dev
+
+new: probe spectrograms
+
+## 0.9.7
+
+* chg: update docs
+
+## 0.9.6
+
+* fix: bad ofdlib dependency
+
+## 0.9.5
+
+* new: wave source support
+* new: modules utils.sounds
+* new: argument parser has now make subcommand for 'movie' and 'sound'
+
+* fix: fdgrid dependency
+* fix: '~' now interpreted as home in config file
+* fix: display probes in grid/pgrid
+* fix: fdgrid v0.8.4 needed
+
+## 0.9.4
+
+* fix: moving bc with curvilinear mesh
+
+## 0.9.3
+
+* fix: Matplotlib frontend for OSX - 2nd try !
+
+## 0.9.2
+
+* new: bc_profiles available
+* chg: update examples
+
+* fix: Probes with curvilinear mesh
+* fix: ofdlib 0.9.4 compatibility
+* fix: Matplotlib frontend for OSX
+
+## 0.9.1
+
+* fix: Check config file version at startup
+
+## 0.9.0
+
+* new: Wall source support with fdgrid >=0.8
+* doc: improve doc and provide sample configuration files
+
+## 0.8.8
+
+* doc: add example using custom geofile
+
+## 0.8.7
+
+* doc: update README
+
+## 0.8.6
+
+* add: '~' is now understood in config file
+* add: nsfds2 show pgrid available
+
+* fix: update config examples for nsfds=0.8.5
+* fix: Bug loading curvilinear function
+
+
 ## 0.8.5
 
 * fix: raise ValueError when using old version of config file
