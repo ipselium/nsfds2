@@ -29,5 +29,5 @@ if sys.platform == 'darwin':
     import matplotlib
     matplotlib.use("TkAgg")
 
-__version__ = "0.9.8"
+__version__ = "0.9.9"
 __all__ = ['fdtd', 'init', 'utils']
