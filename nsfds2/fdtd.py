@@ -131,8 +131,7 @@ class FDTD:
     def _pre_run(self):
 
         # Save file
-        if self.cfg.save:
-            self.fld.init_save()
+        self.fld.init_save()
 
         if not self.cfg.quiet:
             print('-'*int(self.columns))
@@ -182,8 +181,7 @@ class FDTD:
                 pbar.update(self.cfg.it)
 
 
-        if self.cfg.save:
-            self.fld.sfile.close()
+        self.fld.sfile.close()
 
         if not self.cfg.quiet and not self.cfg.timings:
             pbar.finish()
@@ -233,7 +231,7 @@ class FDTD:
                                           data=self.fld.rv, compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhoe_it' + str(self.cfg.it),
                                           data=self.fld.re, compression=self.cfg.comp)
-        if self.cfg.save and self.cfg.probes:
+        if self.cfg.probes:
             self.fld.sfile['probes_value'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
 
     @timing.proceed('pressure')
@@ -264,8 +262,8 @@ class FDTD:
             print('Stop simulation at iteration ', self.cfg.it)
             if np.any(np.isnan(self.fld.p)):
                 print('Nan : {}'.format(np.argwhere(np.isnan(self.fld.p))))
-            if self.cfg.save:
-                self.fld.sfile.close()
+
+            self.fld.sfile.close()
             sys.exit(1)
 
     def phys2num(self):

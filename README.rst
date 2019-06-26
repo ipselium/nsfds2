@@ -48,6 +48,6 @@ or
 Links
 -----
 
-- Documentation: http://perso.univ-lemans.fr/~cdesjouy/nsfds2/
-- Source code: https://github.com/ipselium/nsfds2
-- Bug reports: https://github.com/ipselium/nsfds2/issues
+- **Documentation**: http://perso.univ-lemans.fr/~cdesjouy/nsfds2/
+- **Source code**: https://github.com/ipselium/nsfds2
+- **Bug reports**: https://github.com/ipselium/nsfds2/issues

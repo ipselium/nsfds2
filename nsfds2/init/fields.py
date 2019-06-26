@@ -240,7 +240,7 @@ class Fields:
         """ Init save. """
 
         if _os.path.isfile(self._cfg.datafile):
-            msg = f'{self._cfg.datafile} already exists. Overwrite ? [yes]/no'
+            msg = f'{self._cfg.datafile} already exists. Overwrite ? [yes]/no '
             overwrite = input(misc.colors.RED + msg + misc.colors.END)
             if overwrite.lower() in ['n', 'no']:
                 _sys.exit(1)

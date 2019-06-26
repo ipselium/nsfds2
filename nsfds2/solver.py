@@ -127,11 +127,14 @@ def solve(cfg, msh):
     fdtd = FDTD(msh, fld, cfg)
     fdtd.run()
 
-    if cfg.figures and cfg.save:
+    if cfg.figures:
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
-        plt.fields(view=cfg.args.view, ref=cfg.args.ref,
-                   show_pml=cfg.show_pml, show_probes=cfg.show_probes)
-        plt.probes()
+        if cfg.save:
+            plt.fields(view=cfg.args.view, ref=cfg.args.ref,
+                       show_pml=cfg.show_pml, show_probes=cfg.show_probes)
+        if cfg.probes:
+            plt.probes()
+
         plt.show()
 
 

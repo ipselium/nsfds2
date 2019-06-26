@@ -58,7 +58,7 @@ class CfgSetup:
     def __init__(self, args=None):
 
         # Minimal version of the config file
-        self.base_version = '0.9.0'
+        self.base_version = '0.9.9'
 
         # Command line arguments
         self.args = args
@@ -211,10 +211,10 @@ class CfgSetup:
         self.cfg.set('figures', 'bc_profiles', 'True')
 
         self.cfg.add_section('save')
-        self.cfg.set('save', 'save', 'True')
         self.cfg.set('save', 'path', 'results/')
         self.cfg.set('save', 'filename', 'tmp')
         self.cfg.set('save', 'compression', 'lzf')
+        self.cfg.set('save', 'fields', 'True')
         self.cfg.set('save', 'probes', '[]')
 
         with open(self.path + 'nsfds2.conf', 'w') as cf:
@@ -392,7 +392,7 @@ class CfgSetup:
     def _save(self):
 
         SAVE = self.cfg['save']
-        self.save = SAVE.getboolean('save', True)
+        self.save = SAVE.getboolean('fields', True)
         self.savepath = SAVE.get('path', 'results/')
         self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
         self.comp = SAVE.get('compression', 'lzf')
