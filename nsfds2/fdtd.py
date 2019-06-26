@@ -25,9 +25,40 @@
 """
 -----------
 
-Finite Difference Time Domain class
+The :py:class:`FDTD` class is the heart of `nsfds2`. It coordinates all the
+calculations that have to be led to perform the Finite Differences Time Domain
+(FDTD) simulation. The :py:class:`FDTD` works with :
 
-@author: Cyril Desjouy
+    * a configuration file (parsed by :py:class:`nsfds2.init.config.CfgSetup`)
+    * initial fields (created by :py:class:`nsfds2.init.fields.Fields`)
+    * a mesh (created with fdgrid)
+
+
+Example
+-------
+
+::
+
+    from nsfds2.init import CfgSetup, Fields
+    from nsfds2.fdtd import FDTD
+    from fdgrid.mesh import Mesh
+
+    # Read simulation parameter in config file ~/nsfds2/nsfds2.conf
+    cfg = CfgSetup()
+
+    # Define the mesh
+    msh = Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0), obstacles=[])
+
+    # Init acoustic fields
+    fld = Fields(msh, cfg)
+
+    # Create simulation
+    fdtd = FDTD(msh, fld, cfg)
+    fdtd.run()
+
+
+
+-----------
 """
 
 import os
@@ -43,7 +74,20 @@ from nsfds2.lib.scapture import ShockCapture
 
 
 class FDTD:
-    """ FDTD. """
+    """
+
+    The Finite Differences Time Domain Solver
+
+    Parameters
+    ----------
+        msh : :py:class:`nsfds2.fdgrid.mesh.Mesh`
+            Mesh
+        fld : :py:class:`nsfds2.init.fields.Fields`
+            Initial fields
+        cfg : :py:class:`nsfds2.init.config.CfgSetup`
+            Configuration
+
+    """
 
     def __init__(self, msh, fld, cfg):
 
@@ -95,7 +139,7 @@ class FDTD:
             print('# Start main loop ')
 
     def run(self):
-        """ Main loop. """
+        """ Run the main loop. """
 
         self._pre_run()
 

@@ -110,7 +110,7 @@ def parse_args():
     mak_cmds.add_parser("movie", parents=[commons, view, data],
                         description="Make a movie from existing results",
                         help="make movie from existing results")
-    mak_cmds.add_parser("sound", parents=[commons, view, data],
+    mak_cmds.add_parser("sound", parents=[commons, data],
                         description="Make sound files from existing results",
                         help="make sound files from existing results")
 

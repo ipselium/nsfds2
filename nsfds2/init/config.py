@@ -27,9 +27,19 @@
 """
 -----------
 
-Parse config file and set all simulation parameters
+This module contains the :py:class:`CfgSetup` that read the configuration file
+and set all simulation parameters.
 
-@author: Cyril Desjouy
+Example
+-------
+
+::
+
+    from nsfds2.init import CfgSetup
+
+    cfg = CfgSetup()
+
+-----------
 """
 
 import json

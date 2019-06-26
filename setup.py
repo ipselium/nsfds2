@@ -34,7 +34,7 @@ from setuptools import setup, find_packages
 setup(
     name='nsfds2',
     description="Finite difference solver for Navier-Stokes equations",
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     long_description_content_type='text/markdown',
     version="0.9.7",
     license="GPL",

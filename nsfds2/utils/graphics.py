@@ -24,10 +24,14 @@
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=no-member
 """
------------
+--------------
+
 Graphic utilities for nsfds2
 
-@author: Cyril Desjouy
+
+
+
+--------------
 """
 
 import os
@@ -49,7 +53,7 @@ __all__ = ['get_data', 'DataIterator', 'DataExtractor', 'Plot']
 
 
 def get_data(filename):
-    """ Get data from filename. """
+    """ Get data from `filename` (hdf5 file). """
 
     try:
         home = os.path.expanduser("~")
@@ -67,10 +71,12 @@ class DataIterator:
 
     Parameters
     ----------
-
-    data : DataExtractor instance
-    view : The variable to display. string.
-    nt : The last frame to consider. int
+    data :
+        DataIterator instance.
+    view : tuple
+        The variable to display.
+    nt : int
+        The last frame to consider.
 
     """
 
@@ -114,8 +120,8 @@ class DataExtractor:
 
     Parameters
     ----------
-
-    data : Path to hdf5 file (str) or data from hdf5 file
+    data : str, hdf5file
+        Path to hdf5 file or data from hdf5 file.
 
     """
 
@@ -233,9 +239,11 @@ class Plot:
 
     Parameters
     ----------
+    filename : str
+        hdf5 file
+    quiet : bool, optional
+        Quiet mode.
 
-    filename : hdf5 file
-    quiet : quiet mode. Boolean.
     """
 
     def __init__(self, filename, quiet=False):
@@ -325,7 +333,7 @@ class Plot:
                 pbar.finish()
 
     def probes(self):
-        """ Plot probes. """
+        """ Plot pressure at probes. """
 
         probes = self.data.get_dataset('probes_location').tolist()
 
@@ -351,7 +359,7 @@ class Plot:
         return None
 
     def spectrogram(self):
-        """ Plot probe spectograms. """
+        """ Plot spectograms at probes. """
 
         probes = self.data.get_dataset('probes_location').tolist()
 

@@ -25,9 +25,20 @@
 """
 -----------
 
-Initialize all fields
+To initialize all the fields, :py:class:`Fields` needs :
 
-@author: Cyril Desjouy
+    * the mesh (from :py:class:fdgrid.mesh.Mesh)
+    * the configuration of the simulation as an instance of :py:class:`nsfds2.init.config.CfgSetup`
+
+
+Example
+-------
+
+::
+
+    fld = Fields(msh, cfg)
+
+-----------
 """
 
 import os as _os
@@ -56,7 +67,16 @@ def set_sigma(cfg, msh):
 
 
 class Fields:
-    """ Fields initialization. """
+    """ Initialize fields.
+
+    Parameters
+    ----------
+    msh : :py:class:fdgrid.mesh.Mesh
+        The mesh
+    cfg : :py:class:`nsfds2.init.config.CfgSetup`
+        The simulation configuration
+
+    """
 
     def __init__(self, msh, cfg):
 
