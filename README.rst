@@ -1,12 +1,16 @@
-Introducing **nsfds2**
-======================
+Introducing nsfds2
+==================
 
-.. image:: https://badge.fury.io/py/nsfds2.svg
-    :target: https://badge.fury.io/py/nsfds2.svg
+|Pypi| |Build| |Licence|
 
-**nsfds2** is 2D Navier-Stokes Solver that uses finite difference method. In particular, **nsfds2** is specialized in acoustic simulations.
+.. image:: https://github.com/ipselium/nsfds2/blob/master/docs/source/images/nsfds2.png
 
-**nsfds2** is still in developpement. It is still full of bugs and comes with **ABSOLUTELY NO WARRANTY**.
+
+**nsfds2** is 2D Navier-Stokes Solver that uses finite difference method.
+**nsfds2** is specialized in acoustic simulations.
+
+**nsfds2** is still in developpement. It is still full of bugs and comes with
+**ABSOLUTELY NO WARRANTY**.
 
 
 Dependencies
@@ -21,33 +25,41 @@ Dependencies
 :fdgrid: >= 0.8.0
 :mplutils: >= 0.3.0
 
-**Important:** To create animations using `nsfds2 make movie`, you also need to have **ffmpeg** installed on your system.
+**Important:** To create animations using `nsfds2 make movie`, you also need to
+have **ffmpeg** installed on your system.
 
 
 Installation
 ------------
 
-::
+To install **nsfds2**:
 
-   python setup.py install
+.. code:: console
 
-or
-
-::
-
-   pip install nsfds2
+   $ pip install nsfds2
 
 
-**Note:** To compile *ofdlib2*, OS X users may recquire :
+**Note:** To compile *ofdlib2*, OS X users may recquire:
 
-::
+.. code:: console
 
-   xcode-select --install
+   $ xcode-select --install
 
 
 Links
 -----
 
-- **Documentation**: http://perso.univ-lemans.fr/~cdesjouy/nsfds2/
-- **Source code**: https://github.com/ipselium/nsfds2
-- **Bug reports**: https://github.com/ipselium/nsfds2/issues
+- **Documentation:** http://perso.univ-lemans.fr/~cdesjouy/nsfds2/
+- **Source code:** https://github.com/ipselium/nsfds2
+- **Bug reports:** https://github.com/ipselium/nsfds2/issues
+- **fdgrid:** https://github.com/ipselium/fdgrid
+
+
+.. |Pypi| image:: https://badge.fury.io/py/nsfds2.svg
+    :target: https://pypi.org/project/nsfds2
+    :alt: Pypi Package
+
+.. |Licence| image:: https://img.shields.io/github/license/ipselium/nsfds2.svg
+
+.. |Build| image:: https://travis-ci.org/ipselium/nsfds2.svg?branch=master
+    :target: https://travis-ci.org/ipselium/nsfds2
