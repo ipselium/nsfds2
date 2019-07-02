@@ -84,3 +84,31 @@ def secs_to_dhms(secs):
            (month if dhms.month == 2 else months if dhms.month > 2 else '') + \
            (day if dhms.day == 2 else days if dhms.day > 2 else '') + \
            (h if dhms.hour > 0 else '') + m + s
+
+
+def nearest_index(n, ns, nt):
+    """ Returns nearest possible index `n`
+
+    Parameters
+    ----------
+    n: int
+        Index to look for
+    ns: int
+        Subdivision of `nt`
+    nt: int
+        Total number of iterations
+    """
+
+    if n > nt:
+        return nt
+
+    if n%ns == n:
+        return ns
+
+    if n%ns > ns/2:
+        return (n//ns + 1)*ns
+
+    if n%ns <= ns/2:
+        return n//ns*ns
+
+    return ns

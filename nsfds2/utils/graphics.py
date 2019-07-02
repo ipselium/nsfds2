@@ -44,7 +44,7 @@ from ofdlib2 import fdtd as _fdtd, derivation as _derivation
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
 from mplutils import modified_jet, MidpointNormalize, set_figsize, get_subplot_shape
 import fdgrid.graphics as _graphics
-
+from nsfds2.utils.misc import nearest_index as _ne
 
 __all__ = ['get_data', 'DataIterator', 'DataExtractor', 'Plot']
 
@@ -130,6 +130,7 @@ class DataExtractor:
             self.data = data
 
         self.var = {'p':'p', 'rho':'rho', 'vx':'rhou', 'vz':'rhov', 'e':'rhoe'}
+        self.nt = self.get_attr('nt')
         self.ns = self.get_attr('ns')
 
         if self.get_attr('mesh') == 'curvilinear':
@@ -150,12 +151,12 @@ class DataExtractor:
             ref = self.autoref(view=view)
 
         if isinstance(ref, int):
-            var = self.get(view=view, iteration=ref)
+            var = self.get(view=view, iteration=_ne(ref, self.ns, self.nt))
             return var.min(), var.max()
 
         if isinstance(ref, tuple):
-            varmin = self.get(view=view, iteration=ref[0])
-            varmax = self.get(view=view, iteration=ref[1])
+            varmin = self.get(view=view, iteration=_ne(ref[0], self.ns, self.nt))
+            varmax = self.get(view=view, iteration=_ne(ref[1], self.ns, self.nt))
             return varmin.min(), varmax.max()
 
         print("Only 'p', 'rho', 'vx', 'vz', 'vort' and 'e' available !")
@@ -251,6 +252,7 @@ class Plot:
 
         self.data = DataExtractor(self.filename)
         self.nt = self.data.get_attr('nt')
+        self.ns = self.data.get_attr('ns')
 
         self._init_geo()
         self._init_fig()
@@ -301,6 +303,8 @@ class Plot:
         # Nb of iterations
         if nt is None:
             nt = self.nt
+        else:
+            nt = _ne(nt, self.ns, self.nt)
 
         # Create Iterator and make 1st frame
         data = DataIterator(self.data, view=view, nt=nt)
@@ -399,6 +403,8 @@ class Plot:
 
         if iteration is None:
             iteration = self.nt
+        else:
+            iteration = _ne(iteration, self.ns, self.nt)
 
         var = []
         norm = []
