@@ -106,6 +106,7 @@ def parameters(cfg, msh):
     s += "\t* geometry : '{}'\n".format(cfg.geoname)
 
     s += "\t* dt = {:.5e} s and nt = {}.\n".format(cfg.dt, cfg.nt)
+    s += "\t* Physical time : {:.5e} s.\n".format(cfg.dt*cfg.nt)
 
     if cfg.stype not in cfg.none:
         s += "\t* source : {} at ({}, {})".format(cfg.stype, cfg.ixS, cfg.izS)
