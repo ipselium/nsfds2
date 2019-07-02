@@ -27,7 +27,7 @@
 
 Compute viscous fluxes
 
-@author: Cyril Desjouy
+-----------
 """
 
 

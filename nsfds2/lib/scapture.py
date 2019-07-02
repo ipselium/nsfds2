@@ -26,7 +26,7 @@
 This module provides the ShockCapture class implementing the shock capturing
 procedure proposed by Bogey & al -- JCP228 -- 2009
 
-@author: Cyril Desjouy
+-----------
 """
 
 import ofdlib2.derivation as drv

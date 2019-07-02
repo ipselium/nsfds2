@@ -25,7 +25,7 @@
 
 Some array manipulation tools
 
-@author: Cyril Desjouy
+-----------
 """
 
 import time

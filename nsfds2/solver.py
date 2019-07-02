@@ -25,7 +25,7 @@
 
 Navier Stokes Finite Differences Solver
 
-@author: Cyril Desjouy
+-----------
 """
 
 import os

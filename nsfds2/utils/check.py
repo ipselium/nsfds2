@@ -21,9 +21,10 @@
 # Creation Date : 2019-04-19 - 15:14:22
 """
 -----------
-DOCSTRING
 
-@author: Cyril Desjouy
+Utils
+
+-----------
 """
 
 import re

@@ -28,9 +28,6 @@
 
 Graphic utilities for nsfds2
 
-
-
-
 --------------
 """
 

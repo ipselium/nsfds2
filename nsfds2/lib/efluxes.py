@@ -27,7 +27,7 @@
 
 Compute Eulerian fluxes
 
-@author: Cyril Desjouy
+-----------
 """
 
 

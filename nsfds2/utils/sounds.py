@@ -21,9 +21,10 @@
 # Creation Date : 2019-06-21 - 12:30:57
 """
 -----------
-DOCSTRING
 
-@author: Cyril Desjouy
+Utils: Sounds
+
+-----------
 """
 
 import os as _os

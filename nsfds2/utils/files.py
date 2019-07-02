@@ -21,9 +21,10 @@
 # Creation Date : 2019-03-21 - 23:43:11
 """
 -----------
-DOCSTRING
 
-@author: Cyril Desjouy
+Utils : Files
+
+-----------
 """
 
 import os

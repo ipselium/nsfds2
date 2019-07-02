@@ -27,7 +27,7 @@
 
 Compute Derivatives
 
-@author: Cyril Desjouy
+-----------
 """
 
 

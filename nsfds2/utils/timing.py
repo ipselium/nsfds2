@@ -23,9 +23,9 @@
 """
 -----------
 
-Some tools
+Timing utils
 
-@author: Cyril Desjouy
+-----------
 """
 
 import time

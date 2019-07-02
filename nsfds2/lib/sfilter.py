@@ -23,13 +23,14 @@
 """
 -----------
 
-The SelectiveFilter class propose a filtering procedure to reduce Gibbs
+The SelectiveFilter class provides a filtering procedure to reduce Gibbs
 oscillations.
 
-@author: Cyril Desjouy
+-----------
 """
 
 import ofdlib2.filters as flt
+
 
 class SelectiveFilter:
     """ Filter rho, rhou, rhov and rhoe. """

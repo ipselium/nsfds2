@@ -26,7 +26,7 @@
 
 Headers for nsfds2
 
-@author: Cyril Desjouy
+-----------
 """
 
 import os
