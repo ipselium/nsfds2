@@ -366,6 +366,7 @@ class Fields:
             self.src[:, iz] = tmp*_np.exp(-_np.log(2)*((self._msh.x - self._msh.x[self._cfg.ixS])**2 +
                                                      (z - self._msh.z[self._cfg.izS])**2)/self.Bx**2)
         self.src = self._cfg.S0*self.src
+        _np.random.seed(self._cfg.seed)
         self.noise = _np.random.normal(size=self._cfg.nt)
 
     def update_wav(self, it):
