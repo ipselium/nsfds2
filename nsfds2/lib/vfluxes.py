@@ -46,7 +46,7 @@ class ViscousFluxes:
         self.du = drv.du(msh.x, msh.z, self.cfg.vsc_stencil)
 
         for sub in self.msh.dmdomains:
-            bc = sub.bc.replace('.', '').replace('U', 'R').replace('V', 'R').replace('W', 'R')
+            bc = sub.bc.replace('.', '').replace('V', 'R')
             sub.du = getattr(self.du, f'dud{sub.axname}_{bc}')
 
     def integrate(self):

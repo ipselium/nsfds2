@@ -45,8 +45,7 @@ class Cin:
         self.du = drv.du(msh.x, msh.z, msh.stencil)
 
         for sub in self.msh.dmdomains:
-            bc = sub.bc.replace('.', '').replace('U', 'R')
-            bc = bc.replace('V', 'R').replace('W', 'R')
+            bc = sub.bc.replace('.', '').replace('V', 'R')
             sub.cin_method = getattr(self.du, f'dud{sub.axname}_{bc}')
 
     def dispatch(self):
