@@ -376,7 +376,10 @@ class Fields:
     def update_harmonic(self, it):
         """ Harmonic source time evolution. """
 
-        return self.src*_np.sin(2*_np.pi*self._cfg.f0*it*self._cfg.dt)
+        if it <= self._cfg.off:
+            return self.src*_np.sin(2*_np.pi*self._cfg.f0*it*self._cfg.dt)
+
+        return 0
 
     def update_wall(self, it, f=None, phi=0):
         """ Harmonic source time evolution for walls. """
@@ -389,7 +392,10 @@ class Fields:
     def update_white(self, it):
         """ White noise time evolution. """
 
-        return self.src*self.noise[it-1]
+        if it <= self._cfg.off:
+            return self.src*self.noise[it-1]
+
+        return 0
 
     def isentropic_vortex(self):
         """ Initialize fields with an isentropic vortex [Hu, JCP, 2008] """
@@ -426,7 +432,11 @@ class Fields:
 
         # Poiseuille
         tmp_z = _np.arange(self._msh.nz)*self._msh.dz
-        self._cfg.U0 *= 0.5*(4*tmp_z/(tmp_z[-1]-tmp_z[0]) - 4*tmp_z**2/(tmp_z[-1]-tmp_z[0])**2)
+        self._cfg.U0 *= (4*tmp_z/(tmp_z[-1]-tmp_z[0]) -
+                         4*tmp_z**2/(tmp_z[-1]-tmp_z[0])**2)
+
+        for ix in range(self._cfg.nx):
+            self.ru[ix, :] = self._cfg.U0
 
     def kelvin_helmholtz(self):
         """

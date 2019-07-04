@@ -332,6 +332,8 @@ class CfgSetup:
         self.B0 = SRC.getfloat('B0', 5)
         self.f0 = SRC.getfloat('f0', 20000)
         self.wavfile = SRC.get('wavfile', None)
+        self.off = SRC.getint('off', self.nt)
+
         if self.wavfile:
             self.wavfile = self.wavfile.replace('~', self.home)
 
