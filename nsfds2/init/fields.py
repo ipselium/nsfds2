@@ -118,7 +118,8 @@ class Fields:
             self.ru = _np.zeros_like(self.p) + self._cfg.U0
             self.rv = _np.zeros_like(self.p) + self._cfg.V0
 
-        self.dltn = _np.zeros_like(self.p)
+        if self._cfg.cpt_meth == 'dilatation':
+            self.dltn = _np.zeros_like(self.p)
 
         # Source
         self.source_select()
@@ -207,7 +208,9 @@ class Fields:
 
         if self._cfg.mesh in ['regular', 'adaptative']:
             self.fdtools.Eu(self.Ei, self.Eui, self.Evi, self.Eei,
-                            self.r, self.ru, self.rv, self.re, self.p)
+                            self.r, self.ru, self.rv,
+                            self._cfg.p0*_np.ones_like(self.p)/(self._cfg.gamma-1.),
+                            self._cfg.p0*_np.ones_like(self.p))
 
         elif self._cfg.mesh == 'curvilinear':
             self.fdtools.EuJ(self.Ei, self.Eui, self.Evi, self.Eei,
@@ -216,7 +219,9 @@ class Fields:
 
         if self._cfg.mesh in ['regular', 'adaptative']:
             self.fdtools.Fu(self.Fi, self.Fui, self.Fvi, self.Fei,
-                            self.r, self.ru, self.rv, self.re, self.p)
+                            self.r, self.ru, self.rv,
+                            self._cfg.p0*_np.ones_like(self.p)/(self._cfg.gamma-1.),
+                            self._cfg.p0*_np.ones_like(self.p))
 
         elif self._cfg.mesh == 'curvilinear':
             self.fdtools.FuJ(self.Fi, self.Fui, self.Fvi, self.Fei,

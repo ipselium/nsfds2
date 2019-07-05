@@ -129,21 +129,33 @@ class EulerianFluxes:
             * or periodic bc
         """
 
-        if self.msh.bc[0] in ['R', 'A']:
+        if self.msh.bc[0] in ['R']:
             self.fld.ru[0, :] = 0
             self.fld.rv[0, :] = 0
 
-        if self.msh.bc[1] in ['R', 'A']:
+        if self.msh.bc[0] in ['A']:
+            self.fld.p[0, :] = 0
+
+        if self.msh.bc[1] in ['R']:
             self.fld.ru[:, 0] = 0
             self.fld.rv[:, 0] = 0
 
-        if self.msh.bc[2] in ['R', 'A']:
+        if self.msh.bc[1] in ['A']:
+            self.fld.p[:, 0] = 0
+
+        if self.msh.bc[2] in ['R']:
             self.fld.ru[-1, :] = 0
             self.fld.rv[-1, :] = 0
 
-        if self.msh.bc[3] in ['R', 'A']:
+        if self.msh.bc[2] in ['A']:
+            self.fld.p[-1, :] = 0
+
+        if self.msh.bc[3] in ['R']:
             self.fld.ru[:, -1] = 0
             self.fld.rv[:, -1] = 0
+
+        if self.msh.bc[3] in ['A']:
+            self.fld.p[:, -1] = 0
 
     def cout_periodic(self):
         """ Additional rigid boundaries for periodic condition. """
