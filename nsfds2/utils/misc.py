@@ -52,20 +52,20 @@ def bc_combinations():
     corners = [''.join(i) for i in corners if i.count('A') == 2]
     corners = [i for i in corners if any(re.match(regex, i) for regex in [r'A..A', r'AA..', r'..AA', r'.AA.'])]
 
-    pml = list(itertools.product(['R', 'P', 'X', 'A'], repeat=4))
+    pml = list(itertools.product(['W', 'P', 'X', 'A'], repeat=4))
     pml = [''.join(i) for i in pml if i.count('A') == 1]
-    pml = [i for i in pml if 'A' in i and i.count('P') < 2 and i.count('R') < 3 and i.count('X') > 0]
+    pml = [i for i in pml if 'A' in i and i.count('P') < 2 and i.count('W') < 3 and i.count('X') > 0]
     pml = [i for i in pml if any(re.match(regex, i) for regex in [r'.A.X', r'.X.A', r'X.A.', r'A.X.'])]
 
 
     pml_p = [i for i in pml if 'P' in i]
-    pml_r = [i for i in pml if 'R' in i and 'P' not in i]
-    pml_x = [i for i in pml if 'R' not in i and 'P' not in i]
+    pml_r = [i for i in pml if 'W' in i and 'P' not in i]
+    pml_x = [i for i in pml if 'W' not in i and 'P' not in i]
 
     print('\n* {} Corners : {}'.format(len(corners), ', '.join(corners)))
     print('\n* {} with only X : {}'.format(len(pml_x), ', '.join(pml_x)))
     print('\n* {} with P : {}'.format(len(pml_p), ', '.join(pml_p)))
-    print('\n* {} with only R & X : {}'.format(len(pml_r), ', '.join(pml_r)))
+    print('\n* {} with only W & X : {}'.format(len(pml_r), ', '.join(pml_r)))
 
 
 def secs_to_dhms(secs):

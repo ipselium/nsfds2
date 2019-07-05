@@ -53,15 +53,15 @@ class Check:
         """ Check validity of obstacles boundary conditions. """
 
         for obs in self.msh.obstacles:
-            if not re.match(r'^[RUVW]+$', obs.bc):
-                s = "Obstacles can only be combination of 'RUVW' for now. "
+            if not re.match(r'^[WV]+$', obs.bc):
+                s = "Obstacles can only be combination of 'WV' for now. "
                 raise ValueError(s)
 
     def domain(self):
         """ Check validity of the bcs. """
 
-        if not re.match(r'[PRA][PRA][PRA][PRA]', self.msh.bc):
-            s = "Only 'R', 'P', and 'A' bc are implemented for now. "
-            s += "Fix bcs to 'RRRR'."
+        if not re.match(r'[PRAW][PRAW][PRAW][PRAW]', self.msh.bc):
+            s = "Only 'W', 'R', 'P', and 'A' bc are implemented for now. "
+            s += "Fix bcs to 'WWWW'."
             warnings.warn(s, stacklevel=8)
-            self.msh.bc = 'RRRR'
+            self.msh.bc = 'WWWW'

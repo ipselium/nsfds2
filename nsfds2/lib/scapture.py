@@ -50,7 +50,7 @@ class ShockCapture:
         self.cpt = flt.capture(msh.nx, msh.nz)
 
         for sub in self.msh.fmdomains:
-            bc = sub.bc.replace('.', '').replace('V', 'R')
+            bc = sub.bc.replace('.', '').replace('V', 'W')
             sub.dltn = getattr(self.du, f'dud{sub.axname}_{bc}')
             sub.lpl = getattr(self.lpl, f'lplf{sub.axname}_{bc}')
             sub.cpt = getattr(self.cpt, f'cpt{sub.axname}_{bc}')

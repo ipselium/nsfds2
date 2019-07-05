@@ -129,28 +129,28 @@ class EulerianFluxes:
             * or periodic bc
         """
 
-        if self.msh.bc[0] in ['R']:
+        if self.msh.bc[0] in ['W']:
             self.fld.ru[0, :] = 0
             self.fld.rv[0, :] = 0
 
         if self.msh.bc[0] in ['A']:
             self.fld.p[0, :] = 0
 
-        if self.msh.bc[1] in ['R']:
+        if self.msh.bc[1] in ['W']:
             self.fld.ru[:, 0] = 0
             self.fld.rv[:, 0] = 0
 
         if self.msh.bc[1] in ['A']:
             self.fld.p[:, 0] = 0
 
-        if self.msh.bc[2] in ['R']:
+        if self.msh.bc[2] in ['W']:
             self.fld.ru[-1, :] = 0
             self.fld.rv[-1, :] = 0
 
         if self.msh.bc[2] in ['A']:
             self.fld.p[-1, :] = 0
 
-        if self.msh.bc[3] in ['R']:
+        if self.msh.bc[3] in ['W']:
             self.fld.ru[:, -1] = 0
             self.fld.rv[:, -1] = 0
 
@@ -232,6 +232,41 @@ class EulerianFluxes:
 
         d = _np.sqrt(self.msh.dzn_dxp[sx, sz]**2 + self.msh.dzn_dzp[sx, sz]**2)
         return  (self.msh.dzn_dzp[sx, sz]*vn - self.msh.dxn_dzp[sx, sz]*vt)/d
+
+    def radiation(self):
+        """ Radiation condition. """
+
+        c2_v = _np.zeros((10, self.fld.nz))
+        c2_h = _np.zeros((self.fld.nx, 10))
+        c2_v[-5:5, :] = _np.sqrt(self.cfg.gamma*self.fld.p[-5:5, :]/self.fld.r[-5:5, :])
+        c2_h[:, -5:5] = _np.sqrt(self.cfg.gamma*self.fld.p[:, -5:5]/self.fld.r[:, -5:5])
+
+        for sub in self.msh.adomains:
+            sub.cout_x(self.fld.r, self.fld.Kx, *sub.ix, *sub.iz)
+            sub.cout_x(self.fld.ru, self.fld.Kxu, *sub.ix, *sub.iz)
+            sub.cout_x(self.fld.rv, self.fld.Kxv, *sub.ix, *sub.iz)
+            sub.cout_x(self.fld.re, self.fld.Kxe, *sub.ix, *sub.iz)
+            sub.cout_z(self.fld.r, self.fld.Kz, *sub.ix, *sub.iz)
+            sub.cout_z(self.fld.ru, self.fld.Kzu, *sub.ix, *sub.iz)
+            sub.cout_z(self.fld.rv, self.fld.Kzv, *sub.ix, *sub.iz)
+            sub.cout_z(self.fld.re, self.fld.Kze, *sub.ix, *sub.iz)
+
+        # CL de rayonnement a gauche et a droite du domaine
+        for ix in range(-5, 5):
+            self.fld.K[ix, :] = c2_v[ix, :]*(self.fld.Kx[ix, :]*self.fld.cosv[ix, :] +
+                                             self.fld.Kz[ix, :]*self.fld.sinv[ix, :] +
+                                             (self.fld.r[ix, :] -
+                                              self.cfg.rho0)*self.fld.r_v[ix, :])
+            self.fld.Ku[ix, :] = c2_v[ix, :]*(self.fld.Kxu[ix, :]*self.fld.cosv[ix, :] +
+                                              self.fld.Kzu[ix, :]*self.fld.sinv[ix, :] +
+                                              self.fld.ru[ix, :]*self.fld.r_v[ix, :])
+            self.fld.Kv[ix, :] = c2_v[ix, :]*(self.fld.Kxv[ix, :]*self.fld.cosv[ix, :] +
+                                              self.fld.Kzv[ix, :]*self.fld.sinv[ix, :] +
+                                              self.fld.rv[ix, :]*self.fld.r_v[ix, :])
+            self.fld.Ke[ix, :] = c2_v[ix, :]*(self.fld.Kxe[ix, :]*self.fld.cosv[ix, :] +
+                                              self.fld.Kze[ix, :]*self.fld.sinv[ix, :] +
+                                              (self.re[ix, :] -
+                                               self.cfg.p0/(self.cfg.gamma-1.))*self.fld.r_v[ix, :])
 
     def init_pml(self):
         """ Initialize PMLs. """

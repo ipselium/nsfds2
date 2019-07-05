@@ -294,7 +294,7 @@ class CfgSetup:
         self.geofile = getattr(self.args, 'geofile', None)
         self.geoflag = True
         self.curvname = GEO.get('curvname', 'None')
-        self.bc = GEO.get('bc', 'RRRR').upper()
+        self.bc = GEO.get('bc', 'WWWW').upper()
         self.nx = GEO.getint('nx', 256)
         self.nz = GEO.getint('nz', 256)
         self.ix0 = GEO.getint('ix0', 0)
