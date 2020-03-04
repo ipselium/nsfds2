@@ -49,9 +49,8 @@ import os
 import shutil
 import datetime
 import configparser
-import packaging
+from pkg_resources import parse_version
 import nsfds2
-
 
 class CfgSetup:
     """ Handle configuration file. """
@@ -106,7 +105,7 @@ class CfgSetup:
         try:
             CFG = cfg['configuration']
             version = CFG.get('version')
-            if packaging.version.parse(version) < packaging.version.parse(self.base_version):
+            if parse_version(version) < parse_version(self.base_version):
                 self._overwrite_config_file()
 
         except (KeyError, TypeError):
