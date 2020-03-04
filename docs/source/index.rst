@@ -5,6 +5,7 @@ Welcome to nsfds2's documentation!
 .. image:: https://badge.fury.io/py/nsfds2.svg
    :target: https://badge.fury.io/py/nsfds2.svg
 
+.. image:: images/nsfds2.png
 
 .. toctree::
    :caption: Quickstart

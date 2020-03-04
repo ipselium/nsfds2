@@ -49,6 +49,7 @@ import os
 import shutil
 import datetime
 import configparser
+import packaging
 import nsfds2
 
 
@@ -105,7 +106,7 @@ class CfgSetup:
         try:
             CFG = cfg['configuration']
             version = CFG.get('version')
-            if version < self.base_version:
+            if packaging.version.parse(version) < packaging.version.parse(self.base_version):
                 self._overwrite_config_file()
 
         except (KeyError, TypeError):
@@ -372,8 +373,8 @@ class CfgSetup:
         self.flt_stencil = FLT.getint('stencil', 11)
         self.xnu = FLT.getfloat('strength', 0.75)
 
-        if self.flt_stencil not in [11]:
-            raise ValueError('only 11 pts filter implemented for now')
+        if self.flt_stencil not in [7, 11]:
+            raise ValueError('only 7 and 11 pts filters implemented for now')
 
     def _vsc(self):
 

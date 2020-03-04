@@ -105,6 +105,8 @@ class Fields:
         # PMLS
         if 'A' in self._msh.bc:
             self._init_pml()
+
+        if 'R' in self._msh.bc:
             self._init_radiation()
 
         # Obstacles to 0
