@@ -229,7 +229,7 @@ def main():
         globals()[args.command](cfg, msh)
     else:
         headers.copyright()
-        print('Must specify an action among solve/movie/show')
+        print('Must specify an action among solve/make/show')
         print('See nsfds2 -h for help')
 
 
