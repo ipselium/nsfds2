@@ -34,6 +34,7 @@ Graphic utilities for nsfds2
 import os
 import sys
 import getpass
+import pathlib
 import h5py
 import numpy as _np
 from scipy import signal as _signal
@@ -53,8 +54,7 @@ def get_data(filename):
     """ Get data from `filename` (hdf5 file). """
 
     try:
-        home = os.path.expanduser("~")
-        filename = filename.replace('~', home)
+        filename = pathlib.Path(filename).expanduser()
         data = h5py.File(filename, 'r')
     except OSError:
         print('You must provide a valid hdf5 file')
@@ -124,7 +124,7 @@ class DataExtractor:
 
     def __init__(self, data):
 
-        if isinstance(data, str):
+        if isinstance(data, pathlib.Path):
             self.data = get_data(data)
         else:
             self.data = data
@@ -245,9 +245,8 @@ class Plot:
     """
 
     def __init__(self, filename, quiet=False):
-
-        self.filename = filename
-        self.path = os.path.dirname(filename) + '/'
+        self.filename = pathlib.Path(filename).expanduser()
+        self.path = self.filename.parent
         self.quiet = quiet
 
         self.data = DataExtractor(self.filename)
@@ -314,7 +313,7 @@ class Plot:
                                      show_probes=show_probes,
                                      figsize=figsize)
 
-        with writer.saving(fig, self.path + movie_filename, dpi=dpi):
+        with writer.saving(fig, self.path / movie_filename, dpi=dpi):
 
             writer.grab_frame()
 
@@ -422,7 +421,7 @@ class Plot:
 
         for i, ax in enumerate(axes.ravel()):
             if i < len(var):
-                ims.append(ax.pcolormesh(self.x, self.z, var[i],
+                ims.append(ax.pcolormesh(self.x, self.z, var[i][:-1, :-1],
                                          cmap=self.cm, norm=norm[i]))
                 ax.set_title(self.titles[view[i]] + f' (n={iteration})')
                 ax.set_xlabel(r'$x$ [m]')

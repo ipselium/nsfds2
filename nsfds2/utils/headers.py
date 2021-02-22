@@ -51,7 +51,7 @@ def copyright():
     """ Show copyright. """
     col = 76 if _columns() > 76 else _columns
     cp = [col*'#',
-          "nsfds2 v{} -- Copyright (C) 2016-2019 -- Cyril Desjouy".format(nsfds2.__version__),
+          "nsfds2 v{} -- Copyright (C) 2016-2021 -- Cyril Desjouy".format(nsfds2.__version__),
           " "]
     lc = "This program comes with ABSOLUTELY NO WARRANTY. " + \
          "This is free software, and you are welcome to redistribute it " + \

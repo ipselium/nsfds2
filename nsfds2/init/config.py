@@ -48,9 +48,11 @@ import sys
 import os
 import shutil
 import datetime
+import pathlib
 import configparser
 from pkg_resources import parse_version
 import nsfds2
+
 
 class CfgSetup:
     """ Handle configuration file. """
@@ -65,8 +67,8 @@ class CfgSetup:
 
         # Create config parser
         self.cfg = configparser.ConfigParser(allow_no_value=True)
-        self.home = os.path.expanduser("~")
-        self.path = self.home + '/.nsfds2/'
+        self.home = pathlib.Path.home()
+        self.path = self.home / '.nsfds2'
 
         # Check if config dir exists. If not create it.
         self.check_dir(self.path)
@@ -82,7 +84,7 @@ class CfgSetup:
         if cf:
             self.cfg.read(cf)
         else:
-            self.cfg.read(self.path + 'nsfds2.conf')
+            self.cfg.read(self.path / 'nsfds2.conf')
 
         # Parse arguments
         self.run()
@@ -91,8 +93,8 @@ class CfgSetup:
     def check_dir(directory):
         """ Check if dir exists. If not, create it."""
 
-        if not os.path.isdir(directory):
-            os.makedirs(directory)
+        if not directory.is_dir():
+            directory.mkdir()
             print("Create directory :", directory)
             time.sleep(0.5)
 
@@ -100,7 +102,7 @@ class CfgSetup:
         """ Check version of the config file. Overwrite it if too old. """
 
         cfg = configparser.ConfigParser(allow_no_value=True)
-        cfg.read(self.path + 'nsfds2.conf')
+        cfg.read(self.path / 'nsfds2.conf')
 
         try:
             CFG = cfg['configuration']
@@ -116,7 +118,7 @@ class CfgSetup:
         # Backup old config file
         now = datetime.datetime.now()
         name = f'{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}'
-        shutil.move(self.path + 'nsfds2.conf', self.path + f'nsfds2_{name}.conf')
+        shutil.move(self.path / 'nsfds2.conf', self.path / f'nsfds2_{name}.conf')
 
         print('Bad config file found...')
         print(f'Current configfile backup : nsfds2_{name}.conf')
@@ -128,9 +130,9 @@ class CfgSetup:
     def init_cfg(self):
         """ Check if nsfds2.conf exists. If not create it. """
 
-        if not os.path.exists(self.path + 'nsfds2.conf'):
-            open(self.path + 'nsfds2.conf', 'a').close()
-            print("Create configuration file : {}nsfds2.conf".format(self.path))
+        if not (self.path / 'nsfds2.conf').is_file():
+            open(self.path / 'nsfds2.conf', 'a').close()
+            print("Create configuration file : {}/nsfds2.conf".format(self.path))
             time.sleep(0.5)
             self.write_default()
 
@@ -217,7 +219,7 @@ class CfgSetup:
         self.cfg.set('save', 'fields', 'True')
         self.cfg.set('save', 'probes', '[]')
 
-        with open(self.path + 'nsfds2.conf', 'w') as cf:
+        with open(self.path / 'nsfds2.conf', 'w') as cf:
             self.cfg.write(cf)
 
     def run(self):
@@ -305,10 +307,8 @@ class CfgSetup:
         if self.geofile:
             self.geofile, self.geoname = self.args.geofile
         else:
-            self.geofile = GEO.get('file', 'None')
+            self.geofile = pathlib.Path(GEO.get('file', 'None')).expanduser()
             self.geoname = GEO.get('geoname', 'square')
-
-        self.geofile = self.geofile.replace('~', self.home)
 
         if self.mesh not in ['regular', 'adaptative', 'curvilinear']:
             raise ValueError('mesh must be regular, adaptative, or curvilinear')
@@ -336,7 +336,7 @@ class CfgSetup:
         self.off = SRC.getint('off', self.nt)
 
         if self.wavfile:
-            self.wavfile = self.wavfile.replace('~', self.home)
+            self.wavfile = pathlib.Path(self.wavfile).expanduser()
 
         if self.seed:
             try:
@@ -402,7 +402,7 @@ class CfgSetup:
 
         SAVE = self.cfg['save']
         self.save = SAVE.getboolean('fields', True)
-        self.savepath = SAVE.get('path', 'results/')
+        self.savepath = pathlib.Path(SAVE.get('path', 'results')).expanduser()
         self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
         self.comp = SAVE.get('compression', 'lzf')
         try:
@@ -420,15 +420,14 @@ class CfgSetup:
         if self.comp == 'None':
             self.comp = None
 
-        if self.savepath and not self.savepath.endswith('/'):
-            self.savepath += '/'
-
         # if self.savepath does not exist, create it
         self.check_dir(self.savepath)
 
         self.datafile = getattr(self.args, 'datafile', None)
         if not self.datafile:
-            self.datafile = self.savepath + self.savefile
+            self.datafile = self.savepath / self.savefile
+        else:
+            self.datafile = pathlib.Path(self.datafile).expanduser()
 
     def _figs(self):
 

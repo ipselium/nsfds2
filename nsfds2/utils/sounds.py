@@ -28,6 +28,7 @@ Utils: Sounds
 """
 
 import os as _os
+import pathlib as _pathlib
 import numpy as _np
 import scipy.signal as _sps
 import scipy.io.wavfile as _wf
@@ -108,8 +109,7 @@ def probes_to_wave(datafile, dtype=_np.int16, path=None):
     """
 
     probes = []
-    home = _os.path.expanduser('~')
-    datafile = datafile.replace('~', home)
+    datafile = _pathlib.Path(datafile).expanduser()
 
     with _DataExtractor(datafile) as data:
         probes_values = data.get_dataset('probes_value')

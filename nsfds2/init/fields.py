@@ -41,7 +41,6 @@ Example
 -----------
 """
 
-import os as _os
 import sys as _sys
 import h5py
 import numpy as _np
@@ -304,7 +303,7 @@ class Fields:
         for obs in self._msh.obstacles:
             for bc in obs.edges:
                 if isinstance(bc.f0_n, str):
-                    filename = bc.f0_n.replace('~', self._cfg.home)
+                    filename = bc.f0_n.replace('~', str(self._cfg.home))
                     if filename in self.wav_lst:
                         bc.wav = self.wav_lst[filename]
                     else:
@@ -314,7 +313,7 @@ class Fields:
     def init_save(self):
         """ Init save. """
 
-        if _os.path.isfile(self._cfg.datafile):
+        if self._cfg.datafile.is_file():
             msg = f'{self._cfg.datafile} already exists. Overwrite ? [yes]/no '
             overwrite = input(misc.colors.RED + msg + misc.colors.END)
             if overwrite.lower() in ['n', 'no']:
@@ -351,10 +350,10 @@ class Fields:
 
         if self._cfg.mesh == 'curvilinear':
             self.sfile.create_dataset('J', data=self._msh.J, compression=self._cfg.comp)
-            self.sfile.create_dataset('xn', data=self._xn, compression=self._cfg.comp)
-            self.sfile.create_dataset('zn', data=self._zn, compression=self._cfg.comp)
-            self.sfile.create_dataset('xp', data=self._xp, compression=self._cfg.comp)
-            self.sfile.create_dataset('zp', data=self._zp, compression=self._cfg.comp)
+            self.sfile.create_dataset('xn', data=self._msh.xn, compression=self._cfg.comp)
+            self.sfile.create_dataset('zn', data=self._msh.zn, compression=self._cfg.comp)
+            self.sfile.create_dataset('xp', data=self._msh.xp, compression=self._cfg.comp)
+            self.sfile.create_dataset('zp', data=self._msh.zp, compression=self._cfg.comp)
 
     def source_select(self):
         """ Source selection. """
