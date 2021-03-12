@@ -60,7 +60,7 @@ class CfgSetup:
     def __init__(self, args=None):
 
         # Minimal version of the config file
-        self.base_version = '0.9.9'
+        self.base_version = '0.9.15'
 
         # Command line arguments
         self.args = args
