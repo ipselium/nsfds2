@@ -8,3 +8,4 @@ results/
 *profile.prof
 *libc*
 *.c
+NOTES.md

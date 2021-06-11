@@ -45,3 +45,44 @@ several main objects to perform numerical simulations :
    plt.imshow(fld.p)
    plt.show()
 
+
+hdf5 files
+==========
+
+If `save` option is selected, hdf5 are created. They contain the following variables.
+
++-------------------+---------------------------------------------------+
+| var               | variable                                          |
++===================+===================================================+
+| rho               | density                                           |
++-------------------+---------------------------------------------------+
+| rhou              | product of density and x component of velocity    |
++-------------------+---------------------------------------------------+
+| rhov              | product of density and z component of velocity    |
++-------------------+---------------------------------------------------+
+| rhoe              | product of density and energy                     |
++-------------------+---------------------------------------------------+
+| x                 | x-grid                                            |
++-------------------+---------------------------------------------------+
+| z                 | z-grid                                            |
++-------------------+---------------------------------------------------+
+| probe_location    | coordinates of probes                             |
++-------------------+---------------------------------------------------+
+| probe_value       | pressure at probe locations                       |
++-------------------+---------------------------------------------------+
+
+For `rho`, `rhou`, `rhov`, and `rhoe` quantities, there are two distinct
+variables. One with the `_init` suffix which represents the initial value of the
+quantity (1d array) and one with the `_it` suffix which gathers the field at
+each iteration (2d array).
+
+To access the acoustic pressure, one can use:: 
+
+    import numpy as np
+    from ofdlib2 import fdtd
+    ...
+    p  = np.empty_like(rho) 
+    fdtd.p(p, rho, rhou, rhov, rhoe, gamma)
+
+Here `p` needs to be initialize first. Then, it is used as an input argument of
+`fdtd.p` 

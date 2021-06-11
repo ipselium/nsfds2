@@ -71,7 +71,7 @@ Work with movies
 ----------------
 
 Movies can be created from an hdf5 file if the `save` option has been selected.
-Then, the following variables are allowed:
+Then, the following variables are allowed as argument of the movie subcommand:
 
 +------+-----------------------------+
 | var  | variable                    |

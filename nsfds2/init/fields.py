@@ -422,6 +422,8 @@ class Fields:
                             * ((self._x-self._x[ixS])**2 +
                                (z - self._z[izS])**2)/self.Bx**2)
 
+        self.r = self._cfg.c0*self._cfg.c0*self.p
+
     def harmonic(self):
         """ Harmonic ponctual source. """
 
