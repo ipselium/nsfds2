@@ -224,14 +224,14 @@ class EulerianFluxes:
             self.fld.rv[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vz
 
     def _vx(self, vn, vt, sx, sz):
-
+        """Cf. Dragna p.98"""
         d = _np.sqrt(self.msh.dzn_dxp[sx, sz]**2 + self.msh.dzn_dzp[sx, sz]**2)
-        return  (self.msh.dxn_dzp[sx, sz]*vn + self.msh.dzn_dzp[sx, sz]*vt)/d
+        return  (self.msh.dzn_dxp[sx, sz]*vn + self.msh.dzn_dzp[sx, sz]*vt)/d
 
     def _vz(self, vn, vt, sx, sz):
 
-        d = _np.sqrt(self.msh.dzn_dxp[sx, sz]**2 + self.msh.dzn_dzp[sx, sz]**2)
-        return  (self.msh.dzn_dzp[sx, sz]*vn - self.msh.dxn_dzp[sx, sz]*vt)/d
+        d = _np.sqrt(self.msh.dxn_dzp[sx, sz]**2 + self.msh.dzn_dzp[sx, sz]**2)
+        return  (self.msh.dzn_dzp[sx, sz]*vn - self.msh.dzn_dxp[sx, sz]*vt)/d
 
     def radiation(self):
         """ Radiation condition. """
