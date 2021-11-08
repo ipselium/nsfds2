@@ -189,7 +189,8 @@ class EulerianFluxes:
         if isinstance(bc.f0_n, (float, int)) and bc.f0_n > 0:
             vn = bc.vn*self.fld.update_wall(self.cfg.it, f=bc.f0_n, phi=bc.phi_n)
         elif isinstance(bc.f0_n, str) and hasattr(self.cfg.geofile, bc.f0_n):
-            vn = bc.vn*getattr(self.cfg.geofile, bc.f0_n)(self.cfg.it, self.cfg.nt, self.cfg.dt)
+            vn = bc.vn*getattr(self.cfg.geofile, bc.f0_n)(self.cfg.it, self.cfg.dt)
+            print('wall')
         elif isinstance(bc.f0_n, str) and hasattr(bc, 'wav'):
             vn = bc.vn*bc.wav[self.cfg.it]
         else:
