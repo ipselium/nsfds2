@@ -303,12 +303,14 @@ class Fields:
         for obs in self._msh.obstacles:
             for bc in obs.edges:
                 if isinstance(bc.f0_n, str):
-                    filename = bc.f0_n.replace('~', str(self._cfg.home))
-                    if filename in self.wav_lst:
-                        bc.wav = self.wav_lst[filename]
-                    else:
-                        bc.wav = resample(filename, 1/self._cfg.dt, pad=self._cfg.nt+1)
-                        self.wav_lst[filename] = bc.wav
+                    if 'wav' in bc.f0_n:
+                        filename = bc.f0_n.replace('~', str(self._cfg.home))
+                        if filename in self.wav_lst:
+                            bc.wav = self.wav_lst[filename]
+                        else:
+                            bc.wav = resample(filename, 1/self._cfg.dt,
+                                              pad=self._cfg.nt+1)
+                            self.wav_lst[filename] = bc.wav
 
     def init_save(self):
         """ Init save. """
