@@ -35,6 +35,7 @@ import re
 import numpy as _np
 import ofdlib2.derivation as drv
 from nsfds2.utils.array import empty_like
+from nsfds2.utils.files import get_wall_function
 from .cin import Cin
 
 
@@ -188,11 +189,11 @@ class EulerianFluxes:
 
         if isinstance(bc.f0_n, (float, int)) and bc.f0_n > 0:
             vn = bc.vn*self.fld.update_wall(self.cfg.it, f=bc.f0_n, phi=bc.phi_n)
-        elif isinstance(bc.f0_n, str) and hasattr(self.cfg.geofile, bc.f0_n):
-            vn = bc.vn*getattr(self.cfg.geofile, bc.f0_n)(self.cfg.it, self.cfg.dt)
-            print('wall')
         elif isinstance(bc.f0_n, str) and hasattr(bc, 'wav'):
             vn = bc.vn*bc.wav[self.cfg.it]
+        elif isinstance(bc.f0_n, str):
+            func = get_wall_function(self.cfg, bc.f0_n)
+            vn = bc.vn*func(self.cfg.it, self.cfg.dt)
         else:
             vn = 0
 

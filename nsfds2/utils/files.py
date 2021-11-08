@@ -74,3 +74,15 @@ def get_curvilinear(cfg):
             cfg.curvflag = False
             fcurv = None
     return fcurv
+
+
+def get_wall_function(cfg, name):
+    """ Get function to apply to wall source."""
+
+    try:
+        sys.path.append(os.path.dirname(cfg.geofile))
+        custom = __import__(os.path.basename(cfg.geofile).split('.')[0])
+        func = getattr(custom, name)
+    except (AttributeError, ImportError):
+        func = None
+    return func
