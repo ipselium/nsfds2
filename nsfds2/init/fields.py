@@ -47,6 +47,7 @@ import numpy as _np
 from ofdlib2.fdtd import fdtools
 from nsfds2.utils import headers, misc
 from nsfds2.utils.sounds import resample
+from nsfds2.utils.files import get_wall_function
 
 
 def set_sigma(cfg, msh):
@@ -96,7 +97,7 @@ class Fields:
         self._init_fields()
         self._init_derivatives()
         self._init_filters()
-        self._init_wav_wall()
+        self._init_wall_sources()
 
         self.fdtools = fdtools(self._nx, self._nz,
                                self._cfg.p0, self._cfg.gamma, self._cfg.dt)
@@ -297,20 +298,33 @@ class Fields:
             self.cosh[:, iz] = (self._x - xCL)*2.*self.r_h[:, iz]
             self.sinh[:, iz] = (self._z[iz] - zCL)*2.*self.r_h[:, iz]
 
-    def _init_wav_wall(self):
-        """ Initialize wall with a time evolution built from a wavfile. """
+    def _init_wall_sources(self):
+        """ Init all sources on walls. """
+
+        time = _np.arange(0, (self._cfg.nt+1)*self._cfg.dt, self._cfg.dt)
 
         for obs in self._msh.obstacles:
-            for bc in obs.edges:
-                if isinstance(bc.f0_n, str):
-                    if 'wav' in bc.f0_n:
-                        filename = bc.f0_n.replace('~', str(self._cfg.home))
-                        if filename in self.wav_lst:
-                            bc.wav = self.wav_lst[filename]
-                        else:
-                            bc.wav = resample(filename, 1/self._cfg.dt,
-                                              pad=self._cfg.nt+1)
-                            self.wav_lst[filename] = bc.wav
+            for edge in obs.edges:
+                if edge.f0_n > 0:
+                    edge.vn = _np.sin(2*_np.pi*edge.f0_n*time + edge.phi_t)
+                elif edge.func:
+                    func = get_wall_function(self._cfg, edge.func)
+                    edge.vn = func(time)
+                elif edge.wav:
+                    filename = edge.wav.replace('~', str(self._cfg.home))
+                    if filename in self.wav_lst:
+                        edge.vn = self.wav_lst[filename]
+                    else:
+                        edge.vn = resample(filename, 1/self._cfg.dt,
+                                           pad=self._cfg.nt+1)
+                        self.wav_lst[filename] = edge.vn
+                else:
+                    edge.vn = 0
+
+                if edge.f0_t:
+                    edge.vt = _np.sin(2*_np.pi*edge.f0_t*time + edge.phi_t)
+                else:
+                    edge.vt = 0
 
     def init_save(self):
         """ Init save. """
@@ -446,11 +460,6 @@ class Fields:
         _np.random.seed(self._cfg.seed)
         self.noise = _np.random.normal(size=self._cfg.nt)
 
-    def update_wav(self, it):
-        """ Wav source time evolution. """
-
-        return self.src*self.wav[it]
-
     def update_harmonic(self, it):
         """ Harmonic source time evolution. """
 
@@ -458,14 +467,6 @@ class Fields:
             return self.src*_np.sin(2*_np.pi*self._cfg.f0*it*self._cfg.dt)
 
         return 0
-
-    def update_wall(self, it, f=None, phi=0):
-        """ Harmonic source time evolution for walls. """
-
-        if not f:
-            f = self._cfg.f0
-
-        return _np.sin(2*_np.pi*f*it*self._cfg.dt + phi)
 
     def update_white(self, it):
         """ White noise time evolution. """

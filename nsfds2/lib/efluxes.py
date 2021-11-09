@@ -99,7 +99,7 @@ class EulerianFluxes:
         self.cout_obstacles()
         self.cout_bc()
         self.cout_periodic()
-        self.cout_source()
+        self.cout_sources()
 
     def cout_obstacles(self):
         """ Obstacle walls. """
@@ -171,61 +171,49 @@ class EulerianFluxes:
                 self.fld.ru[s] = 0
                 self.fld.rv[s] = 0
 
-    def cout_source(self):
+    def cout_sources(self):
         """ Wall sources. """
 
         for obs in self.msh.obstacles:
-            for bc in obs.edges:
+            for edge in obs.edges:
 
-                vn, vt = self._get_source_wall(bc)
+                vn, vt = self._get_wall_velocity(edge)
 
                 if self.cfg.mesh == 'curvilinear':
-                    self._cout_source_curvilinear(bc, vn, vt)
-
+                    self._apply_source_curvilinear(edge, vn, vt)
                 else:
-                    self._cout_source_cartesian(bc, vn, vt)
+                    self._apply_source_cartesian(edge, vn, vt)
 
-    def _get_source_wall(self, bc):
+    def _get_wall_velocity(self, edge):
+        """ Get wall velocity. """
 
-        if isinstance(bc.f0_n, (float, int)) and bc.f0_n > 0:
-            vn = bc.vn*self.fld.update_wall(self.cfg.it, f=bc.f0_n, phi=bc.phi_n)
-        elif isinstance(bc.f0_n, str) and hasattr(bc, 'wav'):
-            vn = bc.vn*bc.wav[self.cfg.it]
-        elif isinstance(bc.f0_n, str):
-            func = get_wall_function(self.cfg, bc.f0_n)
-            vn = bc.vn*func(self.cfg.it, self.cfg.dt)
-        else:
-            vn = 0
-
-        if bc.f0_t:
-            vt = bc.vt*self.fld.update_wall(self.cfg.it, f=bc.f0_t, phi=bc.phi_t)
-        else:
-            vt = 0
+        vn = edge.pn*edge.vn[self.cfg.it] if isinstance(edge.vn, _np.ndarray) else 0
+        vt = edge.pt*edge.vt[self.cfg.it] if isinstance(edge.vt, _np.ndarray) else 0
 
         return vn, vt
 
-    def _cout_source_cartesian(self, bc, vn, vt):
+    def _apply_source_cartesian(self, edge, vn, vt):
 
-        if bc.axis == 0:
-            self.fld.ru[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vn
-            self.fld.rv[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vt
+        if edge.axis == 0:
+            self.fld.ru[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vn
+            self.fld.rv[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vt
 
-        elif bc.axis == 1:
-            self.fld.ru[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vt
-            self.fld.rv[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vn
+        elif edge.axis == 1:
+            self.fld.ru[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vt
+            self.fld.rv[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vn
 
-    def _cout_source_curvilinear(self, bc, vn, vt):
+    def _apply_source_curvilinear(self, edge, vn, vt):
 
-        vx = self._vx(vn, vt, bc.sx, bc.sz)
-        vz = self._vz(vn, vt, bc.sx, bc.sz)
+        vx = self._vx(vn, vt, edge.sx, edge.sz)
+        vz = self._vz(vn, vt, edge.sx, edge.sz)
 
-        if bc.axis == 0:
-            self.fld.ru[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vz
-            self.fld.rv[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vx
+        if edge.axis == 0:
+            self.fld.ru[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vz
+            self.fld.rv[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vx
 
-        elif bc.axis == 1:
-            self.fld.ru[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vx
-            self.fld.rv[bc.sx, bc.sz] = self.fld.r[bc.sx, bc.sz]*vz
+        elif edge.axis == 1:
+            self.fld.ru[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vx
+            self.fld.rv[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vz
 
     def _vx(self, vn, vt, sx, sz):
         """Cf. Dragna p.98"""
