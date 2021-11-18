@@ -71,17 +71,17 @@ class EulerianFluxes:
             if 'A' in self.msh.bc:
                 self.pml()
 
-            self.fld.fdtools.adtime(self.fld.r, self.r, self.fld.K, irk)
-            self.fld.fdtools.adtime(self.fld.ru, self.ru, self.fld.Ku, irk)
-            self.fld.fdtools.adtime(self.fld.rv, self.rv, self.fld.Kv, irk)
-            self.fld.fdtools.adtime(self.fld.re, self.re, self.fld.Ke, irk)
+            self.fld.fdtools.adtime(self.fld.r, self.r, self.fld.K, irk, self.cfg.cpu)
+            self.fld.fdtools.adtime(self.fld.ru, self.ru, self.fld.Ku, irk, self.cfg.cpu)
+            self.fld.fdtools.adtime(self.fld.rv, self.rv, self.fld.Kv, irk, self.cfg.cpu)
+            self.fld.fdtools.adtime(self.fld.re, self.re, self.fld.Ke, irk, self.cfg.cpu)
 
             # Boundary conditions
             self.cout()
 
             # Compute p
             self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
-                               self.fld.rv, self.fld.re)
+                               self.fld.rv, self.fld.re, self.cfg.cpu)
 
             if self.cfg.stype in ['harmonic', 'white', 'wav']:
                 self.fld.p += self.fld.update_source(self.cfg.it)

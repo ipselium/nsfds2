@@ -201,7 +201,7 @@ class DataExtractor:
             rhov = self.data[f"rhov_it{iteration}"][...]*self.J
             rhoe = self.data[f"rhoe_it{iteration}"][...]*self.J
             p = _np.empty_like(rho)
-            _fdtd.p(p, rho, rhou, rhov, rhoe, self.data.attrs['gamma'])
+            _fdtd.p(p, rho, rhou, rhov, rhoe, self.data.attrs['gamma'], 1)
 
             return p.T - self.data.attrs['p0']
 

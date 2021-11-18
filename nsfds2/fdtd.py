@@ -239,7 +239,7 @@ class FDTD:
         """ Update pressure field """
 
         self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
-                           self.fld.rv, self.fld.re)
+                           self.fld.rv, self.fld.re, self.cfg.cpu)
 
     @timing.proceed('probe')
     def update_probes(self):
@@ -252,9 +252,9 @@ class FDTD:
         """ Check if computation diverges. """
 
         if self.cfg.mesh == 'curvilinear':
-            self.res = self.fld.fdtools.residual(self.fld.p*self.msh.J)
+            self.res = self.fld.fdtools.residual(self.fld.p*self.msh.J, self.cfg.cpu)
         else:
-            self.res = self.fld.fdtools.residual(self.fld.p)
+            self.res = self.fld.fdtools.residual(self.fld.p, self.cfg.cpu)
 
 #        if (abs(self.res) > 100*self.pmax) or np.any(np.isnan(self.fld.p)):
         if np.any(np.isnan(self.fld.p)):

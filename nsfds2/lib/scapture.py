@@ -79,7 +79,7 @@ class ShockCapture:
         """ Update pressure / dilatation. """
 
         self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
-                           self.fld.rv, self.fld.re)
+                           self.fld.rv, self.fld.re, self.cfg.cpu)
 
         if self.cfg.cpt_meth == 'dilatation':
             self.dilatation()

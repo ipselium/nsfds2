@@ -218,23 +218,23 @@ class Fields:
             self.fdtools.Eu(self.Ei, self.Eui, self.Evi, self.Eei,
                             self.r, self.ru, self.rv,
                             self._cfg.p0*_np.ones_like(self.p)/(self._cfg.gamma-1.),
-                            self._cfg.p0*_np.ones_like(self.p))
+                            self._cfg.p0*_np.ones_like(self.p), self._cfg.cpu)
 
         elif self._cfg.mesh == 'curvilinear':
             self.fdtools.EuJ(self.Ei, self.Eui, self.Evi, self.Eei,
                              self.r, self.ru, self.rv, self.re, self.p,
-                             self._msh.dxn_dxp, self._msh.dxn_dzp)
+                             self._msh.dxn_dxp, self._msh.dxn_dzp, self._cfg.cpu)
 
         if self._cfg.mesh in ['regular', 'adaptative']:
             self.fdtools.Fu(self.Fi, self.Fui, self.Fvi, self.Fei,
                             self.r, self.ru, self.rv,
                             self._cfg.p0*_np.ones_like(self.p)/(self._cfg.gamma-1.),
-                            self._cfg.p0*_np.ones_like(self.p))
+                            self._cfg.p0*_np.ones_like(self.p), self._cfg.cpu)
 
         elif self._cfg.mesh == 'curvilinear':
             self.fdtools.FuJ(self.Fi, self.Fui, self.Fvi, self.Fei,
                              self.r, self.ru, self.rv, self.re, self.p,
-                             self._msh.dzn_dxp, self._msh.dzn_dzp)
+                             self._msh.dzn_dxp, self._msh.dzn_dzp, self._cfg.cpu)
 
     def _init_radiation(self):
         """ Init radiation conditions. """

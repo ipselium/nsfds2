@@ -76,7 +76,7 @@ class ViscousFluxes:
         fdtd.dEF(self.fld.Eu, self.fld.Ev, self.fld.Ee,
                  self.fld.Fu, self.fld.Fv, self.fld.Fe, mu,
                  self.fld.tau11, self.fld.tau12, self.fld.tau22,
-                 self.fld.r, self.fld.ru, self.fld.rv)
+                 self.fld.r, self.fld.ru, self.fld.rv, self.cfg.cpu)
 
         # viscous flux : order 2 centered scheme
         for sub in self.msh.dxdomains:
