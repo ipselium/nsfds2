@@ -143,6 +143,7 @@ class CfgSetup:
         self.cfg.set('configuration', 'version', str(nsfds2.__version__))
         self.cfg.set('configuration', 'timings', 'False')
         self.cfg.set('configuration', 'quiet', 'False')
+        self.cfg.set('configuration', 'cpu', '1')
 
         self.cfg.add_section('simulation')
         self.cfg.set('simulation', 'nt', '500')
@@ -254,6 +255,7 @@ class CfgSetup:
         CFG = self.cfg['configuration']
         self.timings = getattr(self.args, 'timings', None)
         self.quiet = getattr(self.args, 'quiet', None)
+        self.cpu = CFG.getint('cpu', 1)
 
         if not isinstance(self.timings, bool):
             self.timings = CFG.getboolean('timings', False)
@@ -307,7 +309,9 @@ class CfgSetup:
         if self.geofile:
             self.geofile, self.geoname = self.args.geofile
         else:
-            self.geofile = pathlib.Path(GEO.get('file', 'None')).expanduser()
+            self.geofile = GEO.get('file', 'None')
+            if self.geofile != "None":
+                self.geofile = pathlib.Path(self.geofile).expanduser()
             self.geoname = GEO.get('geoname', 'square')
 
         if self.mesh not in ['regular', 'adaptative', 'curvilinear']:
