@@ -91,6 +91,6 @@ class ViscousFluxes:
 
         # Integrate in time
         for sub in self.msh.dsdomains:
-            self.fld.fdtools.integrate(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-            self.fld.fdtools.integrate(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-            self.fld.fdtools.integrate(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+            self.fld.fdtools.integrate(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz, self.cfg.cpu)
+            self.fld.fdtools.integrate(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz, self.cfg.cpu)
+            self.fld.fdtools.integrate(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz, self.cfg.cpu)
