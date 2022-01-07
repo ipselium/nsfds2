@@ -345,6 +345,7 @@ class Fields:
         self.sfile.create_dataset('rhoe_init', data=self.re, compression=self._cfg.comp)
 
         self.sfile.attrs['obstacles'] = self._msh.get_obstacles()
+        self.sfile.attrs['domains'] = self._msh.get_domains()
         self.sfile.attrs['dx'] = self._msh.dx
         self.sfile.attrs['dz'] = self._msh.dz
         self.sfile.attrs['dt'] = self._cfg.dt
