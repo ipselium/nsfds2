@@ -41,14 +41,16 @@ def get_obstacle(cfg):
             custom = __import__(os.path.basename(cfg.geofile).split('.')[0])
             obstacle = getattr(custom, cfg.geoname)(cfg.nx, cfg.nz)
             cfg.geoflag = True
-        except (AttributeError, ImportError):
+        except (AttributeError, ImportError) as e:
+            print(e)
             cfg.geoflag = False
             obstacle = []
     else:
         try:
             obstacle = getattr(_tplt, cfg.geoname)(cfg.nx, cfg.nz)
             cfg.geoflag = True
-        except AttributeError:
+        except AttributeError as e:
+            print(e)
             cfg.geoflag = False
             obstacle = []
     return obstacle
@@ -63,14 +65,16 @@ def get_curvilinear(cfg):
             custom = __import__(os.path.basename(cfg.geofile).split('.')[0])
             fcurv = getattr(custom, cfg.curvname)
             cfg.curvflag = True
-        except (AttributeError, ImportError):
+        except (AttributeError, ImportError) as e:
+            print(e)
             cfg.curvflag = False
             fcurv = None
     else:
         try:
             fcurv = getattr(_tplt, cfg.curvname)
             cfg.curvflag = True
-        except AttributeError:
+        except AttributeError as e:
+            print(e)
             cfg.curvflag = False
             fcurv = None
     return fcurv

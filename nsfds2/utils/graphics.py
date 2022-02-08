@@ -285,7 +285,8 @@ class Plot:
                        'vort': r'$\omega$ [m/s]'}
 
     def movie(self, view=('p', 'e', 'vx', 'vz'), nt=None, ref=None,
-              figsize='auto', show_pml=False, show_probes=False, dpi=100):
+              figsize='auto', show_pml=False, show_probes=False,
+              dpi=100, fps=24):
         """ Make movie. """
 
         # Progress bar
@@ -296,7 +297,7 @@ class Plot:
         # Movie parameters
         title = os.path.basename(self.filename).split('.')[0]
         metadata = dict(title=title, artist=getpass.getuser(), comment='From nsfds2')
-        writer = _ani.FFMpegWriter(fps=24, metadata=metadata, bitrate=-1, codec="libx264")
+        writer = _ani.FFMpegWriter(fps=fps, metadata=metadata, bitrate=-1, codec="libx264")
         movie_filename = f'{title}.mkv'
 
         # Nb of iterations

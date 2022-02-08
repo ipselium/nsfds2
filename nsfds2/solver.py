@@ -189,7 +189,8 @@ def make(cfg, _):
 
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
         plt.movie(view=cfg.args.view, nt=cfg.args.nt, ref=cfg.args.ref,
-                  show_pml=cfg.show_pml, show_probes=cfg.show_probes)
+                  show_pml=cfg.show_pml, show_probes=cfg.show_probes,
+                  fps=cfg.fps)
         plt.show()
 
     elif cfg.args.make_command == 'sound':
@@ -205,24 +206,21 @@ def main():
     # Parse config file
     cfg = CfgSetup(args=args)
 
-    # Geometry
-    obstacles = files.get_obstacle(cfg)
-
     # Mesh
     if cfg.mesh == 'regular':
         msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0),
-                        bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml,
+                        bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
                         stencil=cfg.stencil)
     elif cfg.mesh == 'curvilinear':
         fcurv = files.get_curvilinear(cfg)
         msh = mesh.CurvilinearMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
                                    origin=(cfg.ix0, cfg.iz0),
-                                   bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml,
+                                   bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
                                    stencil=cfg.stencil, fcurvxz=fcurv)
     elif cfg.mesh == 'adaptative':
         msh = mesh.AdaptativeMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
                                   origin=(cfg.ix0, cfg.iz0),
-                                  bc=cfg.bc, obstacles=obstacles, Npml=cfg.Npml,
+                                  bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
                                   stencil=cfg.stencil)
 
     if args.command:

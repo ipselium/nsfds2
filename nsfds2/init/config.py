@@ -52,6 +52,7 @@ import pathlib
 import configparser
 from pkg_resources import parse_version
 import nsfds2
+from nsfds2.utils import files
 
 
 class CfgSetup:
@@ -62,29 +63,31 @@ class CfgSetup:
         # Minimal version of the config file
         self.base_version = '0.9.15'
 
-        # Command line arguments
+        # Command line arguments + home
         self.args = args
+        self.home = pathlib.Path.home()
 
         # Create config parser
         self.cfg = configparser.ConfigParser(allow_no_value=True)
-        self.home = pathlib.Path.home()
-        self.path = self.home / '.nsfds2'
 
-        # Check if config dir exists. If not create it.
-        self.check_dir(self.path)
+        # Load config file
+        if isinstance(args, str):
+            self.cfgfile = args
+        else:
+            self.cfgfile = getattr(self.args, 'cfgfile', None)
 
-        # Check if config file exist. If not create it
-        self.init_cfg()
+        # Check cfg file
+        if not self.cfgfile:
+            self.path = self.home / '.nsfds2'
+            self.cfgfile = self.path / 'nsfds2.conf'
+            self.check_dir(self.path) # Check if cfg dir exists. If not create it.
+            self.init_cfg()           # Check if cfg file exist. If not create it
 
         # Check if config file version is ok
         self.check_config_file()
 
         # Read config file (can be overridden by command line)
-        cf = getattr(self.args, 'cfgfile', None)
-        if cf:
-            self.cfg.read(cf)
-        else:
-            self.cfg.read(self.path / 'nsfds2.conf')
+        self.cfg.read(self.cfgfile)
 
         # Parse arguments
         self.run()
@@ -102,7 +105,7 @@ class CfgSetup:
         """ Check version of the config file. Overwrite it if too old. """
 
         cfg = configparser.ConfigParser(allow_no_value=True)
-        cfg.read(self.path / 'nsfds2.conf')
+        cfg.read(self.cfgfile)
 
         try:
             CFG = cfg['configuration']
@@ -128,7 +131,7 @@ class CfgSetup:
         self.init_cfg()
 
     def init_cfg(self):
-        """ Check if nsfds2.conf exists. If not create it. """
+        """ Check if config file exists. If not create it. """
 
         if not (self.path / 'nsfds2.conf').is_file():
             open(self.path / 'nsfds2.conf', 'a').close()
@@ -295,9 +298,9 @@ class CfgSetup:
         GEO = self.cfg['geometry']
         self.mesh = GEO.get('mesh', 'regular').lower()
         self.curvflag = True if self.mesh == 'curvilinear' else False
+        self.curvname = GEO.get('curvname', 'None')
         self.geofile = getattr(self.args, 'geofile', None)
         self.geoflag = True
-        self.curvname = GEO.get('curvname', 'None')
         self.bc = GEO.get('bc', 'WWWW').upper()
         self.nx = GEO.getint('nx', 256)
         self.nz = GEO.getint('nz', 256)
@@ -316,6 +319,8 @@ class CfgSetup:
 
         if self.mesh not in ['regular', 'adaptative', 'curvilinear']:
             raise ValueError('mesh must be regular, adaptative, or curvilinear')
+
+        self.obstacles = files.get_obstacle(self)
 
     def _pml(self):
 
@@ -440,3 +445,4 @@ class CfgSetup:
         self.show_probes = FIGS.getboolean('probes', True)
         self.show_pml = FIGS.getboolean('pml', True)
         self.bc_profiles = FIGS.getboolean('bc_profiles', True)
+        self.fps = FIGS.getint('fps', 24)

@@ -28,10 +28,10 @@ several main objects to perform numerical simulations :
    from fdgrid.mesh import Mesh
 
    # Read simulation parameter in config file ~/nsfds2/nsfds2.conf
-   cfg = CfgSetup()
+   cfg = CfgSetup()    # or cfg = CfgSetup('path_to_configfile.conf')
 
    # Define the mesh
-   msh = Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0), obstacles=[])
+   msh = Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0), obstacles=cfg.obstacles)
 
    # Init acoustic fields
    fld = Fields(msh, cfg)
@@ -44,6 +44,14 @@ several main objects to perform numerical simulations :
    plt.figure()
    plt.imshow(fld.p)
    plt.show()
+
+
+One can also use the `pickle` module to load cfg instance from the .cfg file::
+
+
+   import pickle
+   with open('file.cfg', 'rb') as cfg_file:
+       cfg = pickle.load(cfg_file)
 
 
 hdf5 files

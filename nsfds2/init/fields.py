@@ -42,7 +42,8 @@ Example
 """
 
 import sys as _sys
-import h5py
+import pickle as _pickle
+import h5py as _h5py
 import numpy as _np
 from ofdlib2.fdtd import fdtools
 from nsfds2.utils import headers, misc
@@ -335,7 +336,10 @@ class Fields:
             if overwrite.lower() in ['n', 'no']:
                 _sys.exit(1)
 
-        self.sfile = h5py.File(self._cfg.datafile, 'w')
+        with open(self._cfg.datafile.with_suffix('.cfg'), 'wb') as pkl:
+            _pickle.dump(self._cfg, pkl)
+
+        self.sfile = _h5py.File(self._cfg.datafile, 'w')
 
         self.sfile.create_dataset('x', data=self._x, compression=self._cfg.comp)
         self.sfile.create_dataset('z', data=self._z, compression=self._cfg.comp)
@@ -345,7 +349,7 @@ class Fields:
         self.sfile.create_dataset('rhoe_init', data=self.re, compression=self._cfg.comp)
 
         self.sfile.attrs['obstacles'] = self._msh.get_obstacles()
-        self.sfile.attrs['domains'] = self._msh.get_domains(only_xz=True)
+#        self.sfile.attrs['domains'] = self._msh.get_domains(only_xz=True)
         self.sfile.attrs['dx'] = self._msh.dx
         self.sfile.attrs['dz'] = self._msh.dz
         self.sfile.attrs['dt'] = self._cfg.dt
