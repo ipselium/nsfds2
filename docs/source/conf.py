@@ -27,7 +27,7 @@ author = 'Cyril Desjouy'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.11.2'
+release = '0.11.3'
 
 
 # -- General configuration ---------------------------------------------------
