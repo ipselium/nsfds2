@@ -80,7 +80,10 @@ def start(cfg):
     check_geo(cfg)
 
     log = "Starting computation for geometry : '{}' ({}x{})."
-    print(log.format(cfg.geoname, cfg.nx, cfg.nz))
+    log += "\nSolving {} equations {} shock capture procedure."
+    eqs = "Navier-Stokes" if cfg.vsc else "Nonlinear Euler"
+    cpt = "with" if cfg.cpt else "without"
+    print(log.format(cfg.geoname, cfg.nx, cfg.nz, eqs, cpt))
     key = input("Hit enter to continue (prefix 'q' to abort) ! ")
     if key == 'q':
         sys.exit(0)
