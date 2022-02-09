@@ -422,7 +422,10 @@ class CfgSetup:
 
         SAVE = self.cfg['save']
         self.save = SAVE.getboolean('fields', True)
-        self.savepath = pathlib.Path(SAVE.get('path', 'results')).expanduser()
+        if self.path == self.path_default:
+            self.savepath = pathlib.Path(SAVE.get('path', 'results'))
+        else:
+            self.savepath = self.path / SAVE.get('path', 'results')
         self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
         self.comp = SAVE.get('compression', 'lzf')
         try:
