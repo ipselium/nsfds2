@@ -66,22 +66,27 @@ class CfgSetup:
         # Command line arguments + home
         self.args = args
         self.home = pathlib.Path.home()
+        self.path_default = self.home / '.nsfds2'
+        self.cfgfile_default = self.path_default / 'nsfds2.conf'
 
         # Create config parser
         self.cfg = configparser.ConfigParser(allow_no_value=True)
 
         # Load config file
-        if isinstance(args, str):
-            self.cfgfile = args
+        if isinstance(self.args, str):
+            self.cfgfile = pathlib.Path(self.args)
         else:
             self.cfgfile = getattr(self.args, 'cfgfile', None)
 
         # Check cfg file
         if not self.cfgfile:
-            self.path = self.home / '.nsfds2'
-            self.cfgfile = self.path / 'nsfds2.conf'
+            self.path = self.path_default
+            self.cfgfile = self.cfgfile_default
             self.check_dir(self.path) # Check if cfg dir exists. If not create it.
             self.init_cfg()           # Check if cfg file exist. If not create it
+        else:
+            self.cfgfile = pathlib.Path(self.cfgfile)
+            self.path = self.cfgfile.absolute().parent
 
         # Check if config file version is ok
         self.check_config_file()
@@ -110,11 +115,21 @@ class CfgSetup:
         try:
             CFG = cfg['configuration']
             version = CFG.get('version')
-            if parse_version(version) < parse_version(self.base_version):
+            is_default_cfg = self.cfgfile == self.cfgfile_default
+            is_version_ok = parse_version(version) >= parse_version(self.base_version)
+
+            if not is_version_ok and is_default_cfg:
                 self._overwrite_config_file()
+            elif not is_version_ok:
+                print(f'Config file version must be >= {self.base_version}')
+                sys.exit(1)
 
         except (KeyError, TypeError):
-            self._overwrite_config_file()
+            print(f'Config file version must be >= {self.base_version}')
+            if is_default_cfg:
+                self._overwrite_config_file()
+            else:
+                sys.exit(1)
 
     def _overwrite_config_file(self):
 
@@ -123,7 +138,6 @@ class CfgSetup:
         name = f'{now.year}{now.month}{now.day}{now.hour}{now.minute}{now.second}'
         shutil.move(self.path / 'nsfds2.conf', self.path / f'nsfds2_{name}.conf')
 
-        print('Bad config file found...')
         print(f'Current configfile backup : nsfds2_{name}.conf')
         time.sleep(1)
 
@@ -215,6 +229,7 @@ class CfgSetup:
         self.cfg.set('figures', 'probes', 'True')
         self.cfg.set('figures', 'pml', 'True')
         self.cfg.set('figures', 'bc_profiles', 'True')
+        self.cfg.set('figures', 'fps', '24')
 
         self.cfg.add_section('save')
         self.cfg.set('save', 'path', 'results/')
@@ -299,7 +314,8 @@ class CfgSetup:
         self.mesh = GEO.get('mesh', 'regular').lower()
         self.curvflag = True if self.mesh == 'curvilinear' else False
         self.curvname = GEO.get('curvname', 'None')
-        self.geofile = getattr(self.args, 'geofile', None)
+        self.geofile = GEO.get('file', 'None')
+        self.geoname = GEO.get('geoname', 'square')
         self.geoflag = True
         self.bc = GEO.get('bc', 'WWWW').upper()
         self.nx = GEO.getint('nx', 256)
@@ -309,13 +325,8 @@ class CfgSetup:
         self.dx = GEO.getfloat('dx', 1)
         self.dz = GEO.getfloat('dz', 1)
 
-        if self.geofile:
-            self.geofile, self.geoname = self.args.geofile
-        else:
-            self.geofile = GEO.get('file', 'None')
-            if self.geofile != "None":
-                self.geofile = pathlib.Path(self.geofile).expanduser()
-            self.geoname = GEO.get('geoname', 'square')
+        if self.geofile != "None":
+            self.geofile = self.path / self.geofile
 
         if self.mesh not in ['regular', 'adaptative', 'curvilinear']:
             raise ValueError('mesh must be regular, adaptative, or curvilinear')

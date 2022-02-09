@@ -89,7 +89,7 @@ def check_geo(cfg):
     """ Check geofile. """
 
     if not cfg.geoflag:
-        print('Warning: Unable to load {} from {}'.format(cfg.geoname, cfg.geofile))
+        print('Warning: Unable to load {} from {}.py'.format(cfg.geoname, cfg.geofile))
         cfg.geoname = 'empty'
 
 
