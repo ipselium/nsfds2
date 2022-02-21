@@ -1,12 +1,11 @@
 Introducing nsfds2
 ==================
 
-|Pypi| |Build| |Licence|
+|Pypi| |Build| |Licence| |DOI|
+
 
 .. image:: https://github.com/ipselium/nsfds2/blob/master/docs/source/images/nsfds2.png
 
-.. image:: https://zenodo.org/badge/178000566.svg
-   :target: https://zenodo.org/badge/latestdoi/178000566
 
 **nsfds2** is 2D Navier-Stokes Solver that uses finite difference method.
 **nsfds2** is specialized in acoustic simulations.
@@ -65,3 +64,7 @@ Links
 
 .. |Build| image:: https://travis-ci.org/ipselium/nsfds2.svg?branch=master
     :target: https://travis-ci.org/ipselium/nsfds2
+
+.. |DOI| image:: https://zenodo.org/badge/178000566.svg
+    :target: https://zenodo.org/badge/latestdoi/178000566
+
