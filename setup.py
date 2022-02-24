@@ -43,8 +43,9 @@ setup(
     author_email="cyril.desjouy@univ-lemans.fr",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["numpy", "scipy", "matplotlib", "ofdlib2>=0.9.8",
-                      "progressbar33", "mplutils>=0.3.0", "h5py", "fdgrid>=0.9.1"],
+    install_requires=["numpy", "scipy", "matplotlib", "ofdlib2>=0.10.0",
+                      "progressbar33", "mplutils>=0.3.0", "h5py",
+                      "fdgrid>=0.10.0"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",

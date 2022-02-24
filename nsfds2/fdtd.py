@@ -205,6 +205,7 @@ class FDTD:
         """ Viscous flux """
         if self.cfg.vsc:
             self.vfluxes.integrate()
+            self.efluxes.cout()
 
     @timing.proceed('sfilt')
     def selective_filter(self):

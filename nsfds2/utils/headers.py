@@ -100,26 +100,40 @@ def check_geo(cfg):
 def parameters(cfg, msh):
     """ Show simulation parameters. """
 
+    # Geometry
     s = msh.__str__()
+    s += "\t* geometry     : '{}'\n".format(cfg.geoname)
+
+    # Thermophysics
+    s += "\t* Thermophysic : "
+    s += "c0={:.2f} m/s, rho0={:.2f} kg/m3, nu={:.3e} m2/s\n".format(cfg.c0,
+                                                                     cfg.rho0,
+                                                                     cfg.nu)
+    # PML
     if 'A' in cfg.bc:
         nsfds2.init.fields.set_sigma(cfg, msh)
         s += "\t* sigma=({:.3e}, {:.3e}) and beta={}\n".format(cfg.sigmax,
                                                                cfg.sigmaz,
                                                                cfg.beta)
 
-    s += "\t* geometry : '{}'\n".format(cfg.geoname)
+    # Time
+    s += "\t* Physical time: {:.5e} s.\n".format(cfg.dt*cfg.nt)
+    s += "\t* Time step    : dt={:.5e} s and nt={}.\n".format(cfg.dt,
+                                                              cfg.nt)
 
-    s += "\t* dt = {:.5e} s and nt = {}.\n".format(cfg.dt, cfg.nt)
-    s += "\t* Physical time : {:.5e} s.\n".format(cfg.dt*cfg.nt)
-
+    # Source
     if cfg.stype not in cfg.none:
-        s += "\t* source : {} at ({}, {})".format(cfg.stype, cfg.ixS, cfg.izS)
+        s += "\t* source   : {} at ({}, {})".format(cfg.stype,
+                                                    cfg.ixS,
+                                                    cfg.izS)
         if cfg.ftype == 'harmonic':
             s += 'with f={}.\n'.format(cfg.f0)
         else:
             s += '.\n'
 
     if cfg.ftype not in cfg.none:
-        s += "\t* flow   : {} (U0={}, V0={}).".format(cfg.ftype, cfg.U0, cfg.V0)
+        s += "\t* flow     : {} (U0={}, V0={}).".format(cfg.ftype,
+                                                        cfg.U0,
+                                                        cfg.V0)
 
     print(s)

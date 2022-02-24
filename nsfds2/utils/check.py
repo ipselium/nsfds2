@@ -42,6 +42,7 @@ class Check:
         self.source()
         self.obstacles()
         self.domain()
+        self.not_implemented()
 
     def source(self):
         """ Check if source is not in an obstacle. """
@@ -65,3 +66,11 @@ class Check:
             s += "Fix bcs to 'WWWW'."
             warnings.warn(s, stacklevel=8)
             self.msh.bc = 'WWWW'
+
+    def not_implemented(self):
+        """ Check not implemented features. """
+
+        if self.cfg.mesh == "curvilinear" and self.cfg.vsc:
+            s = 'Cannot solve viscous fluxes with curvilinear mesh for now'
+            raise ValueError(s)
+

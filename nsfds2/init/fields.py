@@ -306,8 +306,8 @@ class Fields:
 
         for obs in self._msh.obstacles:
             for edge in obs.edges:
-                if edge.f0_n > 0:
-                    edge.vn = _np.sin(2*_np.pi*edge.f0_n*time + edge.phi_t)
+                if edge.f0 > 0:
+                    edge.vn = _np.sin(2*_np.pi*edge.f0*time + edge.phi)
                 elif edge.func:
                     func = get_wall_function(self._cfg, edge.func)
                     edge.vn = func(time)
@@ -322,16 +322,12 @@ class Fields:
                 else:
                     edge.vn = 0
 
-                if edge.f0_t:
-                    edge.vt = _np.sin(2*_np.pi*edge.f0_t*time + edge.phi_t)
-                else:
-                    edge.vt = 0
 
     def init_save(self):
         """ Init save. """
 
         if self._cfg.datafile.is_file():
-            msg = f'{self._cfg.datafile} already exists. Overwrite ? [yes]/no '
+            msg = f'{self._cfg.datafile} already exists. \nOverwrite ? [yes]/no '
             overwrite = input(misc.colors.RED + msg + misc.colors.END)
             if overwrite.lower() in ['n', 'no']:
                 _sys.exit(1)

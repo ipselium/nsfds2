@@ -176,30 +176,22 @@ class EulerianFluxes:
 
         for obs in self.msh.obstacles:
             for edge in obs.edges:
-
-                vn, vt = self._get_wall_velocity(edge)
+                vn = edge.pn*edge.vn[self.cfg.it]
+                vt = 0
 
                 if self.cfg.mesh == 'curvilinear':
                     self._apply_source_curvilinear(edge, vn, vt)
                 else:
                     self._apply_source_cartesian(edge, vn, vt)
 
-    def _get_wall_velocity(self, edge):
-        """ Get wall velocity. """
-
-        vn = edge.pn*edge.vn[self.cfg.it] if isinstance(edge.vn, _np.ndarray) else 0
-        vt = edge.pt*edge.vt[self.cfg.it] if isinstance(edge.vt, _np.ndarray) else 0
-
-        return vn, vt
-
     def _apply_source_cartesian(self, edge, vn, vt):
 
         if edge.axis == 0:
             self.fld.ru[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vn
-            self.fld.rv[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vt
+            self.fld.rv[edge.sx, edge.sz] = vt
 
         elif edge.axis == 1:
-            self.fld.ru[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vt
+            self.fld.ru[edge.sx, edge.sz] = vt
             self.fld.rv[edge.sx, edge.sz] = self.fld.r[edge.sx, edge.sz]*vn
 
     def _apply_source_curvilinear(self, edge, vn, vt):
@@ -218,12 +210,12 @@ class EulerianFluxes:
     def _vx(self, vn, vt, sx, sz):
         """Cf. Dragna p.98"""
         d = _np.sqrt(self.msh.dzn_dxp[sx, sz]**2 + self.msh.dzn_dzp[sx, sz]**2)
-        return  (self.msh.dzn_dxp[sx, sz]*vn + self.msh.dzn_dzp[sx, sz]*vt)/d
+        return (self.msh.dzn_dxp[sx, sz]*vn + self.msh.dzn_dzp[sx, sz]*vt)/d
 
     def _vz(self, vn, vt, sx, sz):
 
         d = _np.sqrt(self.msh.dxn_dzp[sx, sz]**2 + self.msh.dzn_dzp[sx, sz]**2)
-        return  (self.msh.dzn_dzp[sx, sz]*vn - self.msh.dzn_dxp[sx, sz]*vt)/d
+        return (self.msh.dzn_dzp[sx, sz]*vn - self.msh.dzn_dxp[sx, sz]*vt)/d
 
     def radiation(self):
         """ Radiation condition. """

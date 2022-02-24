@@ -43,7 +43,7 @@ class ViscousFluxes:
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
-        self.du = drv.du(msh.x, msh.z, self.cfg.vsc_stencil)
+        self.du = drv.du(msh.x, msh.z, cfg.vsc_stencil)
 
         for sub in self.msh.dmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
@@ -54,31 +54,50 @@ class ViscousFluxes:
             Viscous flux integration : interior points [optimized]
         """
 
-        # dE/dx term
+        # u and v
         self.fld.Eu = self.fld.ru/self.fld.r
         self.fld.Ev = self.fld.rv/self.fld.r
 
-        # Strain tensor : WARNING : CHECK THAT DUDX3RR CORRESPONDS TO THIS NEED !
+        # Strain tensor : WARN : CHECK THAT DUDX3RR CORRESPONDS TO THIS NEED !
+        # Init tau22 because of adding previous tau22 in dudz !
+        self.fld.tau22[:, :] = 0
+
         for sub in self.msh.dxdomains:
             sub.du(self.fld.Eu, self.fld.tau11, *sub.ix, *sub.iz)
             sub.du(0.5*self.fld.Ev, self.fld.tau12, *sub.ix, *sub.iz)
 
-        # Important : Init tau22 (because of adding previous tau22 in dudz !)
-        self.fld.tau22[:, :] = 0
         for sub in self.msh.dzdomains:
             sub.du(self.fld.Ev, self.fld.tau22, *sub.ix, *sub.iz)
             sub.du(0.5*self.fld.Eu, self.fld.tau12, *sub.ix, *sub.iz)
 
-        # Dynamic viscosity
-        mu = self.fld.r*self.cfg.nu
+        # Temperature
+        Tk = self.fld.p/(self.fld.r*(self.cfg.cp - self.cfg.cv))
+
+        # Temperature gradients
+        # Note because of adding previous F in dudz !)
+        self.fld.F[:, :] = 0
+
+        for sub in self.msh.dxdomains:
+            sub.du(Tk, self.fld.E, *sub.ix, *sub.iz)
+
+        for sub in self.msh.dzdomains:
+            sub.du(Tk, self.fld.F, *sub.ix, *sub.iz)
+
+        # Dynamic viscosity : Sutherland law (valid from 0°C to 1216°C)
+        # mu = self.fld.r*self.cfg.nu
+        mu = self.cfg.mu0*(Tk/self.cfg.T0)**(3/2) \
+            * (self.cfg.T0 + self.cfg.Ssu)/(Tk + self.cfg.Ssu)
+
+        cppr = - self.cfg.cp/self.cfg.prandtl
 
         # dE/dx and dF/dz
         fdtd.dEF(self.fld.Eu, self.fld.Ev, self.fld.Ee,
                  self.fld.Fu, self.fld.Fv, self.fld.Fe, mu,
                  self.fld.tau11, self.fld.tau12, self.fld.tau22,
+                 self.fld.E*cppr, self.fld.F*cppr,
                  self.fld.r, self.fld.ru, self.fld.rv)
 
-        # viscous flux : order 2 centered scheme
+        # viscous flux
         for sub in self.msh.dxdomains:
             sub.du(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz)
             sub.du(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz)

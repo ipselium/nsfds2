@@ -168,10 +168,10 @@ class CfgSetup:
         self.cfg.set('simulation', 'CFL', '0.5')
 
         self.cfg.add_section('thermophysic')
-        self.cfg.set('thermophysic', 'rho0', '1.2')
-        self.cfg.set('thermophysic', 'c0', '340')
+        self.cfg.set('thermophysic', 'P0', '101325.0')
+        self.cfg.set('thermophysic', 'T0', '20.0')
         self.cfg.set('thermophysic', 'gamma', '1.4')
-        self.cfg.set('thermophysic', 'nu', '1.5e-5')
+        self.cfg.set('thermophysic', 'prandtl', '0.7')
 
         self.cfg.add_section('geometry')
         self.cfg.set('geometry', 'mesh', 'regular')
@@ -299,11 +299,26 @@ class CfgSetup:
     def _thp(self):
 
         THP = self.cfg['thermophysic']
-        self.c0 = THP.getfloat('c0', 340)
-        self.rho0 = THP.getfloat('rho0', 1.22)
+
+        self.Ssu = 111.0  # Sutherland constant
+        self.T0 = 273.0
+        self.T = self.T0 + THP.getfloat('T0', 20.0)
+
         self.gamma = THP.getfloat('gamma', 1.4)
-        self.nu = THP.getfloat('nu', 1.5e-5)
-        self.p0 = self.rho0*self.c0**2/self.gamma
+        self.cv = 717.5
+        self.cp = self.cv*self.gamma
+
+        self.p0 = THP.getfloat('P0', 101325.0)
+        self.rho0 = self.p0/(self.T*(self.cp - self.cv))
+        self.c0 = (self.gamma*self.p0/self.rho0)**0.5
+        self.mu0 = 0.00001716
+        self.mu = (self.mu0*(self.T/self.T0)**(3./2.) *
+                   (self.T0 + self.Ssu)/(self.T + self.Ssu))
+        self.nu = self.mu/self.rho0
+        self.prandtl = THP.getfloat('prandtl', 0.7)
+
+#        self.nu = THP.getfloat('nu', 1.5e-5)
+#        self.p0 = self.rho0*self.c0**2/self.gamma
 
         if self.c0 < 1:
             raise ValueError('c0 must be >= 1')
