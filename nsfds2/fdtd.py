@@ -71,6 +71,7 @@ from nsfds2.lib.efluxes import EulerianFluxes
 from nsfds2.lib.vfluxes import ViscousFluxes
 from nsfds2.lib.sfilter import SelectiveFilter
 from nsfds2.lib.scapture import ShockCapture
+from nsfds2.lib.vorticity import Vorticity
 
 
 class FDTD:
@@ -98,18 +99,30 @@ class FDTD:
         # Check some of the simulation parameters
         check.Check(self.cfg, self.msh)
 
+        # Init timings and residuals
+        self.res = 0
+        self.tt = 0
+        timed_methods = ['total', 'efluxes', 'save', 'pressure']
+
         # Init libs
         self.efluxes = EulerianFluxes(self.msh, self.fld, self.cfg)
         if self.cfg.vsc:
             self.vfluxes = ViscousFluxes(self.msh, self.fld, self.cfg)
+            timed_methods += ['vfluxes']
         if self.cfg.flt:
             self.sfilter = SelectiveFilter(self.msh, self.fld, self.cfg)
+            timed_methods += ['sfilt']
         if self.cfg.cpt:
             self.scapture = ShockCapture(self.msh, self.fld, self.cfg)
+            timed_methods += ['scapt']
+        if self.cfg.save_vortis:
+            self.vorticity = Vorticity(self.msh, self.fld, self.cfg)
+            timed_methods += ['vorticity']
 
         # Init probes
-        if cfg.probes:
+        if self.cfg.probes:
             self.probes = np.zeros((len(cfg.probes), cfg.ns))
+            timed_methods += ['probes']
 
         # Prompt user for start
         if not self.cfg.quiet:
@@ -120,11 +133,7 @@ class FDTD:
         self.pmax = - 0.5*self.cfg.rho0*v \
                     *(self.cfg.gamma - 2)/(self.cfg.gamma - 1) + self.cfg.S0
 
-        # Init timings and residuals
-        self.res = 0
-        self.tt = 0
-        timed_methods = ['total', 'efluxes', 'vfluxes', 'sfilt',
-                         'scapt', 'save', 'pressure', 'probe']
+        # Start timings
         self.bench = {i: [] for i in timed_methods}
         self.tloopi = time.perf_counter()
 
@@ -155,16 +164,13 @@ class FDTD:
             self.eulerian_fluxes()
             self.viscous_flux()
 
-            if self.cfg.mesh == 'curvilinear':
-                self.num2phys()
-
+            self.num2phys()
             self.selective_filter()
             self.shock_capture()
-
-            if self.cfg.mesh == 'curvilinear':
-                self.phys2num()
+            self.phys2num()
 
             self.update_pressure()
+            self.update_vorticity()
 
             # Break when computation diverges
             self.check_results()
@@ -173,13 +179,11 @@ class FDTD:
             self.log()
 
             # Update probes
-            if self.cfg.probes:
-                self.update_probes()
+            self.update_probes()
 
             # Progress bar
             if not self.cfg.timings and not self.cfg.quiet:
                 pbar.update(self.cfg.it)
-
 
         self.fld.sfile.close()
 
@@ -223,15 +227,25 @@ class FDTD:
     def save(self):
         """ Save data """
 
-        if self.cfg.save:
+        if self.cfg.save_fields:
             self.fld.sfile.create_dataset('rho_it' + str(self.cfg.it),
-                                          data=self.fld.r, compression=self.cfg.comp)
+                                          data=self.fld.r,
+                                          compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhou_it' + str(self.cfg.it),
-                                          data=self.fld.ru, compression=self.cfg.comp)
+                                          data=self.fld.ru,
+                                          compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhov_it' + str(self.cfg.it),
-                                          data=self.fld.rv, compression=self.cfg.comp)
+                                          data=self.fld.rv,
+                                          compression=self.cfg.comp)
             self.fld.sfile.create_dataset('rhoe_it' + str(self.cfg.it),
-                                          data=self.fld.re, compression=self.cfg.comp)
+                                          data=self.fld.re,
+                                          compression=self.cfg.comp)
+
+        if self.cfg.save_vortis:
+            self.fld.sfile.create_dataset('vxz_it' + str(self.cfg.it),
+                                          data=self.fld.vxz,
+                                          compression=self.cfg.comp)
+
         if self.cfg.probes:
             self.fld.sfile['probes_value'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
 
@@ -242,12 +256,21 @@ class FDTD:
         self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
                            self.fld.rv, self.fld.re)
 
-    @timing.proceed('probe')
+    @timing.proceed('vorticity')
+    def update_vorticity(self):
+        """ Update vorticity field """
+
+        if self.cfg.save_vortis:
+            self.vorticity.compute()
+
+    @timing.proceed('probes')
     def update_probes(self):
         """ Update probes. """
 
-        for n, c in enumerate(self.cfg.probes):
-            self.probes[n, self.cfg.it%self.cfg.ns] = self.fld.p[c[0], c[1]]
+        if self.cfg.probes:
+            for n, c in enumerate(self.cfg.probes):
+                self.probes[n, self.cfg.it % self.cfg.ns] = \
+                        self.fld.p[c[0], c[1]]
 
     def check_results(self):
         """ Check if computation diverges. """
@@ -270,18 +293,20 @@ class FDTD:
     def phys2num(self):
         """ Convert curvilinear coordinates : from physical to numeric. """
 
-        self.fld.r = self.fld.r/self.msh.J
-        self.fld.ru = self.fld.ru/self.msh.J
-        self.fld.rv = self.fld.rv/self.msh.J
-        self.fld.re = self.fld.re/self.msh.J
+        if self.cfg.mesh == 'curvilinear':
+            self.fld.r = self.fld.r/self.msh.J
+            self.fld.ru = self.fld.ru/self.msh.J
+            self.fld.rv = self.fld.rv/self.msh.J
+            self.fld.re = self.fld.re/self.msh.J
 
     def num2phys(self):
         """ Convert curvilinear coordinates : from numeric to physical. """
 
-        self.fld.r = self.fld.r*self.msh.J
-        self.fld.ru = self.fld.ru*self.msh.J
-        self.fld.rv = self.fld.rv*self.msh.J
-        self.fld.re = self.fld.re*self.msh.J
+        if self.cfg.mesh == 'curvilinear':
+            self.fld.r = self.fld.r*self.msh.J
+            self.fld.ru = self.fld.ru*self.msh.J
+            self.fld.rv = self.fld.rv*self.msh.J
+            self.fld.re = self.fld.re*self.msh.J
 
     def log(self):
         """ Display timings. """

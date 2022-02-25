@@ -159,7 +159,7 @@ class DataExtractor:
             varmax = self.get(view=view, iteration=_ne(ref[1], self.ns, self.nt))
             return varmin.min(), varmax.max()
 
-        print("Only 'p', 'rho', 'vx', 'vz', 'vort' and 'e' available !")
+        print("Only 'p', 'rho', 'vx', 'vz', 'vxz' and 'e' available !")
         sys.exit(1)
 
     def autoref(self, view='p'):
@@ -205,7 +205,7 @@ class DataExtractor:
 
             return p.T - self.data.attrs['p0']
 
-        if view == 'rho':
+        if view in ['rho', 'vxz']:
             return (self.data[f"{view}_it{iteration}"][...]*self.J).T
 
         if view in ['vx', 'vz', 'e']:
@@ -213,14 +213,7 @@ class DataExtractor:
             rho = (self.data[f"rho_it{iteration}"][...]*self.J)
             return (vx/rho).T
 
-        if view == 'vort':
-            rho = (self.data[f"rho_it{iteration}"][...]*self.J)
-            vx = (self.data[f"rhou_it{iteration}"][...]*self.J)/rho
-            vz = (self.data[f"rhov_it{iteration}"][...]*self.J)/rho
-            return _derivation.vorticity(self.data['x'][...], self.data['x'][...],
-                                         vx, vz).T
-
-        raise ValueError("view must be 'p', 'rho', 'vx', 'vz', 'e', or 'vort'")
+        raise ValueError("view must be 'p', 'rho', 'vx', 'vz', 'e', or 'vxz'")
 
     def get_attr(self, attr):
         """ Get attribute from hdf5 file. attr must be string."""
@@ -282,7 +275,7 @@ class Plot:
                        'vx': r'$v_x$ [m/s]',
                        'vz': r'$v_z$ [m/s]',
                        'rho': r'$\rho$ [kg.m$^3$]',
-                       'vort': r'$\omega$ [m/s]'}
+                       'vxz': r'$\omega$ [m/s]'}
 
     def movie(self, view=('p', 'e', 'vx', 'vz'), nt=None, ref=None,
               figsize='auto', show_pml=False, show_probes=False,

@@ -49,7 +49,7 @@ def parse_args():
     view.add_argument('-i', dest='nt', type=int, help='number of time iterations')
     view.add_argument('-r', dest='ref', type=int, help='reference frame for colormap')
     view.add_argument('view', nargs='*', default='p',
-                      choices=['p', 'rho', 'vx', 'vz', 'vort', 'e'],
+                      choices=['p', 'rho', 'vx', 'vz', 'vxz', 'e'],
                       help='variable(s) to plot')
 
     data = argparse.ArgumentParser(add_help=False)
@@ -129,7 +129,7 @@ def solve(cfg, msh):
 
     if cfg.figures:
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
-        if cfg.save:
+        if cfg.save_fields:
             plt.fields(view=cfg.args.view, ref=cfg.args.ref,
                        show_pml=cfg.show_pml, show_probes=cfg.show_probes)
         if cfg.probes:

@@ -86,7 +86,7 @@ Then, the following variables are allowed as argument of the movie subcommand:
 +------+-----------------------------+
 | e    | energy                      |
 +------+-----------------------------+
-| vort | vorticity                   |
+| vxz  | vorticity                   |
 +------+-----------------------------+
 
 For instance, to create a movie with both components of velocity::

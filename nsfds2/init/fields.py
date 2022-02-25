@@ -97,7 +97,8 @@ class Fields:
         # Fields
         self._init_fields()
         self._init_derivatives()
-        self._init_filters()
+        self._init_capture()
+        self._init_viscosity()
         self._init_wall_sources()
 
         self.fdtools = fdtools(self._nx, self._nz,
@@ -130,6 +131,9 @@ class Fields:
         if self._cfg.cpt_meth == 'dilatation':
             self.dltn = _np.zeros_like(self.p)
 
+        if self._cfg.save_vortis:
+            self.vxz = _np.zeros_like(self.p)
+
         # Source
         self.source_select()
 
@@ -157,14 +161,20 @@ class Fields:
         self.Fv = _np.empty_like(self.p)
         self.Fe = _np.empty_like(self.p)
 
-    def _init_filters(self):
-        """ Init variables used for filtering. """
+    def _init_capture(self):
+        """ Init variables used for shock capture. """
 
-        self.dp = _np.zeros_like(self.p)
-        self.sg = _np.zeros_like(self.p)
-        self.tau11 = _np.zeros_like(self.p)
-        self.tau22 = _np.zeros_like(self.p)
-        self.tau12 = _np.zeros_like(self.p)
+        if self._cfg.cpt:
+            self.dp = _np.zeros_like(self.p)
+            self.sg = _np.zeros_like(self.p)
+
+    def _init_viscosity(self):
+        """ Init variables used for viscosity. """
+
+        if self._cfg.vsc:
+            self.tau11 = _np.zeros_like(self.p)
+            self.tau22 = _np.zeros_like(self.p)
+            self.tau12 = _np.zeros_like(self.p)
 
     def _init_pml(self):
         """ Init PMLs. """
@@ -321,7 +331,6 @@ class Fields:
                         self.wav_lst[filename] = edge.vn
                 else:
                     edge.vn = 0
-
 
     def init_save(self):
         """ Init save. """

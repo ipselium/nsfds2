@@ -59,7 +59,7 @@ class ViscousFluxes:
         self.fld.Ev = self.fld.rv/self.fld.r
 
         # Strain tensor : WARN : CHECK THAT DUDX3RR CORRESPONDS TO THIS NEED !
-        # Init tau22 because of adding previous tau22 in dudz !
+        # Note : Init tau22 because of adding previous tau22 in dudz !
         self.fld.tau22[:, :] = 0
 
         for sub in self.msh.dxdomains:
@@ -74,7 +74,7 @@ class ViscousFluxes:
         Tk = self.fld.p/(self.fld.r*(self.cfg.cp - self.cfg.cv))
 
         # Temperature gradients
-        # Note because of adding previous F in dudz !)
+        # Note : Init F because of adding previous F in dudz !)
         self.fld.F[:, :] = 0
 
         for sub in self.msh.dxdomains:

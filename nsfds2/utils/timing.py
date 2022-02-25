@@ -36,9 +36,11 @@ def proceed(name):
     """ Time method of a class containing 'bench' attribute. """
     def layer(func):
         def wrapper(*args, **kwargs):
-            start = time.perf_counter()
+            if name in args[0].bench.keys():
+                start = time.perf_counter()
             func(*args, **kwargs)
-            args[0].bench[name].append(time.perf_counter() - start)
+            if name in args[0].bench.keys():
+                args[0].bench[name].append(time.perf_counter() - start)
         return wrapper
     return layer
 
@@ -49,18 +51,17 @@ def disp(bench, it, residu):
     template = "Iteration : {0:5} | Res. : {1:.8f} | Time : {2:.4f} s."
     print(template.format(it, residu, np.mean(bench['total'])))
     template = "\t {:6} : {:.4f} s."
-    if 'vfluxes' not in bench.keys():
-        bench['vfluxes'] = 0
-    if not bench['vfluxes']:
-        bench['vfluxes'] = 0
-    if not bench['save']:
-        bench['save'] = 0
     print(template.format('EFlux', np.mean(bench['efluxes'])))
-    if 0 not in bench['vfluxes']:
+    if 'vfluxes' in bench.keys():
         print(template.format('VFlux', np.mean(bench['vfluxes'])))
-    print(template.format('Filt', np.mean(bench['sfilt'])))
-    print(template.format('Capt', np.mean(bench['scapt'])))
-    print(template.format('Save', np.mean(bench['save'])))
+    if 'sfilt' in bench.keys():
+        print(template.format('Filt', np.mean(bench['sfilt'])))
+    if 'scapt' in bench.keys():
+        print(template.format('Capt', np.mean(bench['scapt'])))
+    if 'vorticity' in bench.keys():
+        print(template.format('Vort', np.mean(bench['vorticity'])))
+    if 'save' in bench.keys():
+        print(template.format('Save', np.mean(bench['save'])))
     bench = {key: [] for key in bench.keys()}
 
     return bench

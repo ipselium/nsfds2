@@ -236,6 +236,7 @@ class CfgSetup:
         self.cfg.set('save', 'filename', 'tmp')
         self.cfg.set('save', 'compression', 'lzf')
         self.cfg.set('save', 'fields', 'True')
+        self.cfg.set('save', 'vorticity', 'False')
         self.cfg.set('save', 'probes', '[]')
 
         with open(self.path / 'nsfds2.conf', 'w') as cf:
@@ -436,7 +437,8 @@ class CfgSetup:
     def _save(self):
 
         SAVE = self.cfg['save']
-        self.save = SAVE.getboolean('fields', True)
+        self.save_fields = SAVE.getboolean('fields', True)
+        self.save_vortis = SAVE.getboolean('vorticity', False)
         if self.path == self.path_default:
             self.savepath = pathlib.Path(SAVE.get('path', 'results'))
         else:
