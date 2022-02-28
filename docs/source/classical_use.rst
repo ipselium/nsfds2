@@ -128,26 +128,34 @@ file contains simulation parameters that are used by the solver.
 ::
 
    [configuration]
-   timings = True|False 			# Display timings
-   quiet = True|False 			# Quiet mode
+   version = 0.13.0
+   timings = False      # Display timing detail
+   quiet = False        # Quiet mode
+   cpu = 1              # Number of cpu used by the solver
 
    [simulation]
-   nt = 500 				# Number of time iterations
-   ns = 10 				# Save each ns iterations
-   cfl = 0.5 				# Courant–Friedrichs–Lewy number
+   nt = 500             # Number of time iterations
+   ns = 10          # Save each ns iterations
+   cfl = 0.5            # Courant–Friedrichs–Lewy number
+
+   [thermophysic]
+   p0 = 101325.0        # Atmospheric pressure (Pa)
+   t0 = 20.0            # Ambiant temperature (°C)
+   gamma = 1.4          # Heat capacity ratio
+   prandtl = 0.7        # Prandtl number
 
    [geometry]
    mesh = regular|curvilinear|adaptative	# Mesh type
-   file = None|path 			# Path to python file (for geoname and curvname)
+   file = None|path 			 # Path to python file (for geoname and curvname)
    geoname = helmholtz_double 		# Python function for geometry
    curvname = curvz			# Python function for curvilinear coordinates
-   bc = ARRA 				# Boundary conditions. Must be a mix of ARP
-   nx = 256				# Number of grid points along x-axis
-   nz = 256				# Number of grid points along z-axis
-   ix0 = 128 				# Origin of the grid
-   iz0 = 0					# Origin of the grid
-   dx = 1e-4				# Spatial x-step
-   dz = 1e-4 				# Spatial z-step
+   bc = PPPP            # Boundary conditions. Must be a mix of ARP
+   nx = 256             # Number of grid points along x-axis
+   nz = 256             # Number of grid points along z-axis
+   ix0 = 0              # Origin of the grid
+   iz0 = 0              # Origin of the grid
+   dx = 1               # Spatial x-step
+   dz = 1               # Spatial z-step
 
    [PML]
    beta = 0.0 				# Depends on pseudo mean flow profile
@@ -158,46 +166,50 @@ file contains simulation parameters that are used by the solver.
 
    [source]
    type = None|pulse|harmonic|white|wav 	# Source type
-   ixs = 64				# Source x-location
-   izs = 128 				# Source z-location
-   s0 = 1e6 				# Sources strength [Pa]
-   B0 = 2 					# Half spatial bandwidth
-   f0 = 60000 				# Frequency (for harmonic only) [Hz]
-   wavfile = None|path 			# path to wavfile (for wav only)
+   ixs = 64             # Source x-location
+   izs = 128            # Source z-location
+   s0 = 1e6             # Sources strength [Pa]
+   b0 = 2           # Half spatial bandwidth
+   f0 = 60000           # Frequency (for harmonic only) [Hz]
+   seed = None          # Seed for white noise. Must be integer.
+   wavfile = None|path          # path to wavfile (for wav only)
 
    [flow]
-   type = None 				# Flow type
-   U0 = 5 					# Flow velocity following x [m/s]
-   V0 = 5 					# Flow velocity following z [m/s]
+   type = None          # Flow type
+   U0 = 5           # Flow velocity following x [m/s]
+   V0 = 5           # Flow velocity following z [m/s]
 
    [eulerian fluxes]
-   stencil = 3|7|11 			# Number of points of stencil
+   stencil = 3|7|11             # Number of points of stencil
 
    [filtering]
-   filter = True|False 			# Activate selective filter
-   stencil = 11 				# Number of points of stencil used by filters
-   stength = 0.75 				# Strength of the filter
+   filter = True|False          # Activate selective filter
+   stencil = 11             # Number of points of stencil used by filters
+   stength = 0.75           # Strength of the filter
 
    [viscous fluxes]
-   viscosity = True|False 			# Activate viscosity
-   stencil = 7 				# Number of points of stencil used for viscosity
+   viscosity = True|False           # Activate viscosity
+   stencil = 7          # Number of points of stencil used for viscosity
 
    [shock capture]
-   shock capture = True|False 		# Activate shock capture procedure
-   stencil = 7 				# Number of points of stencil for capture
-   method = pressure|dilatation 		# Capture based on pressure or dilatation
+   shock capture = True|False           # Activate shock capture procedure
+   stencil = 7          # Number of points of stencil for capture
+   method = pressure|dilatation             # Capture based on pressure or dilatation
 
    [figures]
-   figures = True|False 			# Activate figures
-   probes = True|False 			# Show probes in maps
-   pml = True|False 			# Show PML in maps
+   figures = True|False             # Activate figures
+   probes = True|False          # Show probes in maps
+   pml = True|False             # Show PML in maps
+   bc_profiles = True           # Show bc profiles
+   fps = 24             # Framerate for videos
 
    [save]
-   save = True|False 			# Activate save
-   path = results 				# Path to data file
-   filename = tmp 				# Data filename
-   compression = None|lzf 			# Activate compression
-   probes = [[128, 128], [128, 192]] 	# Probe locations. Must be a list of lists
+   path = results/          # path to data file
+   filename = tmp           # data filename
+   compression = None|lzf           # Activate data compression
+   fields = True            # Save fields
+   vorticity = False            # Save vorticity
+   probes = []          # Probe locations. Must be list of lists
 
 
 Customize geometry

@@ -115,9 +115,23 @@ def ceperley(nx, nz, source_size=5):
     obs6 = Obstacle([loc2+source_size, nz-11, nx-1, nz-1], 'WWWW')
 
     obs3.set_moving_bc({'f': 340/(nx*dx), 'A': 2, 'func': 'sine', 'kwargs':{'n':2}})
-    obs5.set_moving_bc({'f': 340/(nx*dx), 'A': 2, 'phi': _np.pi/4,  'func': 'sine', 'kwargs':{'n':2}})
+#    obs5.set_moving_bc({'f': 340/(nx*dx), 'A': 2, 'phi': _np.pi/4,  'func': 'sine', 'kwargs':{'n':2}})
+    obs5.set_moving_bc({'f': 340/(nx*dx), 'A': 2, 'func': 'sine', 'kwargs':{'n':2}})
 
     return Domain((nx, nz), data=[obs1, obs2, obs3, obs4, obs5, obs6])
+
+
+def waveguide(nx, nz, size_percent=20):
+    """
+
+    """
+
+    source = Obstacle([0, 0, 20, nz-1], 'WWVW')
+
+    source.set_moving_bc({'f': 2*340/(2*(nx-20)*1e-4), 'A': 1, 'func': 'flat'})
+
+    return Domain((nx, nz), data=[source])
+
 
 
 def wav_squares(nx, nz, size_percent=5):

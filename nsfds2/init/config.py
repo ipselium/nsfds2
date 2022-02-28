@@ -200,6 +200,7 @@ class CfgSetup:
         self.cfg.set('source', 'S0', '1e6')
         self.cfg.set('source', 'B0', '5')
         self.cfg.set('source', 'f0', '20000')
+        self.cfg.set('source', 'seed', 'None')
         self.cfg.set('source', 'wavfile', 'None')
 
         self.cfg.add_section('flow')
