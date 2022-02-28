@@ -168,6 +168,7 @@ class CfgSetup:
         self.cfg.set('simulation', 'CFL', '0.5')
 
         self.cfg.add_section('thermophysic')
+        self.cfg.set('thermophysic', 'norm', 'False')
         self.cfg.set('thermophysic', 'P0', '101325.0')
         self.cfg.set('thermophysic', 'T0', '20.0')
         self.cfg.set('thermophysic', 'gamma', '1.4')
@@ -246,7 +247,9 @@ class CfgSetup:
     def run(self):
         """ Run configuration. """
 
-        self.none = ['none', 'false', '']
+        self.source_list = ['pulse', 'harmonic', 'wav', 'white']
+        self.flow_list = ['custom', 'vortex', 'poiseuille']
+        self.none = ['', 'none', 'None']
 
         try:
             self._cfg()
@@ -302,6 +305,8 @@ class CfgSetup:
 
         THP = self.cfg['thermophysic']
 
+        self.norm = THP.getboolean('norm', False)
+
         self.Ssu = 111.0  # Sutherland constant
         self.T0 = 273.0
         self.T = self.T0 + THP.getfloat('T0', 20.0)
@@ -324,6 +329,12 @@ class CfgSetup:
 
         if self.c0 < 1:
             raise ValueError('c0 must be >= 1')
+
+        if self.norm:
+            self.rho0 = 1
+            self.c0 = 1
+            self.p0 = self.rho0*self.c0**2/self.gamma
+            self.T0 = 299.8189
 
     def _geo(self):
 
@@ -381,7 +392,7 @@ class CfgSetup:
             except ValueError:
                 raise ValueError('Seed must be int or None')
 
-        if self.stype in self.none:
+        if self.stype not in self.source_list:
             self.S0 = 0
 
     def _flw(self):
@@ -391,7 +402,7 @@ class CfgSetup:
         self.U0 = FLW.getfloat('U0', 5)
         self.V0 = FLW.getfloat('V0', 5)
 
-        if self.ftype in self.none:
+        if self.ftype not in self.flow_list:
             self.U0, self.V0 = 0., 0.
 
     def _eul(self):

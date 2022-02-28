@@ -139,6 +139,7 @@ file contains simulation parameters that are used by the solver.
    cfl = 0.5            # Courant–Friedrichs–Lewy number
 
    [thermophysic]
+   norm = True|False            # Normalize p0, rho0, c0 and T0 (Override following values).
    p0 = 101325.0        # Atmospheric pressure (Pa)
    t0 = 20.0            # Ambiant temperature (°C)
    gamma = 1.4          # Heat capacity ratio
@@ -172,6 +173,7 @@ file contains simulation parameters that are used by the solver.
    b0 = 2           # Half spatial bandwidth
    f0 = 60000           # Frequency (for harmonic only) [Hz]
    seed = None          # Seed for white noise. Must be integer.
+   off = 100            # Stop source at iteration 100. nt by default.
    wavfile = None|path          # path to wavfile (for wav only)
 
    [flow]

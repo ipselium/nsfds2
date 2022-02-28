@@ -389,7 +389,7 @@ class Fields:
         self.update_source = None
         self.wav_lst = dict()
 
-        if self._cfg.stype in ["", "None", "none"]:
+        if self._cfg.stype in ['', 'none']:
             pass
 
         elif self._cfg.stype == "pulse":
@@ -415,7 +415,7 @@ class Fields:
     def flow_select(self):
         """ Flow selection. """
 
-        if self._cfg.ftype in ["", "None", "none"]:
+        if self._cfg.ftype in ['', 'none']:
             pass
         elif self._cfg.ftype == "custom":
             pass
@@ -527,6 +527,8 @@ class Fields:
 
         for ix in range(self._nx):
             self.ru[ix, :] = self._cfg.U0
+
+        self.ru *= self.r
 
     def kelvin_helmholtz(self):
         """
