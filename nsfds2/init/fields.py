@@ -424,7 +424,9 @@ class Fields:
         elif self._cfg.ftype == "poiseuille":
             self.poiseuille()
         elif self._cfg.ftype == "kh":
+            self.flw = _np.zeros_like(self.p)
             self.kelvin_helmholtz()
+            self.update_flow = self.update_kh
         else:
             raise ValueError('Only custom and vortex supported for now')
 
@@ -487,6 +489,11 @@ class Fields:
 
         return 0
 
+    def update_kh(self, it):
+        """ White noise time evolution. """
+
+        return self.flw*_np.sin(_np.pi/2*(it-1)*self._cfg.dt)
+
     def isentropic_vortex(self):
         """ Initialize fields with an isentropic vortex [Hu, JCP, 2008] """
 
@@ -544,14 +551,17 @@ class Fields:
 
         T = _np.zeros((self._nx, self._nz))
 
-        for iz in range(self._nz):
+        for iz, z in enumerate(self._z):
             self.ru[:, iz] = 0.5*((U1+U2) +
                                   (U1-U2)*_np.tanh(2*self._z[iz]/delta))
             T[:, iz] = T1*(self.ru[:, iz] - U2)/(U1 - U2) \
                      + T2*(U1-self.ru[:, iz])/(U1 - U2) \
                      + 0.5*(self._cfg.gamma-1)*(U1 - self.ru[:, iz])*(self.ru[:, iz]-U2)
-            self.r[:, iz] = 1/T[:, iz]
+            self.flw[:, iz] = 5*_np.exp(-_np.log(2) *
+                                        ((self._x + 0.5)**2 +
+                                         (z - 0)**2)/0.03**2)
 
+        self.r = 1/T
         self.p = _np.ones((self._nx, self._nz))/self._cfg.gamma
         self.ru = self.ru*self.r
 

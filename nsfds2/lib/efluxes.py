@@ -71,6 +71,9 @@ class EulerianFluxes:
             if 'A' in self.msh.bc:
                 self.pml()
 
+            if self.cfg.ftype == 'kh':
+                self.fld.Ke -= self.fld.update_flow(self.cfg.it)
+
             self.fld.fdtools.adtime(self.fld.r, self.r, self.fld.K, irk)
             self.fld.fdtools.adtime(self.fld.ru, self.ru, self.fld.Ku, irk)
             self.fld.fdtools.adtime(self.fld.rv, self.rv, self.fld.Kv, irk)
@@ -85,6 +88,7 @@ class EulerianFluxes:
 
             if self.cfg.stype in ['harmonic', 'white', 'wav']:
                 self.fld.p += self.fld.update_source(self.cfg.it)
+
 
         if 'A' in self.msh.bc:
             self.update_pml()
@@ -222,8 +226,10 @@ class EulerianFluxes:
 
         c2_v = _np.zeros((10, self.fld.nz))
         c2_h = _np.zeros((self.fld.nx, 10))
-        c2_v[-5:5, :] = _np.sqrt(self.cfg.gamma*self.fld.p[-5:5, :]/self.fld.r[-5:5, :])
-        c2_h[:, -5:5] = _np.sqrt(self.cfg.gamma*self.fld.p[:, -5:5]/self.fld.r[:, -5:5])
+        c2_v[-5:5, :] = _np.sqrt(self.cfg.gamma*self.fld.p[-5:5, :] /
+                                 self.fld.r[-5:5, :])
+        c2_h[:, -5:5] = _np.sqrt(self.cfg.gamma*self.fld.p[:, -5:5] /
+                                 self.fld.r[:, -5:5])
 
         for sub in self.msh.adomains:
             sub.cout_x(self.fld.r, self.fld.Kx, *sub.ix, *sub.iz)
@@ -237,20 +243,22 @@ class EulerianFluxes:
 
         # CL de rayonnement a gauche et a droite du domaine
         for ix in range(-5, 5):
-            self.fld.K[ix, :] = c2_v[ix, :]*(self.fld.Kx[ix, :]*self.fld.cosv[ix, :] +
-                                             self.fld.Kz[ix, :]*self.fld.sinv[ix, :] +
-                                             (self.fld.r[ix, :] -
-                                              self.cfg.rho0)*self.fld.r_v[ix, :])
-            self.fld.Ku[ix, :] = c2_v[ix, :]*(self.fld.Kxu[ix, :]*self.fld.cosv[ix, :] +
-                                              self.fld.Kzu[ix, :]*self.fld.sinv[ix, :] +
-                                              self.fld.ru[ix, :]*self.fld.r_v[ix, :])
-            self.fld.Kv[ix, :] = c2_v[ix, :]*(self.fld.Kxv[ix, :]*self.fld.cosv[ix, :] +
-                                              self.fld.Kzv[ix, :]*self.fld.sinv[ix, :] +
-                                              self.fld.rv[ix, :]*self.fld.r_v[ix, :])
-            self.fld.Ke[ix, :] = c2_v[ix, :]*(self.fld.Kxe[ix, :]*self.fld.cosv[ix, :] +
-                                              self.fld.Kze[ix, :]*self.fld.sinv[ix, :] +
-                                              (self.re[ix, :] -
-                                               self.cfg.p0/(self.cfg.gamma-1.))*self.fld.r_v[ix, :])
+            self.fld.K[ix, :] = c2_v[ix, :] * \
+                    (self.fld.Kx[ix, :]*self.fld.cosv[ix, :] +
+                     self.fld.Kz[ix, :]*self.fld.sinv[ix, :] +
+                     (self.fld.r[ix, :] - self.cfg.rho0)*self.fld.r_v[ix, :])
+            self.fld.Ku[ix, :] = c2_v[ix, :] * \
+                (self.fld.Kxu[ix, :]*self.fld.cosv[ix, :] +
+                 self.fld.Kzu[ix, :]*self.fld.sinv[ix, :] +
+                 self.fld.ru[ix, :]*self.fld.r_v[ix, :])
+            self.fld.Kv[ix, :] = c2_v[ix, :] * \
+                (self.fld.Kxv[ix, :]*self.fld.cosv[ix, :] +
+                 self.fld.Kzv[ix, :]*self.fld.sinv[ix, :] +
+                 self.fld.rv[ix, :]*self.fld.r_v[ix, :])
+            self.fld.Ke[ix, :] = c2_v[ix, :] * \
+                (self.fld.Kxe[ix, :]*self.fld.cosv[ix, :] +
+                 self.fld.Kze[ix, :]*self.fld.sinv[ix, :] +
+                 (self.re[ix, :] - self.cfg.p0/(self.cfg.gamma-1.))*self.fld.r_v[ix, :])
 
     def init_pml(self):
         """ Initialize PMLs. """

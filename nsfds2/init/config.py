@@ -247,8 +247,6 @@ class CfgSetup:
     def run(self):
         """ Run configuration. """
 
-        self.source_list = ['pulse', 'harmonic', 'wav', 'white']
-        self.flow_list = ['custom', 'vortex', 'poiseuille']
         self.none = ['', 'none', 'None']
 
         try:
@@ -372,6 +370,7 @@ class CfgSetup:
 
     def _src(self):
 
+        source_list = ['pulse', 'harmonic', 'wav', 'white']
         SRC = self.cfg['source']
         self.stype = SRC.get('type', 'pulse').lower()
         self.ixS = SRC.getint('ixS', 32)
@@ -392,17 +391,18 @@ class CfgSetup:
             except ValueError:
                 raise ValueError('Seed must be int or None')
 
-        if self.stype not in self.source_list:
+        if self.stype not in source_list:
             self.S0 = 0
 
     def _flw(self):
 
+        flow_list = ['custom', 'vortex', 'poiseuille']
         FLW = self.cfg['flow']
         self.ftype = FLW.get('type', 'None').lower()
         self.U0 = FLW.getfloat('U0', 5)
         self.V0 = FLW.getfloat('V0', 5)
 
-        if self.ftype not in self.flow_list:
+        if self.ftype not in flow_list:
             self.U0, self.V0 = 0., 0.
 
     def _eul(self):
