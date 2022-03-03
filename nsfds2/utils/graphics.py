@@ -405,7 +405,11 @@ class Plot:
 
         for v in view:
             var.append(self.data.get(view=v, iteration=iteration).T)
-            vmin, vmax = self.data.reference(view=v, ref=ref)
+            if ref:
+                vmin, vmax = self.data.reference(view=v, ref=ref)
+            else:
+                vmin, vmax = var[-1].min(), var[-1].max()
+            vmin = 0 if abs(vmin) < 0.01*abs(vmax) else vmin
             norm.append(MidpointNormalize(vmin=vmin, vmax=vmax, midpoint=0))
 
         fig, axes = _plt.subplots(*get_subplot_shape(len(var)))

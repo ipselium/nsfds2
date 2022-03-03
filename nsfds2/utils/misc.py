@@ -102,13 +102,13 @@ def nearest_index(n, ns, nt):
     if n > nt:
         return nt
 
-    if n%ns == n:
+    if n % ns == n:
         return ns
 
-    if n%ns > ns/2:
+    if n % ns > ns/2:
         return (n//ns + 1)*ns
 
-    if n%ns <= ns/2:
+    if n % ns <= ns/2:
         return n//ns*ns
 
     return ns

@@ -89,7 +89,6 @@ class EulerianFluxes:
             if self.cfg.stype in ['harmonic', 'white', 'wav']:
                 self.fld.p += self.fld.update_source(self.cfg.it)
 
-
         if 'A' in self.msh.bc:
             self.update_pml()
 
@@ -101,9 +100,9 @@ class EulerianFluxes:
         """ Boundaries. """
 
         self.cout_obstacles()
-        self.cout_bc()
         self.cout_periodic()
         self.cout_sources()
+        self.cout_bc()
 
     def cout_obstacles(self):
         """ Obstacle walls. """
