@@ -215,7 +215,8 @@ class CfgSetup:
         self.cfg.add_section('filtering')
         self.cfg.set('filtering', 'filter', 'True')
         self.cfg.set('filtering', 'stencil', '11')
-        self.cfg.set('filtering', 'stength', '0.75')
+        self.cfg.set('filtering', 'strength', '0.2')
+        self.cfg.set('filtering', 'strength_on_walls', '0.01')
 
         self.cfg.add_section('viscous fluxes')
         self.cfg.set('viscous fluxes', 'viscosity', 'True')
@@ -418,7 +419,8 @@ class CfgSetup:
         FLT = self.cfg['filtering']
         self.flt = FLT.getboolean('filter', True)
         self.flt_stencil = FLT.getint('stencil', 11)
-        self.xnu = FLT.getfloat('strength', 0.75)
+        self.xnu = FLT.getfloat('strength', 0.2)
+        self.xnu0 = FLT.getfloat('strength_on_walls', 0.01)
 
         if self.flt_stencil not in [7, 11]:
             raise ValueError('only 7 and 11 pts filters implemented for now')

@@ -187,7 +187,7 @@ file contains simulation parameters that are used by the solver.
    [filtering]
    filter = True|False          # Activate selective filter
    stencil = 11             # Number of points of stencil used by filters
-   stength = 0.75           # Strength of the filter
+   strength = 0.75           # Strength of the filter
 
    [viscous fluxes]
    viscosity = True|False           # Activate viscosity

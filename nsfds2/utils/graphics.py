@@ -41,9 +41,9 @@ from scipy import signal as _signal
 import matplotlib.pyplot as _plt
 import matplotlib.animation as _ani
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from ofdlib2 import fdtd as _fdtd, derivation as _derivation
+from ofdlib2 import fdtd as _fdtd
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
-from mplutils import modified_jet, MidpointNormalize, set_figsize, get_subplot_shape
+from mplutils import modified_jet, MidPointNorm, set_figsize, get_subplot_shape
 import fdgrid.graphics as _graphics
 from nsfds2.utils.misc import nearest_index as _ne
 
@@ -145,9 +145,17 @@ class DataExtractor:
         self.close()
 
     def reference(self, view='p', ref=None):
-        """ Generate the references  for min/max colormap values """
+        """ Generate the references for min/max colormap values
 
-        if ref is None:
+        Parameters
+        ----------
+        view : str
+            The quantity from which the reference is to be taken
+        ref : int, tuple, None, or str
+            Can be int (frame index), tuple (int_min, int_max), or 'auto'
+        """
+
+        if not ref or ref == 'auto':
             ref = self.autoref(view=view)
 
         if isinstance(ref, int):
@@ -261,7 +269,8 @@ class Plot:
             self.x = self.data.get_dataset('xp')
             self.z = self.data.get_dataset('zp')
         else:
-            self.x, self.z = _np.meshgrid(self.data.get_dataset('x'), self.data.get_dataset('z'))
+            self.x, self.z = _np.meshgrid(self.data.get_dataset('x'),
+                                          self.data.get_dataset('z'))
             self.x = _np.ascontiguousarray(self.x.T)
             self.z = _np.ascontiguousarray(self.z.T)
 
@@ -293,11 +302,9 @@ class Plot:
         writer = _ani.FFMpegWriter(fps=fps, metadata=metadata, bitrate=-1, codec="libx264")
         movie_filename = f'{title}.mkv'
 
-        # Nb of iterations
-        if nt is None:
-            nt = self.nt
-        else:
-            nt = _ne(nt, self.ns, self.nt)
+        # Nb of iterations and reference
+        nt = self.nt if not nt else _ne(nt, self.ns, self.nt)
+        ref = 'auto' if not ref else ref
 
         # Create Iterator and make 1st frame
         data = DataIterator(self.data, view=view, nt=nt)
@@ -376,7 +383,8 @@ class Plot:
                                                    fs=1/self.data.get_attr('dt'),
                                                    window='hanning',
                                                    nperseg=M, noverlap=M-100,
-                                                   detrend=False, scaling='spectrum')
+                                                   detrend=False,
+                                                   scaling='spectrum')
             im = ax[i].pcolormesh(times, freqs/1000, 10*_np.log10(Sx), cmap='viridis')
             ax[i].set_ylabel('Frequency [kHz]')
             if i != len(probes) - 1:
@@ -409,8 +417,7 @@ class Plot:
                 vmin, vmax = self.data.reference(view=v, ref=ref)
             else:
                 vmin, vmax = var[-1].min(), var[-1].max()
-            vmin = 0 if abs(vmin) < 0.01*abs(vmax) else vmin
-            norm.append(MidpointNormalize(vmin=vmin, vmax=vmax, midpoint=0))
+            norm.append(MidPointNorm(vmin=vmin, vmax=vmax, midpoint=0))
 
         fig, axes = _plt.subplots(*get_subplot_shape(len(var)))
 

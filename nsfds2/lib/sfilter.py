@@ -35,12 +35,13 @@ import ofdlib2.filters as flt
 class SelectiveFilter:
     """ Filter rho, rhou, rhov and rhoe. """
 
-
     def __init__(self, msh, fld, cfg):
 
         self.msh = msh
         self.fld = fld
-        self.flt = flt.sfilter(msh.nx, msh.nz, cfg.xnu, stencil=cfg.flt_stencil)
+        self.flt = flt.sfilter(msh.nx, msh.nz,
+                               cfg.xnu, cfg.xnu0, stencil=cfg.flt_stencil)
+
 
         for sub in self.msh.fmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
@@ -67,8 +68,9 @@ class SelectiveFilter:
 
     def update(self, domains):
         """ Update fields. """
+
         for sub in domains:
-            self.flt.apply(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
-            self.flt.apply(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-            self.flt.apply(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-            self.flt.apply(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+            self.flt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
+            self.flt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+            self.flt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+            self.flt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
