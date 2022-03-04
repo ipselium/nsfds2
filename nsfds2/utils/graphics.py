@@ -399,7 +399,7 @@ class Plot:
         return None
 
     def fields(self, view=('p', 'e', 'vx', 'vz'), iteration=None, ref=None,
-               show_pml=False, show_probes=True, figsize='auto'):
+               show_pml=False, show_probes=True, figsize='auto', midpoint=0):
         """ Make figure """
 
         if iteration is None:
@@ -410,6 +410,7 @@ class Plot:
         var = []
         norm = []
         ims = []
+        ticks = []
 
         for v in view:
             var.append(self.data.get(view=v, iteration=iteration).T)
@@ -417,7 +418,11 @@ class Plot:
                 vmin, vmax = self.data.reference(view=v, ref=ref)
             else:
                 vmin, vmax = var[-1].min(), var[-1].max()
-            norm.append(MidPointNorm(vmin=vmin, vmax=vmax, midpoint=0))
+            norm.append(MidPointNorm(vmin=vmin, vmax=vmax, midpoint=midpoint))
+            if abs(vmin-midpoint)/vmax > 0.3:
+                ticks.append([vmin, midpoint, vmax])
+            else:
+                ticks.append([midpoint, vmax])
 
         fig, axes = _plt.subplots(*get_subplot_shape(len(var)))
 
@@ -434,7 +439,7 @@ class Plot:
                 ax.set_aspect('equal')
                 divider = make_axes_locatable(ax)
                 cax = divider.append_axes("right", size="5%", pad=0.05)
-                _plt.colorbar(ims[i], cax=cax)
+                _plt.colorbar(ims[i], cax=cax, ticks=ticks[i])
 
                 probes = self.data.get_dataset('probes_location').tolist()
                 if probes and show_probes:
