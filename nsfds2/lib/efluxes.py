@@ -91,6 +91,7 @@ class EulerianFluxes:
 
         if 'A' in self.msh.bc:
             self.update_pml()
+            self.cout_bc()
 
     def cin(self):
         """ Interior domain. """

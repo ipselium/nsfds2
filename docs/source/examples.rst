@@ -5,6 +5,7 @@ Here are some configuration examples. Some of these examples work with a :downlo
 
 - :download:`Reference case <examples/reference.conf>`
 - :download:`Isentropic vortex <examples/vortex.conf>`
+- :download:`Kelvin-Helmholtz <examples/kh.conf>`
 - :download:`Letter A <examples/custom.conf>`
   (:download:`geo file <examples/geo.py>` needed)
 - :download:`Harmonic source <examples/harmonic.conf>`
