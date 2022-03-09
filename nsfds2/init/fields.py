@@ -49,6 +49,7 @@ from ofdlib2.fdtd import fdtools
 from nsfds2.utils import headers, misc
 from nsfds2.utils.sounds import resample
 from nsfds2.utils.files import get_wall_function
+from nsfds2.utils.graphics import DataExtractor
 
 
 def set_sigma(cfg, msh):
@@ -332,6 +333,49 @@ class Fields:
                 else:
                     edge.vn = 0
 
+    def _check_compatibility(self):
+        """ Check compatibility for resume """
+
+        with _h5py.File(self._cfg.datafile, 'r') as data:
+            o = list(data.attrs['obstacles']) == self._msh.get_obstacles()
+            c = data.attrs['dx'] == self._msh.dx and \
+                data.attrs['dz'] == self._msh.dz and \
+                data.attrs['dt'] == self._cfg.dt and \
+                data.attrs['nx'] == self._nx and \
+                data.attrs['nz'] == self._nz and \
+                data.attrs['ns'] == self._cfg.ns and \
+                data.attrs['p0'] == self._cfg.p0 and \
+                data.attrs['rho0'] == self._cfg.rho0 and \
+                data.attrs['gamma'] == self._cfg.gamma and \
+                data.attrs['Npml'] == self._cfg.Npml and \
+                data.attrs['mesh'] == self._cfg.mesh and \
+                data.attrs['bc'] == self._cfg.bc
+        return o and c
+
+    def init_resume(self):
+        """ Resume an older simulation. """
+
+        if self._cfg.datafile.is_file():
+            compatible = self._check_compatibility()
+
+        if compatible:
+            msg = 'Reloading fields...'
+            print(misc.colors.RED + msg + misc.colors.END)
+            with _h5py.File(self._cfg.datafile, 'r') as data:
+                self._cfg.it = data.attrs['itmax']
+                self.r[:, :] = data[f'rho_it{self._cfg.it}'][...]
+                self.ru[:, :] = data[f'rhou_it{self._cfg.it}'][...]
+                self.rv[:, :] = data[f'rhov_it{self._cfg.it}'][...]
+                self.re[:, :] = data[f'rhoe_it{self._cfg.it}'][...]
+            self.fdtools.p(self.p, self.r, self.ru, self.rv, self.re)
+            self.sfile = _h5py.File(self._cfg.datafile, 'a')
+            self.sfile.attrs['nt'] = self._cfg.nt
+            self._cfg.it += 1
+        else:
+            msg = "Can't resume. Starting new simulation..."
+            print(misc.colors.RED + msg + misc.colors.END)
+            self.init_save()
+
     def init_save(self):
         """ Init save. """
 
@@ -368,6 +412,7 @@ class Fields:
         self.sfile.attrs['Npml'] = self._cfg.Npml
         self.sfile.attrs['mesh'] = self._cfg.mesh
         self.sfile.attrs['bc'] = self._cfg.bc
+        self.sfile.attrs['itmax'] = self._cfg.it
 
         probes = _np.zeros((len(self._cfg.probes), self._cfg.nt))
         self.sfile.create_dataset('probes_location', data=self._cfg.probes)

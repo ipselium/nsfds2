@@ -235,6 +235,7 @@ class CfgSetup:
         self.cfg.set('figures', 'fps', '24')
 
         self.cfg.add_section('save')
+        self.cfg.set('save', 'resume', 'False')
         self.cfg.set('save', 'path', 'results/')
         self.cfg.set('save', 'filename', 'tmp')
         self.cfg.set('save', 'compression', 'lzf')
@@ -451,6 +452,7 @@ class CfgSetup:
     def _save(self):
 
         SAVE = self.cfg['save']
+        self.resume = SAVE.getboolean('resume', False)
         self.save_fields = SAVE.getboolean('fields', True)
         self.save_vortis = SAVE.getboolean('vorticity', False)
         if self.path == self.path_default:

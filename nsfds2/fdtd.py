@@ -140,7 +140,10 @@ class FDTD:
     def _pre_run(self):
 
         # Save file
-        self.fld.init_save()
+        if self.cfg.resume:
+            self.fld.init_resume()
+        else:
+            self.fld.init_save()
 
         if not self.cfg.quiet:
             print('-'*int(self.columns))
@@ -156,7 +159,7 @@ class FDTD:
             pbar = ProgressBar(widgets=widgets, maxval=self.cfg.nt,
                                term_width=self.columns).start()
 
-        for self.cfg.it in range(self.cfg.nt+1):
+        for self.cfg.it in range(self.cfg.it, self.cfg.nt+1):
 
             self.tt = time.perf_counter()
 
@@ -226,6 +229,8 @@ class FDTD:
     @timing.proceed('save')
     def save(self):
         """ Save data """
+
+        self.fld.sfile.attrs['itmax'] = self.cfg.it
 
         if self.cfg.save_fields:
             self.fld.sfile.create_dataset('rho_it' + str(self.cfg.it),
