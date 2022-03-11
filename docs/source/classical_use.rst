@@ -206,6 +206,7 @@ file contains simulation parameters that are used by the solver.
    fps = 24             # Framerate for videos
 
    [save]
+   resume = True|False      # Resume older simulation
    path = results/          # path to data file
    filename = tmp           # data filename
    compression = None|lzf           # Activate data compression
