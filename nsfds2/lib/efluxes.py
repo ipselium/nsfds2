@@ -287,13 +287,17 @@ class EulerianFluxes:
 
         for sub in self.msh.adomains:
             sub.pml_method(self.fld.E, self.fld.F, self.fld.qx, self.fld.qz,
-                           self.fld.Kx, self.fld.Kz, self.fld.K, *sub.ix, *sub.iz)
+                           self.fld.Kx, self.fld.Kz, self.fld.K,
+                           *sub.ix, *sub.iz)
             sub.pml_method(self.fld.Eu, self.fld.Fu, self.fld.qux, self.fld.quz,
-                           self.fld.Kux, self.fld.Kuz, self.fld.Ku, *sub.ix, *sub.iz)
+                           self.fld.Kux, self.fld.Kuz, self.fld.Ku,
+                           *sub.ix, *sub.iz)
             sub.pml_method(self.fld.Ev, self.fld.Fv, self.fld.qvx, self.fld.qvz,
-                           self.fld.Kvx, self.fld.Kvz, self.fld.Kv, *sub.ix, *sub.iz)
+                           self.fld.Kvx, self.fld.Kvz, self.fld.Kv,
+                           *sub.ix, *sub.iz)
             sub.pml_method(self.fld.Ee, self.fld.Fe, self.fld.qex, self.fld.qez,
-                           self.fld.Kex, self.fld.Kez, self.fld.Ke, *sub.ix, *sub.iz)
+                           self.fld.Kex, self.fld.Kez, self.fld.Ke,
+                           *sub.ix, *sub.iz)
 
     def update_pml(self):
         """ Integrate PMLs. """
@@ -311,7 +315,6 @@ class EulerianFluxes:
         for irk in range(1, 7):
 
             for sub in self.msh.adomains:
-
                 sub.pml_intgrt(self.fld.qx, self.fld.qz, qx, qz,
                                self.fld.Kx, self.fld.Kz, self.fld.E, irk,
                                *sub.ix, *sub.iz)
