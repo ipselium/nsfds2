@@ -53,19 +53,22 @@ from nsfds2.utils.graphics import DataExtractor
 
 
 def set_sigma(cfg, msh):
-    """ Set sigmax and sigmaz for PMLs. """
+    """ Set sigmax and sigmaz for PMLs (HU, 1996, AIAA)
+        sigma_m D / (1 + alpha) ~ 8
+        14/03/22 : rho0*c0 times instead of c0.
+    """
 
     try:
         cfg.sigmax = float(cfg.sigmax)
     except ValueError:
         D = msh.x[msh.Npml] - msh.x[0]
-        cfg.sigmax = 8*cfg.c0*(cfg.alpha+1)/D
+        cfg.sigmax = 8*cfg.c0*cfg.rho0*(cfg.alpha+1)/D
 
     try:
         cfg.sigmaz = float(cfg.sigmaz)
     except ValueError:
         D = msh.z[msh.Npml] - msh.z[0]
-        cfg.sigmaz = 8*cfg.c0*(cfg.alpha+1)/D
+        cfg.sigmaz = 8*cfg.c0*cfg.rho0*(cfg.alpha+1)/D
 
 
 class Fields:
@@ -297,7 +300,6 @@ class Fields:
         self.r_h = _np.zeros((self._nx, 10))
         self.cosh = _np.zeros((self._nx, 10))
         self.sinh = _np.zeros((self._nx, 10))
-
 
         # prendre (xCL,yCL) pour origine pour le calcul de one_r, cosphi et sinphi
         # calcul pour les bandes verticales
