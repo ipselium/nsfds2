@@ -29,13 +29,20 @@ Navier Stokes Finite Differences Solver
 """
 
 import os
-import sys
 import argparse
 import pathlib
 from fdgrid import mesh
 from nsfds2.init import CfgSetup, create_template, Fields
 from nsfds2.fdtd import FDTD
 from nsfds2.utils import files, headers, graphics, sounds
+
+
+class VirtualArguments:
+
+    def __init__(self, cfgfile, command='solve', quiet=True):
+        self.cfgfile = cfgfile
+        self.command = command
+        self.quiet = quiet
 
 
 def parse_args():
@@ -59,6 +66,10 @@ def parse_args():
     data.add_argument('-d', '--dat-file', metavar='DF', dest='datafile',
                       help='path to hdf5 data file')
 
+    path = argparse.ArgumentParser(add_help=False)
+    path.add_argument('-p', dest='path', type=str, required=True,
+                      help='loop over this path')
+
     time = argparse.ArgumentParser(add_help=False)
     time.add_argument('-t', '--timings', action="store_true", default=None,
                       help='Display complete timings')
@@ -70,7 +81,6 @@ def parse_args():
     commands = root.add_subparsers(dest='command',
                                    help='see nsfds2 `command` -h for further help')
 
-
     commands.add_parser("solve", parents=[commons, view, data, time],
                         description="Navier-Stokes equation solver",
                         help="solve NS equations with given configuration")
@@ -80,7 +90,9 @@ def parse_args():
     mak = commands.add_parser("make",
                               description="Make movie/sound files",
                               help="make movie/sound files")
-
+    loop = commands.add_parser("loop", parents=[path],
+                               description="Loop over .conf in a directory",
+                               help="Solve multiple configurations")
 
     # show section subsubparsers : frame/probe/
     shw_cmds = shw.add_subparsers(dest='show_command',
@@ -147,7 +159,6 @@ def solve(cfg, msh):
 def show(cfg, msh):
     """ Show simulation parameters and grid. """
 
-
     if cfg.args.show_command == 'parameters':
         headers.version()
         headers.check_geo(cfg)
@@ -170,7 +181,8 @@ def show(cfg, msh):
     elif cfg.args.show_command == 'frame':
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
         plt.fields(view=cfg.args.view, iteration=cfg.args.nt, ref=cfg.args.ref,
-                   show_pml=cfg.show_pml, show_probes=cfg.show_probes, comp=cfg.args.comp)
+                   show_pml=cfg.show_pml, show_probes=cfg.show_probes,
+                   comp=cfg.args.comp)
 
     elif cfg.args.show_command == 'probes':
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
@@ -179,7 +191,6 @@ def show(cfg, msh):
     elif cfg.args.show_command == 'spectrogram':
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
         plt.spectrogram()
-
 
     else:
         headers.copyright()
@@ -203,45 +214,58 @@ def make(cfg, _):
         _ = sounds.probes_to_wave(cfg.datafile)
 
 
-def main(args=None):
-    """ Main """
-
-    # Parse arguments
-    if not args:
-        args = parse_args()
-
-    # Bypass the creation of cfg & msh if only create a template
-    if getattr(args, 'make_command', None) == 'template':
-        if not args.cfgfile:
-            print('Path/filename must be specified with -c option')
-        else:
-            cfgfile = pathlib.Path(args.cfgfile).expanduser()
-            path, filename = cfgfile.parent, cfgfile.stem + cfgfile.suffix
-            create_template(path=path, filename=filename)
-            print(f"{cfgfile} created")
-        sys.exit(1)
-
+def template(args):
+    """Make template."""
+    if not args.cfgfile:
+        print('Path/filename must be specified with -c option')
     else:
-        # Parse config file
-        cfg = CfgSetup(args=args)
+        cfgfile = pathlib.Path(args.cfgfile).expanduser()
+        path, filename = cfgfile.parent, cfgfile.stem + cfgfile.suffix
+        create_template(path=path, filename=filename)
+        print(f"{cfgfile} created")
 
-        # Mesh
-        if cfg.mesh == 'regular':
-            msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
-                            origin=(cfg.ix0, cfg.iz0),
-                            bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
-                            stencil=cfg.stencil)
-        elif cfg.mesh == 'curvilinear':
-            fcurv = files.get_curvilinear(cfg)
-            msh = mesh.CurvilinearMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
-                                    origin=(cfg.ix0, cfg.iz0),
-                                    bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
-                                    stencil=cfg.stencil, fcurvxz=fcurv)
-        elif cfg.mesh == 'adaptative':
-            msh = mesh.AdaptativeMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
-                                    origin=(cfg.ix0, cfg.iz0),
-                                    bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
-                                    stencil=cfg.stencil)
+
+def loop(path):
+    """Loop simulations over .conf files"""
+    headers.copyright()
+    path = pathlib.Path(path)
+    for filename in pathlib.os.listdir(path.expanduser()):
+        if filename.endswith('conf'):
+            print(f'Processing {filename}...')
+            args = VirtualArguments(path.expanduser() / filename)
+            run(args=args)
+            print(f'Making movie for {filename}...')
+            cfg = CfgSetup(args=args)
+            plt = graphics.Plot(cfg.datafile, quiet=args.quiet)
+            plt.movie()
+
+
+def run(args):
+    """Run nsfds2."""
+
+    # Parse config file
+    cfg = CfgSetup(args=args)
+
+    # Mesh
+    if cfg.mesh == 'regular':
+        msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                        origin=(cfg.ix0, cfg.iz0),
+                        bc=cfg.bc, obstacles=cfg.obstacles,
+                        Npml=cfg.Npml,
+                        stencil=cfg.stencil)
+    elif cfg.mesh == 'curvilinear':
+        fcurv = files.get_curvilinear(cfg)
+        msh = mesh.CurvilinearMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                                   origin=(cfg.ix0, cfg.iz0),
+                                   bc=cfg.bc, obstacles=cfg.obstacles,
+                                   Npml=cfg.Npml,
+                                   stencil=cfg.stencil, fcurvxz=fcurv)
+    elif cfg.mesh == 'adaptative':
+        msh = mesh.AdaptativeMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                                  origin=(cfg.ix0, cfg.iz0),
+                                  bc=cfg.bc, obstacles=cfg.obstacles,
+                                  Npml=cfg.Npml,
+                                  stencil=cfg.stencil)
 
     if args.command:
         globals()[args.command](cfg, msh)
@@ -249,6 +273,22 @@ def main(args=None):
         headers.copyright()
         print('Must specify an action among solve/make/show')
         print('See nsfds2 -h for help')
+
+
+def main(args=None):
+    """ Main """
+
+    # Parse arguments
+    if not args:
+        args = parse_args()
+
+    # Command
+    if getattr(args, 'make_command', None) == 'template':
+        template(args)
+    elif getattr(args, 'command', None) == 'loop':
+        loop(args.path)
+    else:
+        run(args)
 
 
 if __name__ == "__main__":
