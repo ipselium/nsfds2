@@ -288,7 +288,7 @@ class Plot:
 
     def movie(self, view=('p', 'e', 'vx', 'vz'), nt=None, ref=None,
               figsize='auto', show_pml=False, show_probes=False,
-              dpi=100, fps=24):
+              dpi=100, fps=24, comp=1):
         """ Make movie. """
 
         # Progress bar
@@ -312,7 +312,8 @@ class Plot:
         fig, axes, ims = self.fields(view=view, iteration=i, ref=ref,
                                      show_pml=show_pml,
                                      show_probes=show_probes,
-                                     figsize=figsize)
+                                     figsize=figsize,
+                                     comp=comp)
 
         with writer.saving(fig, self.path / movie_filename, dpi=dpi):
 
@@ -399,7 +400,8 @@ class Plot:
         return None
 
     def fields(self, view=('p', 'e', 'vx', 'vz'), iteration=None, ref=None,
-               show_pml=False, show_probes=True, figsize='auto', midpoint=0):
+               show_pml=False, show_probes=True, figsize='auto',
+               midpoint=0, comp=1):
         """ Make figure """
 
         if iteration is None:
@@ -418,7 +420,7 @@ class Plot:
                 vmin, vmax = self.data.reference(view=v, ref=ref)
             else:
                 vmin, vmax = var[-1].min(), var[-1].max()
-            norm.append(MidPointNorm(vmin=vmin, vmax=vmax, midpoint=midpoint))
+            norm.append(MidPointNorm(vmin=vmin/comp, vmax=vmax/comp, midpoint=midpoint))
             if abs(vmin-midpoint)/vmax > 0.3:
                 ticks.append([vmin, midpoint, vmax])
             else:

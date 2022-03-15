@@ -48,6 +48,7 @@ def parse_args():
     view = argparse.ArgumentParser(add_help=False)
     view.add_argument('-i', dest='nt', type=int, help='number of time iterations')
     view.add_argument('-r', dest='ref', type=int, help='reference frame for colormap')
+    view.add_argument('-s', dest='comp', type=int, help='Display compressed scale')
     view.add_argument('view', nargs='*', default='p',
                       choices=['p', 'rho', 'vx', 'vz', 'vxz', 'e'],
                       help='variable(s) to plot')
@@ -164,7 +165,7 @@ def show(cfg, msh):
     elif cfg.args.show_command == 'frame':
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
         plt.fields(view=cfg.args.view, iteration=cfg.args.nt, ref=cfg.args.ref,
-                   show_pml=cfg.show_pml, show_probes=cfg.show_probes)
+                   show_pml=cfg.show_pml, show_probes=cfg.show_probes, comp=cfg.args.comp)
 
     elif cfg.args.show_command == 'probes':
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
@@ -190,7 +191,7 @@ def make(cfg, _):
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
         plt.movie(view=cfg.args.view, nt=cfg.args.nt, ref=cfg.args.ref,
                   show_pml=cfg.show_pml, show_probes=cfg.show_probes,
-                  fps=cfg.fps)
+                  fps=cfg.fps, comp=cfg.args.comp)
         plt.show()
 
     elif cfg.args.make_command == 'sound':
