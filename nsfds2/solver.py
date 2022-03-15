@@ -48,7 +48,7 @@ def parse_args():
     view = argparse.ArgumentParser(add_help=False)
     view.add_argument('-i', dest='nt', type=int, help='number of time iterations')
     view.add_argument('-r', dest='ref', type=int, help='reference frame for colormap')
-    view.add_argument('-s', dest='comp', type=int, help='Display compressed scale')
+    view.add_argument('-s', dest='comp', default=1, type=int, help='Display compressed scale')
     view.add_argument('view', nargs='*', default='p',
                       choices=['p', 'rho', 'vx', 'vz', 'vxz', 'e'],
                       help='variable(s) to plot')
