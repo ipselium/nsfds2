@@ -22,10 +22,6 @@ matrix:
                   - g++-4.9
                   - gcc-5
                   - g++-5
-    - name: "Python 3.7 on macOS"
-      os: osx
-      osx_image: xcode10.2  # Python 3.7.2 running on macOS 10.14.3
-      language: shell
 # command to install dependencies
 install:
   - pip3 install -q -e .
