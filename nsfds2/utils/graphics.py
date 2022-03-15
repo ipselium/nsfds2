@@ -68,8 +68,8 @@ class DataIterator:
 
     Parameters
     ----------
-    data :
-        DataIterator instance.
+    data : DataExtractor or str
+        DataExtractor instance or filename.
     view : tuple
         The variable to display.
     nt : int
@@ -77,9 +77,13 @@ class DataIterator:
 
     """
 
-    def __init__(self, data_extractor, view=('p'), nt=None):
+    def __init__(self, data, view=('p'), nt=None):
 
-        self.data = data_extractor
+        if isinstance(data, DataExtractor):
+            self.data = data
+        elif isinstance(data, (pathlib.Path, str)):
+            self.data = DataExtractor(data)
+
         self.view = view
         self.ns = self.data.get_attr('ns')
         self.icur = -self.ns
@@ -124,7 +128,7 @@ class DataExtractor:
 
     def __init__(self, data):
 
-        if isinstance(data, pathlib.Path):
+        if isinstance(data, (pathlib.Path, str)):
             self.data = get_data(data)
         else:
             self.data = data

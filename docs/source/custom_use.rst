@@ -59,30 +59,38 @@ hdf5 files
 
 If `save` option is selected, hdf5 are created. They contain the following variables.
 
-+-------------------+---------------------------------------------------+
-| var               | variable                                          |
-+===================+===================================================+
-| rho               | density                                           |
-+-------------------+---------------------------------------------------+
-| rhou              | product of density and x component of velocity    |
-+-------------------+---------------------------------------------------+
-| rhov              | product of density and z component of velocity    |
-+-------------------+---------------------------------------------------+
-| rhoe              | product of density and energy                     |
-+-------------------+---------------------------------------------------+
-| x                 | x-grid                                            |
-+-------------------+---------------------------------------------------+
-| z                 | z-grid                                            |
-+-------------------+---------------------------------------------------+
-| probe_locations   | coordinates of probes                             |
-+-------------------+---------------------------------------------------+
-| probe_values      | pressure at probe locations                       |
-+-------------------+---------------------------------------------------+
++-------------------+--------------------------------------------------------+
+| var               | variable                                               |
++===================+========================================================+
+| rho_init          | initial density                                        |
++-------------------+--------------------------------------------------------+
+| rhou_init         | initial product of density and x component of velocity |
++-------------------+--------------------------------------------------------+
+| rhov_init         | initial product of density and z component of velocity |
++-------------------+--------------------------------------------------------+
+| rhoe_init         | initial product of density and energy                  |
++-------------------+--------------------------------------------------------+
+| rho_itX           | density                                                |
++-------------------+--------------------------------------------------------+
+| rhou_itX          | product of density and x component of velocity         |
++-------------------+--------------------------------------------------------+
+| rhov_itX          | product of density and z component of velocity         |
++-------------------+--------------------------------------------------------+
+| rhoe_itX          | product of density and energy                          |
++-------------------+--------------------------------------------------------+
+| x                 | x-grid                                                 |
++-------------------+--------------------------------------------------------+
+| z                 | z-grid                                                 |
++-------------------+--------------------------------------------------------+
+| probe_locations   | coordinates of probes                                  |
++-------------------+--------------------------------------------------------+
+| probe_values      | pressure at probe locations                            |
++-------------------+--------------------------------------------------------+
+| obstacles         | coordinates of obstacles                               |
++-------------------+--------------------------------------------------------+
 
-For `rho`, `rhou`, `rhov`, and `rhoe` quantities, there are two distinct
-variables. One with the `_init` suffix which represents the initial value of the
-quantity (1d array) and one with the `_it` suffix which gathers the field at
-each iteration (2d array).
+The `rho_itX`, `rhou_itX`, `rhov_itX`, and `rhoe_itX` quantities gather the
+field at each time iteration (2d array).
 
 To access the acoustic pressure, one can use:: 
 
@@ -92,5 +100,39 @@ To access the acoustic pressure, one can use::
     p  = np.empty_like(rho) 
     fdtd.p(p, rho, rhou, rhov, rhoe, gamma)
 
-Here `p` needs to be initialize first. Then, it is used as an input argument of
-`fdtd.p` 
+The variable `p` needs to be initialize first. Then, it is used as an input
+argument of `fdtd.p`
+
+Note that in curvilinear coordinates, there are following sets of coordinates :
+
++-------------------+--------------------------------------------------------+
+| var               | variable                                               |
++===================+========================================================+
+| xn                | numerical x-grid                                       |
++-------------------+--------------------------------------------------------+
+| zn                | numerical z-grid                                       |
++-------------------+--------------------------------------------------------+
+| xp                | physical x-grid                                        |
++-------------------+--------------------------------------------------------+
+| zp                | physical z-grid                                        |
++-------------------+--------------------------------------------------------+
+| J                 | Jacobian matrix of transformation                      |
++-------------------+--------------------------------------------------------+
+
+cfg pickle files
+================
+
+A cfg file is also created for each simulation gathering its configuration. It
+contains the configuration object relative to the simulation:: 
+
+    import pickle
+    
+    with open(filename, 'rb') as _file:
+        cfg = pickle.load(_file)
+
+This object contains in particular :
+
+- cfg.dx, cfg.dz, cfg.dt : spatial and time steps
+- cfg.nx, cfg.nz, cfg.nt, cfg.ns : Number of points (spatial and temporal)
+- cfg.p0, cfg.rho0, cfg.T0, cfg.c0, cfg.gamma, cfg.prandtl, cfg.mu : Thermophysical parameters
+- ... and many other parameters.
