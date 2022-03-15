@@ -1,7 +1,7 @@
 Introducing nsfds2
 ==================
 
-|Pypi| |Build| |Licence| |DOI|
+|Pypi| |Licence| |DOI|
 
 
 .. image:: https://github.com/ipselium/nsfds2/blob/master/docs/source/images/nsfds2.png
@@ -61,9 +61,6 @@ Links
     :alt: Pypi Package
 
 .. |Licence| image:: https://img.shields.io/github/license/ipselium/nsfds2.svg
-
-.. |Build| image:: https://travis-ci.org/ipselium/nsfds2.svg?branch=master
-    :target: https://travis-ci.org/ipselium/nsfds2
 
 .. |DOI| image:: https://zenodo.org/badge/178000566.svg
     :target: https://zenodo.org/badge/latestdoi/178000566
