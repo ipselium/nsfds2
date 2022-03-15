@@ -74,9 +74,9 @@ If `save` option is selected, hdf5 are created. They contain the following varia
 +-------------------+---------------------------------------------------+
 | z                 | z-grid                                            |
 +-------------------+---------------------------------------------------+
-| probe_location    | coordinates of probes                             |
+| probe_locations   | coordinates of probes                             |
 +-------------------+---------------------------------------------------+
-| probe_value       | pressure at probe locations                       |
+| probe_values      | pressure at probe locations                       |
 +-------------------+---------------------------------------------------+
 
 For `rho`, `rhou`, `rhov`, and `rhoe` quantities, there are two distinct

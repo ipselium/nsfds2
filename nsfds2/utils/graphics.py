@@ -337,12 +337,12 @@ class Plot:
     def probes(self):
         """ Plot pressure at probes. """
 
-        probes = self.data.get_dataset('probes_location').tolist()
+        probes = self.data.get_dataset('probe_locations').tolist()
 
         if not probes:
             return None
 
-        p = self.data.get_dataset('probes_value')
+        p = self.data.get_dataset('probe_values')
         t = _np.arange(self.nt)*self.data.get_attr('dt')
 
         _, ax = _plt.subplots(figsize=(9, 4))
@@ -363,12 +363,12 @@ class Plot:
     def spectrogram(self):
         """ Plot spectograms at probes. """
 
-        probes = self.data.get_dataset('probes_location').tolist()
+        probes = self.data.get_dataset('probe_locations').tolist()
 
         if not probes:
             return None
 
-        p = self.data.get_dataset('probes_value')
+        p = self.data.get_dataset('probe_values')
 
         M = 1024
 
@@ -443,7 +443,7 @@ class Plot:
                 cax = divider.append_axes("right", size="5%", pad=0.05)
                 _plt.colorbar(ims[i], cax=cax, ticks=ticks[i])
 
-                probes = self.data.get_dataset('probes_location').tolist()
+                probes = self.data.get_dataset('probe_locations').tolist()
                 if probes and show_probes:
                     _ = [ax.plot(self.x[i, j], self.z[i, j], 'ro') for i, j in probes]
 

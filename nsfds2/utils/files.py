@@ -95,13 +95,14 @@ def get_wall_function(cfg, name):
 
 
 def save_probes(filename):
-    """Save probes in npz file."""
+    """Save probes in npz file and return file content."""
     data = _get_data(filename)
     nt, dt = data.attrs['nt'], data.attrs['dt']
     x, z = data['x'][...], data['z'][...]
-    mic_values = data['probes_value'][...] - data.attrs['p0']
-    mic_locs = data['probes_location'][...]
+    probe_values = data['probe_values'][...] - data.attrs['p0']
+    probe_locs = data['probe_locations'][...]
 
     t = _np.arange(0, nt*dt, dt)
     _np.savez_compressed(filename.split('.')[0] + '_probes',
-                         data=mic_values, loc=mic_locs, t=t, x=x, z=z)
+                         values=probe_values, locs=probe_locs, t=t, x=x, z=z)
+    return _np.load(filename.split('.')[0] + '_probes.npz')

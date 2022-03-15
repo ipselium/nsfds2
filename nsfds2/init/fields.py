@@ -419,8 +419,8 @@ class Fields:
         self.sfile.attrs['itmax'] = self._cfg.it
 
         probes = _np.zeros((len(self._cfg.probes), self._cfg.nt))
-        self.sfile.create_dataset('probes_location', data=self._cfg.probes)
-        self.sfile.create_dataset('probes_value', data=probes,
+        self.sfile.create_dataset('probe_locations', data=self._cfg.probes)
+        self.sfile.create_dataset('probe_values', data=probes,
                                   compression=self._cfg.comp)
 
         if self._cfg.mesh == 'curvilinear':

@@ -112,7 +112,7 @@ def probes_to_wave(datafile, dtype=_np.int16, path=None):
     datafile = _pathlib.Path(datafile).expanduser()
 
     with _DataExtractor(datafile) as data:
-        probes_values = data.get_dataset('probes_value')
+        probe_values = data.get_dataset('probe_values')
         p0 = data.get_attr('p0')
         dt = data.get_attr('dt')
 
@@ -120,11 +120,11 @@ def probes_to_wave(datafile, dtype=_np.int16, path=None):
         path = _os.path.dirname(datafile)
 
 
-    if list(probes_values):
+    if list(probe_values):
 
         filename = _os.path.basename(datafile).split('.')[0]
 
-        for i, p in enumerate(probes_values):
+        for i, p in enumerate(probe_values):
             name = f'{path}/{filename}_probe_{i}.wav'
             tmp = normalize(p - p0, dtype=dtype)
             print(f'Writing {name}...')

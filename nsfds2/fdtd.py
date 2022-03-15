@@ -252,7 +252,7 @@ class FDTD:
                                           compression=self.cfg.comp)
 
         if self.cfg.probes:
-            self.fld.sfile['probes_value'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
+            self.fld.sfile['probe_values'][:, self.cfg.it-self.cfg.ns:self.cfg.it] = self.probes
 
     @timing.proceed('pressure')
     def update_pressure(self):
