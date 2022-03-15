@@ -70,12 +70,12 @@ def create_template(path=None, filename=None, cfg=None):
     cfg.add_section('simulation')
     cfg.set('simulation', 'nt', '500')
     cfg.set('simulation', 'ns', '10')
-    cfg.set('simulation', 'CFL', '0.5')
+    cfg.set('simulation', 'cfl', '0.5')
 
     cfg.add_section('thermophysic')
     cfg.set('thermophysic', 'norm', 'False')
-    cfg.set('thermophysic', 'P0', '101325.0')
-    cfg.set('thermophysic', 'T0', '20.0')
+    cfg.set('thermophysic', 'p0', '101325.0')
+    cfg.set('thermophysic', 't0', '20.0')
     cfg.set('thermophysic', 'gamma', '1.4')
     cfg.set('thermophysic', 'prandtl', '0.7')
 
@@ -97,22 +97,22 @@ def create_template(path=None, filename=None, cfg=None):
     cfg.set('PML', 'alpha', '4.')
     cfg.set('PML', 'sigmax', 'auto')
     cfg.set('PML', 'sigmaz', 'auto')
-    cfg.set('PML', 'Npml', '15')
+    cfg.set('PML', 'npml', '15')
 
     cfg.add_section('source')
     cfg.set('source', 'type', 'pulse')
     cfg.set('source', 'ixS', '32')
     cfg.set('source', 'izS', '128')
-    cfg.set('source', 'S0', '1e6')
-    cfg.set('source', 'B0', '5')
+    cfg.set('source', 's0', '1e6')
+    cfg.set('source', 'b0', '5')
     cfg.set('source', 'f0', '20000')
     cfg.set('source', 'seed', 'None')
     cfg.set('source', 'wavfile', 'None')
 
     cfg.add_section('flow')
     cfg.set('flow', 'type', 'None')
-    cfg.set('flow', 'U0', '5')
-    cfg.set('flow', 'V0', '5')
+    cfg.set('flow', 'u0', '5')
+    cfg.set('flow', 'v0', '5')
 
     cfg.add_section('eulerian fluxes')
     cfg.set('eulerian fluxes', 'stencil', '11')
@@ -217,7 +217,6 @@ class CfgSetup:
 
         cfg = configparser.ConfigParser(allow_no_value=True)
         cfg.read(self.cfgfile)
-
         try:
             CFG = cfg['configuration']
             version = CFG.get('version')
@@ -304,7 +303,7 @@ class CfgSetup:
         SIM = self.cfg['simulation']
         self.nt = getattr(self.args, 'nt', None)
         self.ns = SIM.getint('ns', 10)
-        self.CFL = SIM.getfloat('CFL', 0.5)
+        self.CFL = SIM.getfloat('cfl', 0.5)
 
         if self.nt is None:
             self.nt = SIM.getint('nt', 500)
@@ -322,13 +321,13 @@ class CfgSetup:
 
         self.Ssu = 111.0  # Sutherland constant
         self.T0 = 273.0
-        self.T = self.T0 + THP.getfloat('T0', 20.0)
+        self.T = self.T0 + THP.getfloat('t0', 20.0)
 
         self.gamma = THP.getfloat('gamma', 1.4)
         self.cv = 717.5
         self.cp = self.cv*self.gamma
 
-        self.p0 = THP.getfloat('P0', 101325.0)
+        self.p0 = THP.getfloat('p0', 101325.0)
         self.rho0 = self.p0/(self.T*(self.cp - self.cv))
         self.c0 = (self.gamma*self.p0/self.rho0)**0.5
         self.mu0 = 0.00001716
@@ -381,7 +380,7 @@ class CfgSetup:
         self.alpha = PML.getfloat('alpha', 4.)
         self.sigmax = PML.get('sigmax', 'auto')
         self.sigmaz = PML.get('sigmaz', 'auto')
-        self.Npml = PML.getint('Npml', 15)
+        self.Npml = PML.getint('npml', 15)
 
     def _src(self):
 
@@ -390,8 +389,8 @@ class CfgSetup:
         self.stype = SRC.get('type', 'pulse').lower()
         self.ixS = SRC.getint('ixS', 32)
         self.izS = SRC.getint('izS', 32)
-        self.S0 = SRC.getfloat('S0', 1e3)
-        self.B0 = SRC.getfloat('B0', 5)
+        self.S0 = SRC.getfloat('s0', 1e3)
+        self.B0 = SRC.getfloat('b0', 5)
         self.f0 = SRC.getfloat('f0', 20000)
         self.wavfile = SRC.get('wavfile', None)
         self.seed = SRC.get('seed', None)
@@ -414,8 +413,8 @@ class CfgSetup:
         flow_list = ['custom', 'vortex', 'poiseuille']
         FLW = self.cfg['flow']
         self.ftype = FLW.get('type', 'None').lower()
-        self.U0 = FLW.getfloat('U0', 5)
-        self.V0 = FLW.getfloat('V0', 5)
+        self.U0 = FLW.getfloat('u0', 5)
+        self.V0 = FLW.getfloat('v0', 5)
 
         if self.ftype not in flow_list:
             self.U0, self.V0 = 0., 0.
@@ -501,7 +500,10 @@ class CfgSetup:
     def _figs(self):
 
         FIGS = self.cfg['figures']
-        self.figures = FIGS.getboolean('figures', True)
+        if not self.quiet:
+            self.figures = FIGS.getboolean('figures', True)
+        else:
+            self.figures = False
         self.show_probes = FIGS.getboolean('probes', True)
         self.show_pml = FIGS.getboolean('pml', True)
         self.bc_profiles = FIGS.getboolean('bc_profiles', True)

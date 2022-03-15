@@ -9,6 +9,7 @@ Here are some configuration examples. Some of these examples work with a :downlo
 - :download:`Letter A <examples/custom.conf>`
   (:download:`geo file <examples/geo.py>` needed)
 - :download:`Harmonic source <examples/harmonic.conf>`
+- :download:`Pulse and flow <examples/pulse_stream.conf>`
 - :download:`Circle <examples/circle.conf>`
 - :download:`Ground <examples/ground.conf>`
 - :download:`Periodic <examples/periodic.conf>`

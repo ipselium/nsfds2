@@ -203,11 +203,12 @@ def make(cfg, _):
         _ = sounds.probes_to_wave(cfg.datafile)
 
 
-def main():
+def main(args=None):
     """ Main """
 
     # Parse arguments
-    args = parse_args()
+    if not args:
+        args = parse_args()
 
     # Bypass the creation of cfg & msh if only create a template
     if getattr(args, 'make_command', None) == 'template':
