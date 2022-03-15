@@ -55,6 +55,112 @@ import nsfds2
 from nsfds2.utils import files
 
 
+def create_template(path=None, filename=None, cfg=None):
+    """ Create default configuration file. Default location is .nsfds2/nsfds2.conf."""
+
+    if not cfg:
+        cfg = configparser.ConfigParser(allow_no_value=True)
+
+    cfg.add_section('configuration')
+    cfg.set('configuration', 'version', str(nsfds2.__version__))
+    cfg.set('configuration', 'timings', 'False')
+    cfg.set('configuration', 'quiet', 'False')
+    cfg.set('configuration', 'cpu', '1')
+
+    cfg.add_section('simulation')
+    cfg.set('simulation', 'nt', '500')
+    cfg.set('simulation', 'ns', '10')
+    cfg.set('simulation', 'CFL', '0.5')
+
+    cfg.add_section('thermophysic')
+    cfg.set('thermophysic', 'norm', 'False')
+    cfg.set('thermophysic', 'P0', '101325.0')
+    cfg.set('thermophysic', 'T0', '20.0')
+    cfg.set('thermophysic', 'gamma', '1.4')
+    cfg.set('thermophysic', 'prandtl', '0.7')
+
+    cfg.add_section('geometry')
+    cfg.set('geometry', 'mesh', 'regular')
+    cfg.set('geometry', 'file', 'None')
+    cfg.set('geometry', 'geoname', 'helmholtz_double')
+    cfg.set('geometry', 'curvname', 'None')
+    cfg.set('geometry', 'bc', 'PPPP')
+    cfg.set('geometry', 'nx', '256')
+    cfg.set('geometry', 'nz', '256')
+    cfg.set('geometry', 'ix0', '0')
+    cfg.set('geometry', 'iz0', '0')
+    cfg.set('geometry', 'dx', '1')
+    cfg.set('geometry', 'dz', '1')
+
+    cfg.add_section('PML')
+    cfg.set('PML', 'beta', '0.')
+    cfg.set('PML', 'alpha', '4.')
+    cfg.set('PML', 'sigmax', 'auto')
+    cfg.set('PML', 'sigmaz', 'auto')
+    cfg.set('PML', 'Npml', '15')
+
+    cfg.add_section('source')
+    cfg.set('source', 'type', 'pulse')
+    cfg.set('source', 'ixS', '32')
+    cfg.set('source', 'izS', '128')
+    cfg.set('source', 'S0', '1e6')
+    cfg.set('source', 'B0', '5')
+    cfg.set('source', 'f0', '20000')
+    cfg.set('source', 'seed', 'None')
+    cfg.set('source', 'wavfile', 'None')
+
+    cfg.add_section('flow')
+    cfg.set('flow', 'type', 'None')
+    cfg.set('flow', 'U0', '5')
+    cfg.set('flow', 'V0', '5')
+
+    cfg.add_section('eulerian fluxes')
+    cfg.set('eulerian fluxes', 'stencil', '11')
+
+    cfg.add_section('filtering')
+    cfg.set('filtering', 'filter', 'True')
+    cfg.set('filtering', 'stencil', '11')
+    cfg.set('filtering', 'strength', '0.2')
+    cfg.set('filtering', 'strength_on_walls', '0.01')
+
+    cfg.add_section('viscous fluxes')
+    cfg.set('viscous fluxes', 'viscosity', 'True')
+    cfg.set('viscous fluxes', 'stencil', '7')
+
+    cfg.add_section('shock capture')
+    cfg.set('shock capture', 'shock capture', 'True')
+    cfg.set('shock capture', 'stencil', '7')
+    cfg.set('shock capture', 'method', 'pressure')
+
+    cfg.add_section('figures')
+    cfg.set('figures', 'figures', 'True')
+    cfg.set('figures', 'probes', 'True')
+    cfg.set('figures', 'pml', 'True')
+    cfg.set('figures', 'bc_profiles', 'True')
+    cfg.set('figures', 'fps', '24')
+
+    cfg.add_section('save')
+    cfg.set('save', 'resume', 'False')
+    cfg.set('save', 'path', 'results/')
+    cfg.set('save', 'filename', 'tmp')
+    cfg.set('save', 'compression', 'lzf')
+    cfg.set('save', 'fields', 'True')
+    cfg.set('save', 'vorticity', 'False')
+    cfg.set('save', 'probes', '[]')
+
+    if not path:
+        path = pathlib.Path.home() / '.nsfds2'
+
+    if not filename:
+        filename = 'nsfds2.conf'
+
+    if not path.is_dir():
+        path.mkdir()
+
+    with open(path / filename, 'w') as cf:
+        cfg.write(cf)
+
+
 class CfgSetup:
     """ Handle configuration file. """
 
@@ -149,107 +255,14 @@ class CfgSetup:
 
         if not (self.path / 'nsfds2.conf').is_file():
             open(self.path / 'nsfds2.conf', 'a').close()
-            print("Create configuration file : {}/nsfds2.conf".format(self.path))
+            print(f"Create configuration file : {self.path}/nsfds2.conf")
             time.sleep(0.5)
-            self.write_default()
-
-    def write_default(self):
-        """ Write default configuration file. """
-
-        self.cfg.add_section('configuration')
-        self.cfg.set('configuration', 'version', str(nsfds2.__version__))
-        self.cfg.set('configuration', 'timings', 'False')
-        self.cfg.set('configuration', 'quiet', 'False')
-        self.cfg.set('configuration', 'cpu', '1')
-
-        self.cfg.add_section('simulation')
-        self.cfg.set('simulation', 'nt', '500')
-        self.cfg.set('simulation', 'ns', '10')
-        self.cfg.set('simulation', 'CFL', '0.5')
-
-        self.cfg.add_section('thermophysic')
-        self.cfg.set('thermophysic', 'norm', 'False')
-        self.cfg.set('thermophysic', 'P0', '101325.0')
-        self.cfg.set('thermophysic', 'T0', '20.0')
-        self.cfg.set('thermophysic', 'gamma', '1.4')
-        self.cfg.set('thermophysic', 'prandtl', '0.7')
-
-        self.cfg.add_section('geometry')
-        self.cfg.set('geometry', 'mesh', 'regular')
-        self.cfg.set('geometry', 'file', 'None')
-        self.cfg.set('geometry', 'geoname', 'helmholtz_double')
-        self.cfg.set('geometry', 'curvname', 'None')
-        self.cfg.set('geometry', 'bc', 'PPPP')
-        self.cfg.set('geometry', 'nx', '256')
-        self.cfg.set('geometry', 'nz', '256')
-        self.cfg.set('geometry', 'ix0', '0')
-        self.cfg.set('geometry', 'iz0', '0')
-        self.cfg.set('geometry', 'dx', '1')
-        self.cfg.set('geometry', 'dz', '1')
-
-        self.cfg.add_section('PML')
-        self.cfg.set('PML', 'beta', '0.')
-        self.cfg.set('PML', 'alpha', '4.')
-        self.cfg.set('PML', 'sigmax', 'auto')
-        self.cfg.set('PML', 'sigmaz', 'auto')
-        self.cfg.set('PML', 'Npml', '15')
-
-        self.cfg.add_section('source')
-        self.cfg.set('source', 'type', 'pulse')
-        self.cfg.set('source', 'ixS', '32')
-        self.cfg.set('source', 'izS', '128')
-        self.cfg.set('source', 'S0', '1e6')
-        self.cfg.set('source', 'B0', '5')
-        self.cfg.set('source', 'f0', '20000')
-        self.cfg.set('source', 'seed', 'None')
-        self.cfg.set('source', 'wavfile', 'None')
-
-        self.cfg.add_section('flow')
-        self.cfg.set('flow', 'type', 'None')
-        self.cfg.set('flow', 'U0', '5')
-        self.cfg.set('flow', 'V0', '5')
-
-        self.cfg.add_section('eulerian fluxes')
-        self.cfg.set('eulerian fluxes', 'stencil', '11')
-
-        self.cfg.add_section('filtering')
-        self.cfg.set('filtering', 'filter', 'True')
-        self.cfg.set('filtering', 'stencil', '11')
-        self.cfg.set('filtering', 'strength', '0.2')
-        self.cfg.set('filtering', 'strength_on_walls', '0.01')
-
-        self.cfg.add_section('viscous fluxes')
-        self.cfg.set('viscous fluxes', 'viscosity', 'True')
-        self.cfg.set('viscous fluxes', 'stencil', '7')
-
-        self.cfg.add_section('shock capture')
-        self.cfg.set('shock capture', 'shock capture', 'True')
-        self.cfg.set('shock capture', 'stencil', '7')
-        self.cfg.set('shock capture', 'method', 'pressure')
-
-        self.cfg.add_section('figures')
-        self.cfg.set('figures', 'figures', 'True')
-        self.cfg.set('figures', 'probes', 'True')
-        self.cfg.set('figures', 'pml', 'True')
-        self.cfg.set('figures', 'bc_profiles', 'True')
-        self.cfg.set('figures', 'fps', '24')
-
-        self.cfg.add_section('save')
-        self.cfg.set('save', 'resume', 'False')
-        self.cfg.set('save', 'path', 'results/')
-        self.cfg.set('save', 'filename', 'tmp')
-        self.cfg.set('save', 'compression', 'lzf')
-        self.cfg.set('save', 'fields', 'True')
-        self.cfg.set('save', 'vorticity', 'False')
-        self.cfg.set('save', 'probes', '[]')
-
-        with open(self.path / 'nsfds2.conf', 'w') as cf:
-            self.cfg.write(cf)
+            create_template(cfg=self.cfg)
 
     def run(self):
         """ Run configuration. """
 
-        self.none = ['', 'none', 'None']
+        self.none = ['', 'none', 'None', None]
 
         try:
             self._cfg()
@@ -387,7 +400,7 @@ class CfgSetup:
         if self.wavfile:
             self.wavfile = pathlib.Path(self.wavfile).expanduser()
 
-        if self.seed:
+        if self.seed not in self.none:
             try:
                 self.seed = int(self.seed)
             except ValueError:

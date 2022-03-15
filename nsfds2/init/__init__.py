@@ -22,5 +22,5 @@
 # Creation Date : 2019-03-08 - 10:05:11
 
 
-from .config import CfgSetup
+from .config import CfgSetup, create_template
 from .fields import Fields

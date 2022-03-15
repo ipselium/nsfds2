@@ -29,9 +29,11 @@ Navier Stokes Finite Differences Solver
 """
 
 import os
+import sys
 import argparse
+import pathlib
 from fdgrid import mesh
-from nsfds2.init import CfgSetup, Fields
+from nsfds2.init import CfgSetup, create_template, Fields
 from nsfds2.fdtd import FDTD
 from nsfds2.utils import files, headers, graphics, sounds
 
@@ -105,7 +107,7 @@ def parse_args():
                         description="Display some simulation parameters",
                         help="display some simulation parameters")
 
-    # make section subsubparsers : movie/wav
+    # make section subsubparsers : movie/wav/template
     mak_cmds = mak.add_subparsers(dest='make_command',
                                   help='see -h for further help')
     mak_cmds.add_parser("movie", parents=[commons, view, data],
@@ -114,6 +116,9 @@ def parse_args():
     mak_cmds.add_parser("sound", parents=[commons, data],
                         description="Make sound files from existing results",
                         help="make sound files from existing results")
+    mak_cmds.add_parser("template", parents=[commons, data],
+                        description="Create basic configuration file",
+                        help="Create basic configuration file")
 
     return root.parse_args()
 
@@ -204,25 +209,38 @@ def main():
     # Parse arguments
     args = parse_args()
 
-    # Parse config file
-    cfg = CfgSetup(args=args)
+    # Bypass the creation of cfg & msh if only create a template
+    if getattr(args, 'make_command', None) == 'template':
+        if not args.cfgfile:
+            print('Path/filename must be specified with -c option')
+        else:
+            cfgfile = pathlib.Path(args.cfgfile).expanduser()
+            path, filename = cfgfile.parent, cfgfile.stem + cfgfile.suffix
+            create_template(path=path, filename=filename)
+            print(f"{cfgfile} created")
+        sys.exit(1)
 
-    # Mesh
-    if cfg.mesh == 'regular':
-        msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0),
-                        bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
-                        stencil=cfg.stencil)
-    elif cfg.mesh == 'curvilinear':
-        fcurv = files.get_curvilinear(cfg)
-        msh = mesh.CurvilinearMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
-                                   origin=(cfg.ix0, cfg.iz0),
-                                   bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
-                                   stencil=cfg.stencil, fcurvxz=fcurv)
-    elif cfg.mesh == 'adaptative':
-        msh = mesh.AdaptativeMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
-                                  origin=(cfg.ix0, cfg.iz0),
-                                  bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
-                                  stencil=cfg.stencil)
+    else:
+        # Parse config file
+        cfg = CfgSetup(args=args)
+
+        # Mesh
+        if cfg.mesh == 'regular':
+            msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                            origin=(cfg.ix0, cfg.iz0),
+                            bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
+                            stencil=cfg.stencil)
+        elif cfg.mesh == 'curvilinear':
+            fcurv = files.get_curvilinear(cfg)
+            msh = mesh.CurvilinearMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                                    origin=(cfg.ix0, cfg.iz0),
+                                    bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
+                                    stencil=cfg.stencil, fcurvxz=fcurv)
+        elif cfg.mesh == 'adaptative':
+            msh = mesh.AdaptativeMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                                    origin=(cfg.ix0, cfg.iz0),
+                                    bc=cfg.bc, obstacles=cfg.obstacles, Npml=cfg.Npml,
+                                    stencil=cfg.stencil)
 
     if args.command:
         globals()[args.command](cfg, msh)
