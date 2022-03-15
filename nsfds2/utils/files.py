@@ -29,6 +29,8 @@ Utils : Files
 
 import os
 import sys
+import numpy as _np
+from nsfds2.utils.graphics import get_data as _get_data
 from fdgrid import templates as _tplt
 
 
@@ -90,3 +92,16 @@ def get_wall_function(cfg, name):
     except (AttributeError, ImportError):
         func = None
     return func
+
+
+def save_probes(filename):
+    """Save probes in npz file."""
+    data = _get_data(filename)
+    nt, dt = data.attrs['nt'], data.attrs['dt']
+    x, z = data['x'][...], data['z'][...]
+    mic_values = data['probes_value'][...] - data.attrs['p0']
+    mic_locs = data['probes_location'][...]
+
+    t = _np.arange(0, nt*dt, dt)
+    _np.savez_compressed(filename.split('.')[0] + '_probes',
+                         data=mic_values, loc=mic_locs, t=t, x=x, z=z)
