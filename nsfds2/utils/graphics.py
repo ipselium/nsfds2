@@ -218,7 +218,11 @@ class DataExtractor:
             return p.T - self.data.attrs['p0']
 
         if view in ['rho', 'vxz']:
-            return (self.data[f"{view}_it{iteration}"][...]*self.J).T
+            try:
+                return (self.data[f"{view}_it{iteration}"][...]*self.J).T
+            except KeyError:
+                print('No data for vorticity')
+                sys.exit(1)
 
         if view in ['vx', 'vz', 'e']:
             vx = (self.data[f"{self.var[view]}_it{iteration}"][...]*self.J)
