@@ -7,17 +7,19 @@ Basics
 
 **nsfds2** can be used from a terminal with::
 
-   nsfds2 solve|make|show
+   nsfds2 solve|make|show|loop
 
 * *solve* : solves Navier-Stokes equation using default config file *~/.nsfds2/nsfds2.conf*
 * *make* : makes movie or sound files from results obtained with *solve* subcommand
 * *show* : set of commands for simulations parameters and grid and results inspection
+* *loop* : Run simulations for a set of config files in a path
 
 See `-h` option for further help::
 
    nsfds2 solve -h
    nsfds2 make -h 		# 'movie' and 'sound' subcommands
    nsfds2 show -h 		# 'parameters', 'grid', 'pgrid', 'frame', 'probes' subcommands
+   nsfds2 loop -h
 
 The solve subcommand
 ====================
@@ -45,11 +47,12 @@ To see other options::
 The make subcommand
 ===================
 
-The `make` subcommand can either generate movie (mp4 file) or sound (wav file)
-from an hdf5 file::
+The `make` subcommand can either generate movie (mp4 file), sound (wav file)
+from an hdf5 file or a config file template::
 
    nsfds2 make sound
    nsfds2 make movie
+   nsfds2 make template
 
 Work with sounds
 ----------------
