@@ -31,5 +31,5 @@ if sys.platform == 'darwin':
     import matplotlib
     matplotlib.use("TkAgg")
 
-__version__ = "0.15.3"
+__version__ = "0.16.0"
 __all__ = ['fdtd', 'init', 'utils']
