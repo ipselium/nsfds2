@@ -29,8 +29,10 @@ Navier Stokes Finite Differences Solver
 """
 
 import os
+import time
 import argparse
 import pathlib
+from multiprocessing import cpu_count, Pool, current_process
 from fdgrid import mesh
 from nsfds2.init import CfgSetup, create_template
 from nsfds2.fdtd import FDTD
@@ -44,6 +46,22 @@ class VirtualArguments:
         self.cfgfile = cfgfile
         self.command = command
         self.quiet = quiet
+
+
+def _wrapper(run, args):
+    """Wrapper function for ploop jobs."""
+    cur = current_process().name
+    ti = time.perf_counter()
+    print(f'{cur} - Solving {args.cfgfile}')
+    run(args)
+    ts = time.perf_counter() - ti
+    print(f'{cur} - {args.cfgfile} solved in {ts:.2f} s')
+    ti = time.perf_counter()
+    cfg = CfgSetup(args=args)
+    plt = graphics.Plot(cfg.datafile, quiet=args.quiet)
+    plt.movie()
+    tm = time.perf_counter() - ti
+    print(f'{cur} - {args.cfgfile} movie made in {tm:.2f} s')
 
 
 def parse_args():
@@ -94,6 +112,9 @@ def parse_args():
     loop = commands.add_parser("loop", parents=[path],
                                description="Loop over .conf in a directory",
                                help="Solve multiple configurations")
+    ploop = commands.add_parser("ploop", parents=[path],
+                                description="Loop over .conf in a directory [parallel version]",
+                                help="Solve multiple configurations")
 
     # show section subsubparsers : frame/probe/
     shw_cmds = shw.add_subparsers(dest='show_command',
@@ -227,15 +248,34 @@ def loop(path):
     """Loop simulations over .conf files"""
     headers.copyright()
     path = pathlib.Path(path)
-    for filename in pathlib.os.listdir(path.expanduser()):
-        if filename.endswith('conf'):
-            print(f'Processing {filename}...')
-            args = VirtualArguments(path.expanduser() / filename)
-            run(args=args)
-            print(f'Making movie for {filename}...')
-            cfg = CfgSetup(args=args)
-            plt = graphics.Plot(cfg.datafile, quiet=args.quiet)
-            plt.movie()
+    files = [f for f in pathlib.os.listdir(path.expanduser())
+             if f.endswith('conf')]
+    ti = time.perf_counter()
+    for file in files:
+        print(f'Processing {file}...')
+        args = VirtualArguments(path.expanduser() / file)
+        run(args=args)
+        print(f'Making movie for {file}...')
+        cfg = CfgSetup(args=args)
+        plt = graphics.Plot(cfg.datafile, quiet=args.quiet)
+        plt.movie()
+    print(f'Simulations ended in {time.perf_counter() - ti:.2f}')
+
+
+def ploop(path):
+    """Loop simulations over .conf files [separate processes]."""
+    headers.copyright()
+    path = pathlib.Path(path)
+    files = [f for f in pathlib.os.listdir(path.expanduser())
+             if f.endswith('conf')]
+    ti = time.perf_counter()
+    with Pool(processes=(cpu_count() - 1)) as pool:
+        for file in files:
+            args = VirtualArguments(path.expanduser() / file)
+            pool.apply_async(_wrapper, args=(run, args))
+        pool.close()
+        pool.join()
+    print(f'Simulations ended in {time.perf_counter() - ti:.2f}')
 
 
 def run(args):
@@ -272,6 +312,8 @@ def main(args=None):
         template(args)
     elif getattr(args, 'command', None) == 'loop':
         loop(args.path)
+    elif getattr(args, 'command', None) == 'ploop':
+        ploop(args.path)
     else:
         run(args)
 
