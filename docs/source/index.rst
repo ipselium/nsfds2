@@ -19,7 +19,6 @@ Welcome to nsfds2's documentation!
    :caption: API solver
 
    config.rst
-   fields.rst
    fdtd.rst
 
 .. toctree::

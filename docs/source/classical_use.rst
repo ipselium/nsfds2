@@ -13,6 +13,7 @@ Basics
 * *make* : makes movie or sound files from results obtained with *solve* subcommand
 * *show* : set of commands for simulations parameters and grid and results inspection
 * *loop* : Run simulations for a set of config files in a path
+* *ploop* : Run simulations for a set of config files in a path in parallel processes
 
 See `-h` option for further help::
 
@@ -20,6 +21,7 @@ See `-h` option for further help::
    nsfds2 make -h 		# 'movie' and 'sound' subcommands
    nsfds2 show -h 		# 'parameters', 'grid', 'pgrid', 'frame', 'probes' subcommands
    nsfds2 loop -h
+   nsfds2 ploop -h
 
 The solve subcommand
 ====================
@@ -138,28 +140,31 @@ file contains simulation parameters that are used by the solver.
 
    [simulation]
    nt = 500             # Number of time iterations
-   ns = 10          # Save each ns iterations
-   cfl = 0.5            # Courant–Friedrichs–Lewy number
+   ns = 10              # Save fields each ns iterations
+   cfl = 0.5             # Courant–Friedrichs–Lewy number
 
    [thermophysic]
-   norm = True|False            # Normalize p0, rho0, c0 and T0 (Override following values).
+   norm = True|False    # Normalize p0, rho0, c0 and T0 (Override other values).
    p0 = 101325.0        # Atmospheric pressure (Pa)
    t0 = 20.0            # Ambiant temperature (°C)
    gamma = 1.4          # Heat capacity ratio
    prandtl = 0.7        # Prandtl number
 
    [geometry]
-   mesh = regular|curvilinear|adaptative	# Mesh type
-   file = None|path 			 # Path to python file (for geoname and curvname)
+   mesh = regular|curvilinear|adaptative	 # Mesh type
+   file = None|path             	 # Path to .py file (for geo/curvname)
    geoname = helmholtz_double 		# Python function for geometry
    curvname = curvz			# Python function for curvilinear coordinates
-   bc = PPPP            # Boundary conditions. Must be a mix of ARP
-   nx = 256             # Number of grid points along x-axis
-   nz = 256             # Number of grid points along z-axis
-   ix0 = 0              # Origin of the grid
-   iz0 = 0              # Origin of the grid
-   dx = 1               # Spatial x-step
-   dz = 1               # Spatial z-step
+   only_pml = False                     # Adaptative only in PML
+   Nd = 23                              # Adaptative over Nd points
+   Rx = 3.                              # Dilatation rate [adaptative mesh]
+   bc = PPPP                            # Boundary conditions. Must be a mix of AWP
+   nx = 256                             # Number of grid points along x-axis
+   nz = 256                             # Number of grid points along z-axis
+   ix0 = 0                              # Origin of the grid
+   iz0 = 0                              # Origin of the grid
+   dx = 1                               # Spatial x-step
+   dz = 1                               # Spatial z-step
 
    [PML]
    beta = 0.0 				# Depends on pseudo mean flow profile
@@ -169,53 +174,54 @@ file contains simulation parameters that are used by the solver.
    npml = 15				# Number of points of the PML
 
    [source]
-   type = None|pulse|harmonic|white|wav 	# Source type
-   ixs = 64             # Source x-location
-   izs = 128            # Source z-location
-   s0 = 1e6             # Sources strength [Pa]
-   b0 = 2           # Half spatial bandwidth
-   f0 = 60000           # Frequency (for harmonic only) [Hz]
-   seed = None          # Seed for white noise. Must be integer.
-   off = 100            # Stop source at iteration 100. nt by default.
-   wavfile = None|path          # path to wavfile (for wav only)
+   type = None|pulse|harmonic|white|wav     # Source type
+   ixs = 64                                 # Source x-location
+   izs = 128                                # Source z-location
+   s0 = 1e6                                 # Sources strength [Pa]
+   b0 = 2                                   # Half spatial bandwidth
+   f0 = 60000                               # Frequency [harmonic only] [Hz]
+   seed = None                              # Seed [white noise only]. Must be integer.
+   off = 100                                 # Stop source at iteration 100. nt by default.
+   wavfile = None|path                       # Path to wavfile (for wav only)
 
    [flow]
-   type = None          # Flow type
-   U0 = 5           # Flow velocity following x [m/s]
-   V0 = 5           # Flow velocity following z [m/s]
+   type = None                  # Flow type [custom/vortex]
+   U0 = 5                       # Flow velocity following x [m/s] [only for custom]
+   V0 = 5                       # Flow velocity following z [m/s] [only for custom]
 
    [eulerian fluxes]
    stencil = 3|7|11             # Number of points of stencil
 
    [filtering]
-   filter = True|False          # Activate selective filter
-   stencil = 11             # Number of points of stencil used by filters
-   strength = 0.75           # Strength of the filter
+   filter = True|False           # Activate selective filter
+   stencil = 11                 # Number of points of stencil used by filters
+   strength = 0.75              # Strength of the filter
+   strength_on_walls = 0.01     # Strength on the nearest point from a wall
 
    [viscous fluxes]
-   viscosity = True|False           # Activate viscosity
-   stencil = 7          # Number of points of stencil used for viscosity
+   viscosity = True|False       # Activate viscosity
+   stencil = 7                  # Number of points of stencil used for viscosity
 
    [shock capture]
-   shock capture = True|False           # Activate shock capture procedure
-   stencil = 7          # Number of points of stencil for capture
-   method = pressure|dilatation             # Capture based on pressure or dilatation
+   shock capture = True|False   # Activate shock capture procedure
+   stencil = 7                  # Number of points of stencil for capture
+   method = pressure|dilatation # Capture based on pressure or dilatation
 
    [figures]
-   figures = True|False             # Activate figures
+   figures = True|False          # Activate figures
    probes = True|False          # Show probes in maps
    pml = True|False             # Show PML in maps
-   bc_profiles = True           # Show bc profiles
-   fps = 24             # Framerate for videos
+   bc_profiles = True            # Show bc profiles
+   fps = 24                     # Framerate for movies
 
    [save]
-   resume = True|False      # Resume older simulation
-   path = results/          # path to data file
-   filename = tmp           # data filename
-   compression = None|lzf           # Activate data compression
-   fields = True            # Save fields
+   resume = True|False          # Resume older simulation
+   path = results/              # path to data file
+   filename = tmp                # data filename
+   compression = None|lzf       # Activate data compression
+   fields = True                 # Save fields
    vorticity = False            # Save vorticity
-   probes = []          # Probe locations. Must be list of lists
+   probes = []                  # Probe locations. Must be list of lists
 
 
 Customize geometry
