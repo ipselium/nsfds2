@@ -49,11 +49,8 @@ Example
     # Define the mesh
     msh = Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0), obstacles=[])
 
-    # Init acoustic fields
-    fld = Fields(msh, cfg)
-
     # Create simulation
-    fdtd = FDTD(msh, fld, cfg)
+    fdtd = FDTD(msh, cfg)
     fdtd.run()
 
 
@@ -67,6 +64,7 @@ import time
 import numpy as np
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
 from nsfds2.utils import headers, check, timing, misc
+from nsfds2.init.fields import Fields
 from nsfds2.lib.efluxes import EulerianFluxes
 from nsfds2.lib.vfluxes import ViscousFluxes
 from nsfds2.lib.sfilter import SelectiveFilter
@@ -83,18 +81,16 @@ class FDTD:
     ----------
         msh : :py:class:`nsfds2.fdgrid.mesh.Mesh`
             Mesh
-        fld : :py:class:`nsfds2.init.fields.Fields`
-            Initial fields
         cfg : :py:class:`nsfds2.init.config.CfgSetup`
             Configuration
 
     """
 
-    def __init__(self, msh, fld, cfg):
+    def __init__(self, msh, cfg):
 
         self.msh = msh
-        self.fld = fld
         self.cfg = cfg
+        self.fld = Fields(msh, cfg)
 
         # Check some of the simulation parameters
         check.Check(self.cfg, self.msh)

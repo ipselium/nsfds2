@@ -8,13 +8,8 @@ Introduction
 **nsfds2** can also be used as a classical Python package. It provides
 several main objects to perform numerical simulations :
 
-- `init` package povides:
-
-        - :py:class:`nsfds2.init.config.CfgSetup`: Parses all simulation
-          parameters from *~/.nsfds2/nsfds2.conf*
-        - :py:class:`nsfds2.init.fields.Fields`: Initialize all
-          simulation parameters and fields
-
+- `init` package povides :py:class:`nsfds2.init.config.CfgSetup` that parses
+  all simulation parameters from *~/.nsfds2/nsfds2.conf*
 - `fdtd` module provides :py:class:`nsfds2.fdtd.FDTD` that runs the simulation
 - `utils` package provides in particular :py:mod:`nsfds2.utils.graphics` module
   useful for post-treatment
@@ -23,7 +18,7 @@ several main objects to perform numerical simulations :
  The following example gives the general philosophy to use **nsfds2**::
 
    import matplotlib.pyplot as plt
-   from nsfds2.init import CfgSetup, Fields
+   from nsfds2.init import CfgSetup
    from nsfds2.fdtd import FDTD
    from fdgrid.mesh import Mesh
 
@@ -33,26 +28,30 @@ several main objects to perform numerical simulations :
    # Define the mesh
    msh = Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0), obstacles=cfg.obstacles)
 
-   # Init acoustic fields
-   fld = Fields(msh, cfg)
-
    # Create simulation
-   fdtd = FDTD(msh, fld, cfg)
+   fdtd = FDTD(msh, cfg)
    fdtd.run()
 
    # Figures
    plt.figure()
-   plt.imshow(fld.p)
+   plt.imshow(fdtd.fld.p)
    plt.show()
 
 
-One can also use the `pickle` module to load cfg instance from the .cfg file::
+Once the simulation is finished, you can access the acoustic field at the last
+iteration through the fdtd.fld object using following attributes.
 
-
-   import pickle
-   with open('file.cfg', 'rb') as cfg_file:
-       cfg = pickle.load(cfg_file)
-
++---------------------+--------------------------------------------------------+
+| fdtd.fld attributes | description                                            |
++=====================+========================================================+
+| r                   | density                                                |
++---------------------+--------------------------------------------------------+
+| ru                  | product of density and x component of velocity         |
++---------------------+--------------------------------------------------------+
+| rv                  | product of density and z component of velocity         |
++---------------------+--------------------------------------------------------+
+| re                  | product of density and energy                          |
++---------------------+--------------------------------------------------------+
 
 hdf5 files
 ==========

@@ -32,7 +32,7 @@ import os
 import argparse
 import pathlib
 from fdgrid import mesh
-from nsfds2.init import CfgSetup, create_template, Fields
+from nsfds2.init import CfgSetup, create_template
 from nsfds2.fdtd import FDTD
 from nsfds2.utils import files, headers, graphics, sounds
 
@@ -40,6 +40,7 @@ from nsfds2.utils import files, headers, graphics, sounds
 class VirtualArguments:
 
     def __init__(self, cfgfile, command='solve', quiet=True):
+        """Generate a set of virtual arguments as for configparser"""
         self.cfgfile = cfgfile
         self.command = command
         self.quiet = quiet
@@ -138,11 +139,8 @@ def parse_args():
 def solve(cfg, msh):
     """ Solve NS equations. """
 
-    # Simulation parameters
-    fld = Fields(msh, cfg)
-
     # Simulation
-    fdtd = FDTD(msh, fld, cfg)
+    fdtd = FDTD(msh, cfg)
     fdtd.run()
 
     if cfg.figures:
@@ -271,7 +269,7 @@ def run(args):
         globals()[args.command](cfg, msh)
     else:
         headers.copyright()
-        print('Must specify an action among solve/make/show')
+        print('Must specify an action among solve/make/show/loop')
         print('See nsfds2 -h for help')
 
 
