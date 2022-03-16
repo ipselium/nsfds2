@@ -229,16 +229,16 @@ class FDTD:
         self.fld.sfile.attrs['itmax'] = self.cfg.it
 
         if self.cfg.save_fields:
-            self.fld.sfile.create_dataset('rho_it' + str(self.cfg.it),
+            self.fld.sfile.create_dataset('r_it' + str(self.cfg.it),
                                           data=self.fld.r,
                                           compression=self.cfg.comp)
-            self.fld.sfile.create_dataset('rhou_it' + str(self.cfg.it),
+            self.fld.sfile.create_dataset('ru_it' + str(self.cfg.it),
                                           data=self.fld.ru,
                                           compression=self.cfg.comp)
-            self.fld.sfile.create_dataset('rhov_it' + str(self.cfg.it),
+            self.fld.sfile.create_dataset('rv_it' + str(self.cfg.it),
                                           data=self.fld.rv,
                                           compression=self.cfg.comp)
-            self.fld.sfile.create_dataset('rhoe_it' + str(self.cfg.it),
+            self.fld.sfile.create_dataset('re_it' + str(self.cfg.it),
                                           data=self.fld.re,
                                           compression=self.cfg.comp)
 

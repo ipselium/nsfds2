@@ -61,21 +61,21 @@ If `save` option is selected, hdf5 are created. They contain the following varia
 +-------------------+--------------------------------------------------------+
 | var               | variable                                               |
 +===================+========================================================+
-| rho_init          | initial density                                        |
+| r_init            | initial density                                        |
 +-------------------+--------------------------------------------------------+
-| rhou_init         | initial product of density and x component of velocity |
+| ru_init           | initial product of density and x component of velocity |
 +-------------------+--------------------------------------------------------+
-| rhov_init         | initial product of density and z component of velocity |
+| rv_init           | initial product of density and z component of velocity |
 +-------------------+--------------------------------------------------------+
-| rhoe_init         | initial product of density and energy                  |
+| re_init           | initial product of density and energy                  |
 +-------------------+--------------------------------------------------------+
-| rho_itX           | density                                                |
+| r_itX             | density                                                |
 +-------------------+--------------------------------------------------------+
-| rhou_itX          | product of density and x component of velocity         |
+| ru_itX            | product of density and x component of velocity         |
 +-------------------+--------------------------------------------------------+
-| rhov_itX          | product of density and z component of velocity         |
+| rv_itX            | product of density and z component of velocity         |
 +-------------------+--------------------------------------------------------+
-| rhoe_itX          | product of density and energy                          |
+| re_itX            | product of density and energy                          |
 +-------------------+--------------------------------------------------------+
 | x                 | x-grid                                                 |
 +-------------------+--------------------------------------------------------+
@@ -88,8 +88,8 @@ If `save` option is selected, hdf5 are created. They contain the following varia
 | obstacles         | coordinates of obstacles                               |
 +-------------------+--------------------------------------------------------+
 
-The `rho_itX`, `rhou_itX`, `rhov_itX`, and `rhoe_itX` quantities gather the
-field at each time iteration (2d array).
+The `r_itX`, `ru_itX`, `rv_itX`, and `re_itX` quantities gather the field at
+each time iteration (2d array).
 
 To access the acoustic pressure, one can use:: 
 
@@ -97,7 +97,7 @@ To access the acoustic pressure, one can use::
     from ofdlib2 import fdtd
     ...
     p  = np.empty_like(rho) 
-    fdtd.p(p, rho, rhou, rhov, rhoe, gamma)
+    fdtd.p(p, r, ru, rv, re, gamma)
 
 The variable `p` needs to be initialize first. Then, it is used as an input
 argument of `fdtd.p`

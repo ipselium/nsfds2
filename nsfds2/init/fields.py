@@ -367,10 +367,10 @@ class Fields:
             print(misc.colors.RED + msg + misc.colors.END)
             with _h5py.File(self._cfg.datafile, 'r') as data:
                 self._cfg.it = data.attrs['itmax']
-                self.r[:, :] = data[f'rho_it{self._cfg.it}'][...]
-                self.ru[:, :] = data[f'rhou_it{self._cfg.it}'][...]
-                self.rv[:, :] = data[f'rhov_it{self._cfg.it}'][...]
-                self.re[:, :] = data[f'rhoe_it{self._cfg.it}'][...]
+                self.r[:, :] = data[f'r_it{self._cfg.it}'][...]
+                self.ru[:, :] = data[f'ru_it{self._cfg.it}'][...]
+                self.rv[:, :] = data[f'rv_it{self._cfg.it}'][...]
+                self.re[:, :] = data[f're_it{self._cfg.it}'][...]
             self.fdtools.p(self.p, self.r, self.ru, self.rv, self.re)
             self.sfile = _h5py.File(self._cfg.datafile, 'a')
             self.sfile.attrs['nt'] = self._cfg.nt
@@ -396,10 +396,10 @@ class Fields:
 
         self.sfile.create_dataset('x', data=self._x, compression=self._cfg.comp)
         self.sfile.create_dataset('z', data=self._z, compression=self._cfg.comp)
-        self.sfile.create_dataset('rho_init', data=self.r, compression=self._cfg.comp)
-        self.sfile.create_dataset('rhou_init', data=self.ru, compression=self._cfg.comp)
-        self.sfile.create_dataset('rhov_init', data=self.rv, compression=self._cfg.comp)
-        self.sfile.create_dataset('rhoe_init', data=self.re, compression=self._cfg.comp)
+        self.sfile.create_dataset('r_init', data=self.r, compression=self._cfg.comp)
+        self.sfile.create_dataset('ru_init', data=self.ru, compression=self._cfg.comp)
+        self.sfile.create_dataset('rv_init', data=self.rv, compression=self._cfg.comp)
+        self.sfile.create_dataset('re_init', data=self.re, compression=self._cfg.comp)
 
         self.sfile.attrs['obstacles'] = self._msh.get_obstacles()
 #        self.sfile.attrs['domains'] = self._msh.get_domains(only_xz=True)

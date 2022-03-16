@@ -133,7 +133,7 @@ class DataExtractor:
         else:
             self.data = data
 
-        self.var = {'p':'p', 'rho':'rho', 'vx':'rhou', 'vz':'rhov', 'e':'rhoe'}
+        self.var = {'p':'p', 'rho':'r', 'vx':'ru', 'vz':'rv', 'e':'re', 'vxz':'vxz'}
         self.nt = self.get_attr('nt')
         self.ns = self.get_attr('ns')
 
@@ -208,26 +208,26 @@ class DataExtractor:
         """ Get data at iteration. """
 
         if view == 'p':
-            rho = self.data[f"rho_it{iteration}"][...]*self.J
-            rhou = self.data[f"rhou_it{iteration}"][...]*self.J
-            rhov = self.data[f"rhov_it{iteration}"][...]*self.J
-            rhoe = self.data[f"rhoe_it{iteration}"][...]*self.J
-            p = _np.empty_like(rho)
-            _fdtd.p(p, rho, rhou, rhov, rhoe, self.data.attrs['gamma'])
+            r = self.data[f"r_it{iteration}"][...]*self.J
+            ru = self.data[f"ru_it{iteration}"][...]*self.J
+            rv = self.data[f"rv_it{iteration}"][...]*self.J
+            re = self.data[f"re_it{iteration}"][...]*self.J
+            p = _np.empty_like(r)
+            _fdtd.p(p, r, ru, rv, re, self.data.attrs['gamma'])
 
             return p.T - self.data.attrs['p0']
 
         if view in ['rho', 'vxz']:
             try:
-                return (self.data[f"{view}_it{iteration}"][...]*self.J).T
+                return (self.data[f"{self.var[view]}_it{iteration}"][...]*self.J).T
             except KeyError:
                 print('No data for vorticity')
                 sys.exit(1)
 
         if view in ['vx', 'vz', 'e']:
             vx = (self.data[f"{self.var[view]}_it{iteration}"][...]*self.J)
-            rho = (self.data[f"rho_it{iteration}"][...]*self.J)
-            return (vx/rho).T
+            r = (self.data[f"r_it{iteration}"][...]*self.J)
+            return (vx/r).T
 
         raise ValueError("view must be 'p', 'rho', 'vx', 'vz', 'e', or 'vxz'")
 
@@ -424,15 +424,26 @@ class Plot:
 
         for v in view:
             var.append(self.data.get(view=v, iteration=iteration).T)
+
+            # vmin & vmax
             if ref:
                 vmin, vmax = self.data.reference(view=v, ref=ref)
             else:
                 vmin, vmax = var[-1].min(), var[-1].max()
-            norm.append(MidPointNorm(vmin=vmin/comp, vmax=vmax/comp, midpoint=midpoint))
-            if abs(vmin-midpoint)/vmax > 0.3:
+
+            # midpoint
+            if vmin > 0 and vmax > 0:
+                midpoint = var[-1].mean()
+            else:
+                midpoint = 0
+
+            # ticks
+            if abs(vmin-midpoint)/vmax > 0.33:
                 ticks.append([vmin, midpoint, vmax])
             else:
                 ticks.append([midpoint, vmax])
+
+            norm.append(MidPointNorm(vmin=vmin/comp, vmax=vmax/comp, midpoint=midpoint))
 
         fig, axes = _plt.subplots(*get_subplot_shape(len(var)))
 
