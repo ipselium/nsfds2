@@ -245,25 +245,12 @@ def run(args):
     cfg = CfgSetup(args=args)
 
     # Mesh
-    if cfg.mesh == 'regular':
-        msh = mesh.Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
-                        origin=(cfg.ix0, cfg.iz0),
-                        bc=cfg.bc, obstacles=cfg.obstacles,
-                        Npml=cfg.Npml,
-                        stencil=cfg.stencil)
-    elif cfg.mesh == 'curvilinear':
-        fcurv = files.get_curvilinear(cfg)
-        msh = mesh.CurvilinearMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
-                                   origin=(cfg.ix0, cfg.iz0),
-                                   bc=cfg.bc, obstacles=cfg.obstacles,
-                                   Npml=cfg.Npml,
-                                   stencil=cfg.stencil, fcurvxz=fcurv)
-    elif cfg.mesh == 'adaptative':
-        msh = mesh.AdaptativeMesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
-                                  origin=(cfg.ix0, cfg.iz0),
-                                  bc=cfg.bc, obstacles=cfg.obstacles,
-                                  Npml=cfg.Npml,
-                                  stencil=cfg.stencil)
+    msh = mesh.build(cfg.mesh, (cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                     origin=(cfg.ix0, cfg.iz0),
+                     bc=cfg.bc, obstacles=cfg.obstacles,
+                     Npml=cfg.Npml, stencil=cfg.stencil,
+                     dilatation=cfg.Rx, Nd=cfg.Nd, only_pml=cfg.only_pml,
+                     fcurvxz=files.get_curvilinear(cfg))
 
     if args.command:
         globals()[args.command](cfg, msh)

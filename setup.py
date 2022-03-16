@@ -45,7 +45,7 @@ setup(
     include_package_data=True,
     install_requires=["numpy", "scipy", "matplotlib", "ofdlib2>=0.11.0",
                       "progressbar33", "mplutils>=0.4.2", "h5py",
-                      "fdgrid>=0.10.0"],
+                      "fdgrid>=0.11.0"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",

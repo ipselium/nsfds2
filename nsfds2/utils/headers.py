@@ -33,11 +33,11 @@ import os
 import sys
 import platform
 import textwrap
+import datetime
 import numpy
 import ofdlib2
 import fdgrid
 import nsfds2
-import datetime
 
 
 def _columns():

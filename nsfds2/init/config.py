@@ -357,6 +357,9 @@ class CfgSetup:
         self.geofile = GEO.get('file', 'None')
         self.geoname = GEO.get('geoname', 'square')
         self.geoflag = True
+        self.Nd = GEO.getint('Nd', 23)                      # Adapt over Nd pts
+        self.Rx = GEO.getfloat('Rx', 3.)                    # dilatation rate
+        self.only_pml = GEO.getboolean('only_pml', False)   # adapt only in PML
         self.bc = GEO.get('bc', 'WWWW').upper()
         self.nx = GEO.getint('nx', 256)
         self.nz = GEO.getint('nz', 256)
