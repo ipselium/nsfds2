@@ -41,13 +41,14 @@ Example
 
     from nsfds2.init import CfgSetup, Fields
     from nsfds2.fdtd import FDTD
-    from fdgrid.mesh import Mesh
+    from fdgrid import mesh
 
     # Read simulation parameter in config file ~/nsfds2/nsfds2.conf
     cfg = CfgSetup()
 
     # Define the mesh
-    msh = Mesh((cfg.nx, cfg.nz), (cfg.dx, cfg.dz), origin=(cfg.ix0, cfg.iz0), obstacles=[])
+    msh = mesh.build('regular', (cfg.nx, cfg.nz), (cfg.dx, cfg.dz),
+                     origin=(cfg.ix0, cfg.iz0), obstacles=[])
 
     # Create simulation
     fdtd = FDTD(msh, cfg)

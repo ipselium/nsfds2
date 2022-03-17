@@ -22,9 +22,9 @@ Dependencies
 :matplotlib: >= 3.0
 :h5py: >= 2.8
 :progressbar33: >= 2.4
-:ofdlib2: >= 0.9.3
-:fdgrid: >= 0.8.0
-:mplutils: >= 0.3.0
+:ofdlib2: >= 0.11.0
+:fdgrid: >= 0.11.0
+:mplutils: >= 0.4.2
 
 **Important:** To create animations using **nsfds2 make movie**, you also need to
 have **ffmpeg** installed on your system.
