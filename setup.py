@@ -43,7 +43,7 @@ setup(
     author_email="cyril.desjouy@univ-lemans.fr",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["numpy", "scipy", "matplotlib", "ofdlib2>=0.11.0",
+    install_requires=["numpy", "scipy", "matplotlib", "ofdlib2>=0.12.0",
                       "progressbar33", "mplutils>=0.4.2", "h5py",
                       "fdgrid>=0.11.0"],
     classifiers=[
