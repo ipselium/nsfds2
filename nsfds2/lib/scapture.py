@@ -45,9 +45,9 @@ class ShockCapture:
         sg_cls = getattr(flt, 'sigma_{}'.format(cfg.cpt_meth[0]))
 
         self.du = drv.du(msh.x, msh.z, cfg.cpt_stencil, cpu=cfg.cpu)
-        self.sg = sg_cls(msh.nx, msh.nz, cfg.rth, cfg.gamma)
+        self.sg = sg_cls(msh.nx, msh.nz, cfg.rth, cfg.gamma, cpu=cfg.cpu)
         self.lpl = flt.lplf3(msh.nx, msh.nz)
-        self.cpt = flt.capture(msh.nx, msh.nz)
+        self.cpt = flt.capture(msh.nx, msh.nz, cpu=cfg.cpu)
 
         for sub in self.msh.fmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
@@ -69,11 +69,19 @@ class ShockCapture:
             for sub in direction:
                 self.filter_magnitude(sub)
 
+            # Filter
             for sub in direction:
-                self.filter(sub)
+                sub.cpt(self.fld.r, self.fld.K, self.fld.sg, *sub.ix, *sub.iz)
+                sub.cpt(self.fld.ru, self.fld.Ku, self.fld.sg, *sub.ix, *sub.iz)
+                sub.cpt(self.fld.rv, self.fld.Kv, self.fld.sg, *sub.ix, *sub.iz)
+                sub.cpt(self.fld.re, self.fld.Ke, self.fld.sg, *sub.ix, *sub.iz)
 
+            # Apply filter
             for sub in direction:
-                self.update(sub)
+                self.cpt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
+                self.cpt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+                self.cpt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+                self.cpt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
 
     def update_reference(self):
         """ Update pressure / dilatation. """
@@ -115,19 +123,3 @@ class ShockCapture:
 
         elif self.cfg.cpt_meth == "dilatation":
             sub.sg(self.fld.p, self.fld.r, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
-
-    def filter(self, sub):
-        """ Compute filter. """
-
-        sub.cpt(self.fld.r, self.fld.K, self.fld.sg, *sub.ix, *sub.iz)
-        sub.cpt(self.fld.ru, self.fld.Ku, self.fld.sg, *sub.ix, *sub.iz)
-        sub.cpt(self.fld.rv, self.fld.Kv, self.fld.sg, *sub.ix, *sub.iz)
-        sub.cpt(self.fld.re, self.fld.Ke, self.fld.sg, *sub.ix, *sub.iz)
-
-    def update(self, sub):
-        """ Apply filter to conservative variables. """
-
-        self.cpt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
-        self.cpt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-        self.cpt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-        self.cpt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)

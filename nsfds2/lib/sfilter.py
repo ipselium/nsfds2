@@ -40,7 +40,9 @@ class SelectiveFilter:
         self.msh = msh
         self.fld = fld
         self.flt = flt.sfilter(msh.nx, msh.nz,
-                               cfg.xnu, cfg.xnu0, stencil=cfg.flt_stencil)
+                               cfg.xnu, cfg.xnu0,
+                               stencil=cfg.flt_stencil,
+                               cpu=cfg.cpu)
 
         for sub in self.msh.fmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
