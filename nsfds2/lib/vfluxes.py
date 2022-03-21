@@ -43,7 +43,7 @@ class ViscousFluxes:
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
-        self.du = drv.du(msh.x, msh.z, cfg.vsc_stencil)
+        self.du = drv.du(msh.x, msh.z, cfg.vsc_stencil, cpu=cfg.cpu)
 
         for sub in self.msh.dmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
@@ -55,12 +55,12 @@ class ViscousFluxes:
         """
 
         # u and v
-        self.fld.Eu = self.fld.ru/self.fld.r
-        self.fld.Ev = self.fld.rv/self.fld.r
+        self.fld.fdt.rdiv(self.fld.Eu, self.fld.ru, self.fld.r)
+        self.fld.fdt.rdiv(self.fld.Ev, self.fld.rv, self.fld.r)
 
         # Strain tensor : WARN : CHECK THAT DUDX3RR CORRESPONDS TO THIS NEED !
         # Note : Init tau22 because of adding previous tau22 in dudz !
-        self.fld.tau22[:, :] = 0
+        self.fld.fdt.zeros(self.fld.tau22)
 
         for sub in self.msh.dxdomains:
             sub.du(self.fld.Eu, self.fld.tau11, *sub.ix, *sub.iz)
@@ -71,31 +71,24 @@ class ViscousFluxes:
             sub.du(0.5*self.fld.Eu, self.fld.tau12, *sub.ix, *sub.iz)
 
         # Temperature
-        Tk = self.fld.p/(self.fld.r*(self.cfg.cp - self.cfg.cv))
+        self.fld.fdt.Tk(self.fld.Tk, self.fld.p, self.fld.r)
 
-        # Temperature gradients
+        # Temperature gradients (Qu, Qv)
         # Note : Init F because of adding previous F in dudz !)
-        self.fld.F[:, :] = 0
+        self.fld.fdt.zeros(self.fld.F)
 
         for sub in self.msh.dxdomains:
-            sub.du(Tk, self.fld.E, *sub.ix, *sub.iz)
+            sub.du(self.fld.Tk, self.fld.E, *sub.ix, *sub.iz)
 
         for sub in self.msh.dzdomains:
-            sub.du(Tk, self.fld.F, *sub.ix, *sub.iz)
-
-        # Dynamic viscosity : Sutherland law (valid from 0°C to 1216°C)
-        # mu = self.fld.r*self.cfg.nu
-        mu = self.cfg.mu0*(Tk/self.cfg.T0)**(3/2) \
-            * (self.cfg.T0 + self.cfg.Ssu)/(Tk + self.cfg.Ssu)
-
-        cppr = - self.cfg.cp/self.cfg.prandtl
+            sub.du(self.fld.Tk, self.fld.F, *sub.ix, *sub.iz)
 
         # dE/dx and dF/dz
-        fdtd.dEF(self.fld.Eu, self.fld.Ev, self.fld.Ee,
-                 self.fld.Fu, self.fld.Fv, self.fld.Fe, mu,
-                 self.fld.tau11, self.fld.tau12, self.fld.tau22,
-                 self.fld.E*cppr, self.fld.F*cppr,
-                 self.fld.r, self.fld.ru, self.fld.rv)
+        self.fld.fdt.EFv(self.fld.Eu, self.fld.Ev, self.fld.Ee,
+                         self.fld.Fu, self.fld.Fv, self.fld.Fe,
+                         self.fld.tau11, self.fld.tau12, self.fld.tau22,
+                         self.fld.Tk, self.fld.E, self.fld.F,
+                         self.fld.r, self.fld.ru, self.fld.rv)
 
         # viscous flux
         for sub in self.msh.dxdomains:
@@ -110,6 +103,6 @@ class ViscousFluxes:
 
         # Integrate in time
         for sub in self.msh.dsdomains:
-            self.fld.fdtools.integrate(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-            self.fld.fdtools.integrate(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-            self.fld.fdtools.integrate(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+            self.fld.fdt.integrate(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+            self.fld.fdt.integrate(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+            self.fld.fdt.integrate(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)

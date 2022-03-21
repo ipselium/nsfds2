@@ -105,8 +105,11 @@ class Fields:
         self._init_viscosity()
         self._init_wall_sources()
 
-        self.fdtools = fdtools(self._nx, self._nz,
-                               self._cfg.p0, self._cfg.gamma, self._cfg.dt)
+        self.fdt = fdtools(self._nx, self._nz,
+                           self._cfg.p0, self._cfg.T0, self._cfg.mu0,
+                           self._cfg.Ssu, self._cfg.gamma,
+                           self._cfg.cp, self._cfg.cv, self._cfg.prandtl,
+                           self._cfg.dt, self._cfg.cpu)
 
         # PMLS
         if 'A' in self._msh.bc:
@@ -179,6 +182,7 @@ class Fields:
             self.tau11 = _np.zeros_like(self.p)
             self.tau22 = _np.zeros_like(self.p)
             self.tau12 = _np.zeros_like(self.p)
+            self.Tk = _np.zeros_like(self.p)
 
     def _init_pml(self):
         """ Init PMLs. """
@@ -236,22 +240,18 @@ class Fields:
         self.Fei = _np.zeros_like(self.p)
 
         if self._cfg.mesh in ['regular', 'adaptative']:
-            self.fdtools.Eu(self.Ei, self.Eui, self.Evi, self.Eei,
-                            self.r, self.ru, self.rv,
-                            self._cfg.p0*_np.ones_like(self.p)/(self._cfg.gamma-1.),
-                            self._cfg.p0*_np.ones_like(self.p))
-            self.fdtools.Fu(self.Fi, self.Fui, self.Fvi, self.Fei,
-                            self.r, self.ru, self.rv,
-                            self._cfg.p0*_np.ones_like(self.p)/(self._cfg.gamma-1.),
-                            self._cfg.p0*_np.ones_like(self.p))
+            self.fdt.EFe(self.Ei, self.Eui, self.Evi, self.Eei,
+                         self.Fi, self.Fui, self.Fvi, self.Fei,
+                         self.r, self.ru, self.rv,
+                         self._cfg.p0*_np.ones_like(self.p)/(self._cfg.gamma-1.),
+                         self._cfg.p0*_np.ones_like(self.p))
 
         elif self._cfg.mesh == 'curvilinear':
-            self.fdtools.EuJ(self.Ei, self.Eui, self.Evi, self.Eei,
-                             self.r, self.ru, self.rv, self.re, self.p,
-                             self._msh.dxn_dxp, self._msh.dxn_dzp)
-            self.fdtools.FuJ(self.Fi, self.Fui, self.Fvi, self.Fei,
-                             self.r, self.ru, self.rv, self.re, self.p,
-                             self._msh.dzn_dxp, self._msh.dzn_dzp)
+            self.fdt.EFeJ(self.Ei, self.Eui, self.Evi, self.Eei,
+                          self.Fi, self.Fui, self.Fvi, self.Fei,
+                          self.r, self.ru, self.rv, self.re, self.p,
+                          self._msh.dxn_dxp, self._msh.dxn_dzp,
+                          self._msh.dzn_dxp, self._msh.dzn_dzp)
 
     def _init_radiation(self):
         """ Init radiation conditions. """
@@ -371,7 +371,7 @@ class Fields:
                 self.ru[:, :] = data[f'ru_it{self._cfg.it}'][...]
                 self.rv[:, :] = data[f'rv_it{self._cfg.it}'][...]
                 self.re[:, :] = data[f're_it{self._cfg.it}'][...]
-            self.fdtools.p(self.p, self.r, self.ru, self.rv, self.re)
+            self.fdt.p(self.p, self.r, self.ru, self.rv, self.re)
             self.sfile = _h5py.File(self._cfg.datafile, 'a')
             self.sfile.attrs['nt'] = self._cfg.nt
             self._cfg.it += 1

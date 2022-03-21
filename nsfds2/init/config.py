@@ -146,7 +146,7 @@ def create_template(path=None, filename=None, cfg=None):
     cfg.set('save', 'resume', 'False')
     cfg.set('save', 'path', 'results/')
     cfg.set('save', 'filename', 'tmp')
-    cfg.set('save', 'compression', 'lzf')
+    cfg.set('save', 'compression', 'None')
     cfg.set('save', 'fields', 'True')
     cfg.set('save', 'vorticity', 'False')
     cfg.set('save', 'probes', '[]')
@@ -322,20 +322,20 @@ class CfgSetup:
 
         self.norm = THP.getboolean('norm', False)
 
-        self.Ssu = 111.0  # Sutherland constant
-        self.T0 = 273.0
-        self.T = self.T0 + THP.getfloat('t0', 20.0)
+        self.Ssu = 110.4  # Sutherland constant
+        self.Tref = 273.15
+        self.T0 = self.Tref + THP.getfloat('t0', 20.0)
 
         self.gamma = THP.getfloat('gamma', 1.4)
         self.cv = 717.5
         self.cp = self.cv*self.gamma
 
         self.p0 = THP.getfloat('p0', 101325.0)
-        self.rho0 = self.p0/(self.T*(self.cp - self.cv))
+        self.rho0 = self.p0/(self.T0*(self.cp - self.cv))
         self.c0 = (self.gamma*self.p0/self.rho0)**0.5
         self.mu0 = 0.00001716
-        self.mu = (self.mu0*(self.T/self.T0)**(3./2.) *
-                   (self.T0 + self.Ssu)/(self.T + self.Ssu))
+        self.mu = (self.mu0*(self.T0/self.Tref)**(3./2.) *
+                   (self.Tref + self.Ssu)/(self.T0 + self.Ssu))
         self.nu = self.mu/self.rho0
         self.prandtl = THP.getfloat('prandtl', 0.7)
 
@@ -478,7 +478,7 @@ class CfgSetup:
         else:
             self.savepath = self.path / SAVE.get('path', 'results')
         self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
-        self.comp = SAVE.get('compression', 'lzf')
+        self.comp = SAVE.get('compression', 'None')
         try:
             self.probes = json.loads(SAVE.get('probes', '[]'))
         except:

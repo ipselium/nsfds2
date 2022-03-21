@@ -42,7 +42,7 @@ class Cin:
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
-        self.du = drv.du(msh.x, msh.z, msh.stencil)
+        self.du = drv.du(msh.x, msh.z, cfg.stencil, cpu=cfg.cpu)
 
         for sub in self.msh.dmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
@@ -51,33 +51,27 @@ class Cin:
     def dispatch(self):
         """ Dispatch the domains to the functions. """
 
-        # dE/dz ---------------------------------------------------------------
+        # E & F
         if self.cfg.mesh in ['regular', 'adaptative']:
-            self.fld.fdtools.Eu(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
-                                self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
-                                self.fld.p)
+            self.fld.fdt.EFe(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
+                             self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
+                             self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
+                             self.fld.p)
 
         elif self.cfg.mesh == 'curvilinear':
-            self.fld.fdtools.EuJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
-                                 self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
-                                 self.fld.p, self.msh.dxn_dxp, self.msh.dxn_dzp)
+            self.fld.fdt.EFeJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
+                              self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
+                              self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
+                              self.fld.p,
+                              self.msh.dxn_dxp, self.msh.dxn_dzp,
+                              self.msh.dzn_dxp, self.msh.dzn_dzp)
 
+        # dE/dx & dF/dz
         for sub in self.msh.dxdomains:
             sub.cin_method(self.fld.E, self.fld.K, *sub.ix, *sub.iz)
             sub.cin_method(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz)
             sub.cin_method(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz)
             sub.cin_method(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz)
-
-        # dF/dz ---------------------------------------------------------------
-        if self.cfg.mesh in ['regular', 'adaptative']:
-            self.fld.fdtools.Fu(self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
-                                self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
-                                self.fld.p)
-
-        elif self.cfg.mesh == 'curvilinear':
-            self.fld.fdtools.FuJ(self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
-                                 self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
-                                 self.fld.p, self.msh.dzn_dxp, self.msh.dzn_dzp)
 
         for sub in self.msh.dzdomains:
             sub.cin_method(self.fld.F, self.fld.K, *sub.ix, *sub.iz)

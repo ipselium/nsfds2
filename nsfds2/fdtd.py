@@ -255,8 +255,8 @@ class FDTD:
     def update_pressure(self):
         """ Update pressure field """
 
-        self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
-                           self.fld.rv, self.fld.re)
+        self.fld.fdt.p(self.fld.p, self.fld.r, self.fld.ru,
+                       self.fld.rv, self.fld.re)
 
     @timing.proceed('vorticity')
     def update_vorticity(self):
@@ -278,9 +278,9 @@ class FDTD:
         """ Check if computation diverges. """
 
         if self.cfg.mesh == 'curvilinear':
-            self.res = self.fld.fdtools.residual(self.fld.p*self.msh.J)
+            self.res = self.fld.fdt.residual(self.fld.p*self.msh.J)
         else:
-            self.res = self.fld.fdtools.residual(self.fld.p)
+            self.res = self.fld.fdt.residual(self.fld.p)
 
 #        if (abs(self.res) > 100*self.pmax) or np.any(np.isnan(self.fld.p)):
         if np.any(np.isnan(self.fld.p)):

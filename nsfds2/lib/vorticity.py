@@ -40,7 +40,7 @@ class Vorticity:
         self.msh = msh
         self.fld = fld
         self.cfg = cfg
-        self.du = drv.du(msh.x, msh.z, msh.stencil, add=False)
+        self.du = drv.du(msh.x, msh.z, cfg.stencil, cpu=cfg.cpu, add=False)
 
         for sub in self.msh.dmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')

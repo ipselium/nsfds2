@@ -78,12 +78,13 @@ def secs_to_dhms(secs):
     day, days = f'{dhms.day-1} day, ', f'{dhms.day-1} days, '
     h = f'{dhms.hour}:'
     m = f'{dhms.minute:02}:'
-    s = f'{dhms.second:02}'
+    s = f'{dhms.second:02}:'
+    ms = f'{str(dhms.microsecond)[:2]}'
 
     return (year if dhms.year == 2 else years if dhms.year > 2 else '') + \
            (month if dhms.month == 2 else months if dhms.month > 2 else '') + \
            (day if dhms.day == 2 else days if dhms.day > 2 else '') + \
-           (h if dhms.hour > 0 else '') + m + s
+           (h if dhms.hour > 0 else '') + m + s + ms
 
 
 def nearest_index(n, ns, nt):

@@ -44,7 +44,7 @@ class ShockCapture:
 
         sg_cls = getattr(flt, 'sigma_{}'.format(cfg.cpt_meth[0]))
 
-        self.du = drv.du(msh.x, msh.z, cfg.cpt_stencil)
+        self.du = drv.du(msh.x, msh.z, cfg.cpt_stencil, cpu=cfg.cpu)
         self.sg = sg_cls(msh.nx, msh.nz, cfg.rth, cfg.gamma)
         self.lpl = flt.lplf3(msh.nx, msh.nz)
         self.cpt = flt.capture(msh.nx, msh.nz)
@@ -57,7 +57,7 @@ class ShockCapture:
             sub.sg = getattr(self.sg, f'sg{sub.axname}_{bc}')
 
     def apply(self):
-        """ Run shock capture. """
+        """ Apply shock capture procedure. """
 
         for direction in [self.msh.fxdomains, self.msh.fzdomains]:
 
@@ -78,8 +78,8 @@ class ShockCapture:
     def update_reference(self):
         """ Update pressure / dilatation. """
 
-        self.fld.fdtools.p(self.fld.p, self.fld.r, self.fld.ru,
-                           self.fld.rv, self.fld.re)
+        self.fld.fdt.p(self.fld.p, self.fld.r, self.fld.ru,
+                       self.fld.rv, self.fld.re)
 
         if self.cfg.cpt_meth == 'dilatation':
             self.dilatation()

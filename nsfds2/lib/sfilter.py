@@ -42,34 +42,36 @@ class SelectiveFilter:
         self.flt = flt.sfilter(msh.nx, msh.nz,
                                cfg.xnu, cfg.xnu0, stencil=cfg.flt_stencil)
 
-
         for sub in self.msh.fmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
             sub.filt_method = getattr(self.flt, f"f{sub.axname}_{bc}")
 
     def apply(self):
-        """ Dispatch filtering. """
+        """ Apply selective filter. """
 
+        # Calculate filter following x
         for sub in self.msh.fxdomains:
             sub.filt_method(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
 
-        self.update(self.msh.fxdomains)
+        # Apply filtering following x
+        for sub in self.msh.fxdomains:
+            self.flt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
+            self.flt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
+            self.flt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
+            self.flt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
 
+        # Calculate filter following x
         for sub in self.msh.fzdomains:
             sub.filt_method(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
             sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
 
-        self.update(self.msh.fzdomains)
-
-    def update(self, domains):
-        """ Update fields. """
-
-        for sub in domains:
+        # Apply filtering following z
+        for sub in self.msh.fzdomains:
             self.flt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
             self.flt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
             self.flt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
