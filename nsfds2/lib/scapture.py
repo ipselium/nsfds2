@@ -45,7 +45,7 @@ class ShockCapture:
         sg_cls = getattr(flt, 'sigma_{}'.format(cfg.cpt_meth[0]))
 
         self.du = drv.du(msh.x, msh.z, cfg.cpt_stencil, cpu=cfg.cpu)
-        self.sg = sg_cls(msh.nx, msh.nz, cfg.rth, cfg.gamma, cpu=cfg.cpu)
+        self.sg = sg_cls(msh.nx, msh.nz, cfg.cpt_rth, cfg.gamma, cpu=cfg.cpu)
         self.lpl = flt.lplf3(msh.nx, msh.nz)
         self.cpt = flt.capture(msh.nx, msh.nz, cpu=cfg.cpu)
 

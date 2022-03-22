@@ -40,7 +40,7 @@ class SelectiveFilter:
         self.msh = msh
         self.fld = fld
         self.flt = flt.sfilter(msh.nx, msh.nz,
-                               cfg.xnu, cfg.xnu0,
+                               cfg.flt_xnu, cfg.flt_xnu0,
                                stencil=cfg.flt_stencil,
                                cpu=cfg.cpu)
 

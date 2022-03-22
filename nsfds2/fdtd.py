@@ -287,7 +287,7 @@ class FDTD:
 
             print('Stop simulation at iteration ', self.cfg.it)
             if np.any(np.isnan(self.fld.p)):
-                print('Nan : {}'.format(np.argwhere(np.isnan(self.fld.p))))
+                print(f'Nan : {np.argwhere(np.isnan(self.fld.p))}')
 
             self.fld.sfile.close()
             sys.exit(1)

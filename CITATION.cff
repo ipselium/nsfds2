@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+title: "nsfds2"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+- family-names: "Desjouy"
+  given-names: "Cyril"
+  affiliation: >-
+      Laboratoire d'Acoustique de l'Université du
+      Mans (LAUM), UMR 6613, Institut d'Acoustique -
+      Graduate School (IA-GS), CNRS, Le Mans
+      Université, France 
+version: 0.16.0
+doi: 10.5281/zenodo.6346267
+date-released: 2022-03-11
+url: "https://github.com/ipselium/nsfds2"

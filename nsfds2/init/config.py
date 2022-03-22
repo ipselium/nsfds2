@@ -438,8 +438,8 @@ class CfgSetup:
         FLT = self.cfg['filtering']
         self.flt = FLT.getboolean('filter', True)
         self.flt_stencil = FLT.getint('stencil', 11)
-        self.xnu = FLT.getfloat('strength', 0.2)
-        self.xnu0 = FLT.getfloat('strength_on_walls', 0.01)
+        self.flt_xnu = FLT.getfloat('strength', 0.2)
+        self.flt_xnu0 = FLT.getfloat('strength_on_walls', 0.01)
 
         if self.flt_stencil not in [7, 11]:
             raise ValueError('only 7 and 11 pts filters implemented for now')
@@ -459,7 +459,7 @@ class CfgSetup:
         self.cpt = CPT.getboolean('shock capture', True)
         self.cpt_stencil = CPT.getint('stencil', 7)
         self.cpt_meth = CPT.get('method', 'pressure').lower()
-        self.rth = 1e-6
+        self.cpt_rth = 1e-6
 
         if self.cpt_stencil not in [3, 7, 11]:
             raise ValueError('capture only available with 3, 7 or 11 pts')
