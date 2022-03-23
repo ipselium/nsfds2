@@ -40,6 +40,7 @@ import numpy as _np
 from scipy import signal as _signal
 import matplotlib.pyplot as _plt
 import matplotlib.animation as _ani
+from matplotlib.colors import SymLogNorm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from ofdlib2 import fdtd as _fdtd
 from progressbar import ProgressBar, Bar, ReverseBar, ETA
@@ -296,7 +297,7 @@ class Plot:
 
     def movie(self, view=('p', 'e', 'vx', 'vz'), nt=None, ref=None,
               figsize='auto', show_pml=False, show_probes=False,
-              dpi=100, fps=24, comp=1):
+              dpi=100, fps=24, logscale=False):
         """ Make movie. """
 
         # Progress bar
@@ -321,7 +322,7 @@ class Plot:
                                      show_pml=show_pml,
                                      show_probes=show_probes,
                                      figsize=figsize,
-                                     comp=comp)
+                                     logscale=logscale)
 
         with writer.saving(fig, self.path / movie_filename, dpi=dpi):
 
@@ -409,7 +410,7 @@ class Plot:
 
     def fields(self, view=('p', 'e', 'vx', 'vz'), iteration=None, ref=None,
                show_pml=False, show_probes=True, figsize='auto',
-               midpoint=0, comp=1):
+               midpoint=0, logscale=False):
         """ Make figure """
 
         if iteration is None:
@@ -443,7 +444,13 @@ class Plot:
             else:
                 ticks.append([midpoint, vmax])
 
-            norm.append(MidPointNorm(vmin=vmin/comp, vmax=vmax/comp, midpoint=midpoint))
+            if logscale:
+                bins, values = _np.histogram(var[-1], bins=100)
+                norm.append(SymLogNorm(linthresh=0.8*abs(values[bins.argmax()]), linscale=1,
+                                       vmin=vmin, vmax=vmax, base=10))
+            else:
+                norm.append(MidPointNorm(vmin=vmin, vmax=vmax, midpoint=midpoint))
+
 
         fig, axes = _plt.subplots(*get_subplot_shape(len(var)))
 

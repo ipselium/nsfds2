@@ -46,9 +46,10 @@ class Check:
 
     def source(self):
         """ Check if source is not in an obstacle. """
-        for o in self.msh.obstacles:
-            if o.ix[0] < self.cfg.ixS < o.ix[1] and o.iz[0] < self.cfg.izS < o.iz[1]:
-                raise ValueError('source cannot be in an obstacle')
+        if self.cfg.stype not in self.cfg.none:
+            for o in self.msh.obstacles:
+                if o.ix[0] < self.cfg.ixS < o.ix[1] and o.iz[0] < self.cfg.izS < o.iz[1]:
+                    raise ValueError('source cannot be in an obstacle')
 
     def obstacles(self):
         """ Check validity of obstacles boundary conditions. """
