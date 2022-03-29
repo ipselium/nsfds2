@@ -479,10 +479,7 @@ class CfgSetup:
             self.savepath = self.path / SAVE.get('path', 'results')
         self.savefile = SAVE.get('filename', 'tmp') + '.hdf5'
         self.comp = SAVE.get('compression', 'None')
-        try:
-            self.probes = json.loads(SAVE.get('probes', '[]'))
-        except:
-            raise ValueError('probe and probe_location have been merged. Update config file.')
+        self.probes = json.loads(SAVE.get('probes', '[]'))
 
         # Check probes
         if self.probes:

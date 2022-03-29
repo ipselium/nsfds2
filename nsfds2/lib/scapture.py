@@ -45,9 +45,9 @@ class ShockCapture:
         sg_cls = getattr(flt, 'sigma_{}'.format(cfg.cpt_meth[0]))
 
         self.du = drv.du(msh.x, msh.z, cfg.cpt_stencil, cpu=cfg.cpu)
-        self.sg = sg_cls(msh.nx, msh.nz, cfg.cpt_rth, cfg.gamma, cpu=cfg.cpu)
-        self.lpl = flt.lplf3(msh.nx, msh.nz)
-        self.cpt = flt.capture(msh.nx, msh.nz, cpu=cfg.cpu)
+        self.lpl = flt.lplf3(msh.nx, msh.nz, cpu=cfg.cpu)
+        self.cpt = flt.capture(msh.nx, msh.nz, cpu=cfg.cpu, tsize=1e-3)
+        self.sg = sg_cls(msh.nx, msh.nz, cfg.cpt_rth, cfg.gamma, cpu=cfg.cpu, tsize=1e-3)
 
         for sub in self.msh.fmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
@@ -71,17 +71,17 @@ class ShockCapture:
 
             # Filter
             for sub in direction:
-                sub.cpt(self.fld.r, self.fld.K, self.fld.sg, *sub.ix, *sub.iz)
-                sub.cpt(self.fld.ru, self.fld.Ku, self.fld.sg, *sub.ix, *sub.iz)
-                sub.cpt(self.fld.rv, self.fld.Kv, self.fld.sg, *sub.ix, *sub.iz)
-                sub.cpt(self.fld.re, self.fld.Ke, self.fld.sg, *sub.ix, *sub.iz)
+                sub.cpt(self.fld.r, self.fld.K, self.fld.sg, *sub.ix, *sub.iz, sub.bsize)
+                sub.cpt(self.fld.ru, self.fld.Ku, self.fld.sg, *sub.ix, *sub.iz, sub.bsize)
+                sub.cpt(self.fld.rv, self.fld.Kv, self.fld.sg, *sub.ix, *sub.iz, sub.bsize)
+                sub.cpt(self.fld.re, self.fld.Ke, self.fld.sg, *sub.ix, *sub.iz, sub.bsize)
 
             # Apply filter
             for sub in direction:
-                self.cpt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
-                self.cpt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-                self.cpt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-                self.cpt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+                self.cpt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+                self.cpt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+                self.cpt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+                self.cpt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
     def update_reference(self):
         """ Update pressure / dilatation. """
@@ -99,10 +99,10 @@ class ShockCapture:
         self.fld.F = self.fld.rv/self.fld.r
 
         for sub in self.msh.fxdomains:
-            sub.dltn(self.fld.E, self.fld.dltn, *sub.ix, *sub.iz)
+            sub.dltn(self.fld.E, self.fld.dltn, *sub.ix, *sub.iz, sub.bsize)
 
         for sub in self.msh.fzdomains:
-            sub.dltn(self.fld.F, self.fld.dltn, *sub.ix, *sub.iz)
+            sub.dltn(self.fld.F, self.fld.dltn, *sub.ix, *sub.iz, sub.bsize)
 
     def laplacian(self, sub):
         """  Determine the high frequency components
@@ -110,16 +110,16 @@ class ShockCapture:
         """
 
         if self.cfg.cpt_meth == 'pressure':
-            sub.lpl(self.fld.p, self.fld.dp, *sub.ix, *sub.iz)
+            sub.lpl(self.fld.p, self.fld.dp, *sub.ix, *sub.iz, sub.bsize)
 
         elif self.cfg.cpt_meth == "dilatation":
-            sub.lpl(self.fld.dltn, self.fld.dp, *sub.ix, *sub.iz)
+            sub.lpl(self.fld.dltn, self.fld.dp, *sub.ix, *sub.iz, sub.bsize)
 
     def filter_magnitude(self, sub):
         """ Determine the filtering magnitude (sg). """
 
         if self.cfg.cpt_meth == 'pressure':
-            sub.sg(self.fld.p, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
+            sub.sg(self.fld.p, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz, sub.bsize)
 
         elif self.cfg.cpt_meth == "dilatation":
-            sub.sg(self.fld.p, self.fld.r, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz)
+            sub.sg(self.fld.p, self.fld.r, self.fld.sg, self.fld.dp, *sub.ix, *sub.iz, sub.bsize)

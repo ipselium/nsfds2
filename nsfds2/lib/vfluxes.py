@@ -63,12 +63,12 @@ class ViscousFluxes:
         self.fld.fdt.zeros(self.fld.tau22)
 
         for sub in self.msh.dxdomains:
-            sub.du(self.fld.Eu, self.fld.tau11, *sub.ix, *sub.iz)
-            sub.du(0.5*self.fld.Ev, self.fld.tau12, *sub.ix, *sub.iz)
+            sub.du(self.fld.Eu, self.fld.tau11, *sub.ix, *sub.iz, sub.bsize)
+            sub.du(0.5*self.fld.Ev, self.fld.tau12, *sub.ix, *sub.iz, sub.bsize)
 
         for sub in self.msh.dzdomains:
-            sub.du(self.fld.Ev, self.fld.tau22, *sub.ix, *sub.iz)
-            sub.du(0.5*self.fld.Eu, self.fld.tau12, *sub.ix, *sub.iz)
+            sub.du(self.fld.Ev, self.fld.tau22, *sub.ix, *sub.iz, sub.bsize)
+            sub.du(0.5*self.fld.Eu, self.fld.tau12, *sub.ix, *sub.iz, sub.bsize)
 
         # Temperature
         self.fld.fdt.Tk(self.fld.Tk, self.fld.p, self.fld.r)
@@ -78,10 +78,10 @@ class ViscousFluxes:
         self.fld.fdt.zeros(self.fld.F)
 
         for sub in self.msh.dxdomains:
-            sub.du(self.fld.Tk, self.fld.E, *sub.ix, *sub.iz)
+            sub.du(self.fld.Tk, self.fld.E, *sub.ix, *sub.iz, sub.bsize)
 
         for sub in self.msh.dzdomains:
-            sub.du(self.fld.Tk, self.fld.F, *sub.ix, *sub.iz)
+            sub.du(self.fld.Tk, self.fld.F, *sub.ix, *sub.iz, sub.bsize)
 
         # dE/dx and dF/dz
         self.fld.fdt.EFv(self.fld.Eu, self.fld.Ev, self.fld.Ee,
@@ -92,17 +92,17 @@ class ViscousFluxes:
 
         # viscous flux
         for sub in self.msh.dxdomains:
-            sub.du(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz)
-            sub.du(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz)
-            sub.du(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz)
+            sub.du(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.du(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.du(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
         for sub in self.msh.dzdomains:
-            sub.du(self.fld.Fu, self.fld.Ku, *sub.ix, *sub.iz)
-            sub.du(self.fld.Fv, self.fld.Kv, *sub.ix, *sub.iz)
-            sub.du(self.fld.Fe, self.fld.Ke, *sub.ix, *sub.iz)
+            sub.du(self.fld.Fu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.du(self.fld.Fv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.du(self.fld.Fe, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
         # Integrate in time
         for sub in self.msh.dsdomains:
-            self.fld.fdt.integrate(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-            self.fld.fdt.integrate(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-            self.fld.fdt.integrate(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+            self.fld.fdt.integrate(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            self.fld.fdt.integrate(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            self.fld.fdt.integrate(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)

@@ -29,6 +29,7 @@ Compute Vorticity field
 -----------
 """
 
+import numexpr as _ne
 import ofdlib2.derivation as drv
 
 
@@ -42,6 +43,8 @@ class Vorticity:
         self.cfg = cfg
         self.du = drv.du(msh.x, msh.z, cfg.stencil, cpu=cfg.cpu, add=False)
 
+        _ne.set_num_threads(self.cfg.cpu)
+
         for sub in self.msh.dmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
             sub.du = getattr(self.du, f'dud{sub.axname}_{bc}')
@@ -51,10 +54,10 @@ class Vorticity:
 
         # dvz/dx
         for sub in self.msh.dxdomains:
-            sub.du(self.fld.rv/self.fld.r, self.fld.E, *sub.ix, *sub.iz)
+            sub.du(self.fld.rv/self.fld.r, self.fld.E, *sub.ix, *sub.iz, sub.bsize)
 
         # dvx/dz
         for sub in self.msh.dzdomains:
-            sub.du(self.fld.ru/self.fld.r, self.fld.F, *sub.ix, *sub.iz)
+            sub.du(self.fld.ru/self.fld.r, self.fld.F, *sub.ix, *sub.iz, sub.bsize)
 
-        self.fld.vxz = self.fld.E - self.fld.F
+        self.fld.vxz = _ne.evaluate('self.fld.E - self.fld.F')

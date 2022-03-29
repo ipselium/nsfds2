@@ -317,7 +317,7 @@ class Fields:
     def _init_wall_sources(self):
         """ Init all sources on walls. """
 
-        time = _np.arange(0, (self._cfg.nt+1)*self._cfg.dt, self._cfg.dt)
+        time = _np.arange(self._cfg.nt+1)*self._cfg.dt
 
         for obs in self._msh.obstacles:
             for edge in obs.edges:

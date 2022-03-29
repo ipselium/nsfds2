@@ -53,28 +53,28 @@ class SelectiveFilter:
 
         # Calculate filter following x
         for sub in self.msh.fxdomains:
-            sub.filt_method(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.r, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
         # Apply filtering following x
         for sub in self.msh.fxdomains:
-            self.flt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
-            self.flt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-            self.flt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-            self.flt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+            self.flt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            self.flt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            self.flt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            self.flt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
         # Calculate filter following x
         for sub in self.msh.fzdomains:
-            sub.filt_method(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-            sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+            sub.filt_method(self.fld.r, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            sub.filt_method(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.filt_method(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.filt_method(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
         # Apply filtering following z
         for sub in self.msh.fzdomains:
-            self.flt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz)
-            self.flt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz)
-            self.flt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz)
-            self.flt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz)
+            self.flt.update(self.fld.r, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            self.flt.update(self.fld.ru, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            self.flt.update(self.fld.rv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            self.flt.update(self.fld.re, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)

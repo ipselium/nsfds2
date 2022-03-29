@@ -446,7 +446,8 @@ class Plot:
 
             if logscale:
                 bins, values = _np.histogram(var[-1], bins=100)
-                norm.append(SymLogNorm(linthresh=0.8*abs(values[bins.argmax()]), linscale=1,
+                thresh = max(0.03, 0.8*abs(values[bins.argmax()]))
+                norm.append(SymLogNorm(linthresh=thresh, linscale=1,
                                        vmin=vmin, vmax=vmax, base=10))
             else:
                 norm.append(MidPointNorm(vmin=vmin, vmax=vmax, midpoint=midpoint))

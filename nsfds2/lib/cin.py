@@ -68,13 +68,13 @@ class Cin:
 
         # dE/dx & dF/dz
         for sub in self.msh.dxdomains:
-            sub.cin_method(self.fld.E, self.fld.K, *sub.ix, *sub.iz)
-            sub.cin_method(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz)
-            sub.cin_method(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz)
-            sub.cin_method(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz)
+            sub.cin_method(self.fld.E, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
         for sub in self.msh.dzdomains:
-            sub.cin_method(self.fld.F, self.fld.K, *sub.ix, *sub.iz)
-            sub.cin_method(self.fld.Fu, self.fld.Ku, *sub.ix, *sub.iz)
-            sub.cin_method(self.fld.Fv, self.fld.Kv, *sub.ix, *sub.iz)
-            sub.cin_method(self.fld.Fe, self.fld.Ke, *sub.ix, *sub.iz)
+            sub.cin_method(self.fld.F, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Fu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Fv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Fe, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)

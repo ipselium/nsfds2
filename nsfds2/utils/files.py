@@ -98,7 +98,7 @@ def save_probes(filename):
     probe_values = data['probe_values'][...] - data.attrs['p0']
     probe_locs = data['probe_locations'][...]
 
-    t = _np.arange(0, nt*dt, dt)
+    t = _np.arange(nt)*dt
     _np.savez_compressed(filename.split('.')[0] + '_probes',
                          values=probe_values, locs=probe_locs, t=t, x=x, z=z)
     return _np.load(filename.split('.')[0] + '_probes.npz')
