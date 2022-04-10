@@ -36,7 +36,6 @@ import numpy as _np
 import ofdlib2.derivation as drv
 from nsfds2.utils.array import empty_like
 from nsfds2.utils.files import get_wall_function
-from .cin import Cin
 
 
 class EulerianFluxes:
@@ -48,7 +47,12 @@ class EulerianFluxes:
         self.fld = fld
         self.cfg = cfg
         self.p, self.r, self.ru, self.rv, self.re = empty_like(msh.shape, 5)
-        self.ccin = Cin(msh, fld, cfg)
+        self.du = drv.du(msh.x, msh.z, cfg.stencil, cpu=cfg.cpu)
+
+        for sub in self.msh.dmdomains:
+            bc = sub.bc.replace('.', '').replace('V', 'W')
+            sub.cin_method = getattr(self.du, f'dud{sub.axname}_{bc}')
+
         if 'A' in msh.bc:
             self.init_pml()
 
@@ -94,7 +98,33 @@ class EulerianFluxes:
 
     def cin(self):
         """ Interior domain. """
-        self.ccin.dispatch()
+        # E & F
+        if self.cfg.mesh in ['regular', 'adaptative']:
+            self.fld.fdt.EFe(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
+                             self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
+                             self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
+                             self.fld.p)
+
+        elif self.cfg.mesh == 'curvilinear':
+            self.fld.fdt.EFeJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
+                              self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
+                              self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
+                              self.fld.p,
+                              self.msh.dxn_dxp, self.msh.dxn_dzp,
+                              self.msh.dzn_dxp, self.msh.dzn_dzp)
+
+        # dE/dx & dF/dz
+        for sub in self.msh.dxdomains:
+            sub.cin_method(self.fld.E, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
+
+        for sub in self.msh.dzdomains:
+            sub.cin_method(self.fld.F, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Fu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Fv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_method(self.fld.Fe, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
     def cout(self):
         """ Boundaries. """
