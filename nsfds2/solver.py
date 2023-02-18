@@ -201,7 +201,7 @@ def show(cfg, msh):
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
         plt.fields(view=cfg.args.view, iteration=cfg.args.nt, ref=cfg.args.ref,
                    show_pml=cfg.show_pml, show_probes=cfg.show_probes,
-                   logscale=cfg.args.logscale)
+                   logscale=cfg.args.logscale, xlim=cfg.xlim, ylim=cfg.ylim)
 
     elif cfg.args.show_command == 'probes':
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
@@ -226,7 +226,8 @@ def make(cfg, _):
         plt = graphics.Plot(cfg.datafile, quiet=cfg.quiet)
         plt.movie(view=cfg.args.view, nt=cfg.args.nt, ref=cfg.args.ref,
                   show_pml=cfg.show_pml, show_probes=cfg.show_probes,
-                  fps=cfg.fps, logscale=cfg.args.logscale)
+                  fps=cfg.fps, logscale=cfg.args.logscale,
+                  xlim=cfg.xlim, ylim=cfg.ylim)
         plt.show()
 
     elif cfg.args.make_command == 'sound':

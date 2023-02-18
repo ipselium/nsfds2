@@ -35,7 +35,6 @@ import re
 import numpy as _np
 import ofdlib2.derivation as drv
 from nsfds2.utils.array import empty_like
-from nsfds2.utils.files import get_wall_function
 
 
 class EulerianFluxes:
@@ -51,7 +50,7 @@ class EulerianFluxes:
 
         for sub in self.msh.dmdomains:
             bc = sub.bc.replace('.', '').replace('V', 'W')
-            sub.cin_method = getattr(self.du, f'dud{sub.axname}_{bc}')
+            sub.cin_meth = getattr(self.du, f'dud{sub.axname}_{bc}')
 
         if 'A' in msh.bc:
             self.init_pml()
@@ -72,6 +71,8 @@ class EulerianFluxes:
 
             # Eulerian fluxes
             self.cin()
+
+            # PML
             if 'A' in self.msh.bc:
                 self.pml()
 
@@ -90,6 +91,7 @@ class EulerianFluxes:
             self.fld.fdt.p(self.fld.p, self.fld.r, self.fld.ru,
                            self.fld.rv, self.fld.re)
 
+            # Update source
             if self.cfg.stype in ['harmonic', 'white', 'wav']:
                 self.fld.p += self.fld.update_source(self.cfg.it)
 
@@ -106,25 +108,28 @@ class EulerianFluxes:
                              self.fld.p)
 
         elif self.cfg.mesh == 'curvilinear':
-            self.fld.fdt.EFeJ(self.fld.E, self.fld.Eu, self.fld.Ev, self.fld.Ee,
-                              self.fld.F, self.fld.Fu, self.fld.Fv, self.fld.Fe,
-                              self.fld.r, self.fld.ru, self.fld.rv, self.fld.re,
+            self.fld.fdt.EFeJ(self.fld.E, self.fld.Eu,
+                              self.fld.Ev, self.fld.Ee,
+                              self.fld.F, self.fld.Fu,
+                              self.fld.Fv, self.fld.Fe,
+                              self.fld.r, self.fld.ru,
+                              self.fld.rv, self.fld.re,
                               self.fld.p,
                               self.msh.dxn_dxp, self.msh.dxn_dzp,
                               self.msh.dzn_dxp, self.msh.dzn_dzp)
 
         # dE/dx & dF/dz
         for sub in self.msh.dxdomains:
-            sub.cin_method(self.fld.E, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
-            sub.cin_method(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
-            sub.cin_method(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
-            sub.cin_method(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_meth(self.fld.E, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_meth(self.fld.Eu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_meth(self.fld.Ev, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_meth(self.fld.Ee, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
         for sub in self.msh.dzdomains:
-            sub.cin_method(self.fld.F, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
-            sub.cin_method(self.fld.Fu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
-            sub.cin_method(self.fld.Fv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
-            sub.cin_method(self.fld.Fe, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_meth(self.fld.F, self.fld.K, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_meth(self.fld.Fu, self.fld.Ku, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_meth(self.fld.Fv, self.fld.Kv, *sub.ix, *sub.iz, sub.bsize)
+            sub.cin_meth(self.fld.Fe, self.fld.Ke, *sub.ix, *sub.iz, sub.bsize)
 
     def cout(self):
         """ Boundaries. """
@@ -287,7 +292,8 @@ class EulerianFluxes:
             self.fld.Ke[ix, :] = c2_v[ix, :] * \
                 (self.fld.Kxe[ix, :]*self.fld.cosv[ix, :] +
                  self.fld.Kze[ix, :]*self.fld.sinv[ix, :] +
-                 (self.re[ix, :] - self.cfg.p0/(self.cfg.gamma-1.))*self.fld.r_v[ix, :])
+                 (self.re[ix, :] -
+                     self.cfg.p0/(self.cfg.gamma-1.))*self.fld.r_v[ix, :])
 
     def init_pml(self):
         """ Initialize PMLs. """
@@ -315,16 +321,20 @@ class EulerianFluxes:
         self.fld.Fe -= self.fld.Fei
 
         for sub in self.msh.adomains:
-            sub.pml_method(self.fld.E, self.fld.F, self.fld.qx, self.fld.qz,
+            sub.pml_method(self.fld.E, self.fld.F,
+                           self.fld.qx, self.fld.qz,
                            self.fld.Kx, self.fld.Kz, self.fld.K,
                            *sub.ix, *sub.iz, sub.bsize)
-            sub.pml_method(self.fld.Eu, self.fld.Fu, self.fld.qux, self.fld.quz,
+            sub.pml_method(self.fld.Eu, self.fld.Fu,
+                           self.fld.qux, self.fld.quz,
                            self.fld.Kux, self.fld.Kuz, self.fld.Ku,
                            *sub.ix, *sub.iz, sub.bsize)
-            sub.pml_method(self.fld.Ev, self.fld.Fv, self.fld.qvx, self.fld.qvz,
+            sub.pml_method(self.fld.Ev, self.fld.Fv,
+                           self.fld.qvx, self.fld.qvz,
                            self.fld.Kvx, self.fld.Kvz, self.fld.Kv,
                            *sub.ix, *sub.iz, sub.bsize)
-            sub.pml_method(self.fld.Ee, self.fld.Fe, self.fld.qex, self.fld.qez,
+            sub.pml_method(self.fld.Ee, self.fld.Fe,
+                           self.fld.qex, self.fld.qez,
                            self.fld.Kex, self.fld.Kez, self.fld.Ke,
                            *sub.ix, *sub.iz, sub.bsize)
 

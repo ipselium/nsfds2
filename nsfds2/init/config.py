@@ -511,3 +511,6 @@ class CfgSetup:
         self.show_pml = FIGS.getboolean('pml', True)
         self.bc_profiles = FIGS.getboolean('bc_profiles', True)
         self.fps = FIGS.getint('fps', 24)
+        self.xlim = json.loads(FIGS.get('xlim', '[]'))
+        self.ylim = json.loads(FIGS.get('ylim', '[]'))
+

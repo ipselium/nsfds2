@@ -125,15 +125,15 @@ class Fields:
         """ Setup initial fields. """
 
         if self._cfg.mesh == 'curvilinear':
-            self.p = _np.zeros(self._msh.shape) + self._cfg.p0/self._msh.J
-            self.r = _np.zeros_like(self.p) + self._cfg.rho0/self._msh.J
-            self.ru = _np.zeros_like(self.p) + self._cfg.U0/self._msh.J
-            self.rv = _np.zeros_like(self.p) + self._cfg.V0/self._msh.J
+            self.p = _np.zeros(self._msh.shape) + self._cfg.p0 / self._msh.J
+            self.r = _np.zeros_like(self.p) + self._cfg.rho0 / self._msh.J
+            self.ru = _np.zeros_like(self.p) + self._cfg.U0 * self._cfg.rho0 / self._msh.J
+            self.rv = _np.zeros_like(self.p) + self._cfg.V0 * self._cfg.rho0 / self._msh.J
         else:
             self.p = _np.zeros(self._msh.shape) + self._cfg.p0
             self.r = _np.zeros_like(self.p) + self._cfg.rho0
-            self.ru = _np.zeros_like(self.p) + self._cfg.U0
-            self.rv = _np.zeros_like(self.p) + self._cfg.V0
+            self.ru = _np.zeros_like(self.p) + self._cfg.U0 * self._cfg.rho0
+            self.rv = _np.zeros_like(self.p) + self._cfg.V0 * self._cfg.rho0
 
         if self._cfg.cpt_meth == 'dilatation':
             self.dltn = _np.zeros_like(self.p)
@@ -500,7 +500,7 @@ class Fields:
                                (z - self._z[izS])**2)/self.Bx**2)
 
         # update rho
-        self.r = self.p/(self._cfg.c0*self._cfg.c0)
+        self.r = (self.p - self._cfg.p0) / (self._cfg.c0 * self._cfg.c0) + self._cfg.rho0
 
     def harmonic(self):
         """ Harmonic ponctual source. """

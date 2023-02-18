@@ -296,7 +296,8 @@ class Plot:
                        'vxz': r'$\omega$ [m/s]'}
 
     def movie(self, view=('p', 'e', 'vx', 'vz'), nt=None, ref=None,
-              figsize='auto', show_pml=False, show_probes=False,
+              figsize='auto', xlim=None, ylim=None,
+              show_pml=False, show_probes=False,
               dpi=100, fps=24, logscale=False):
         """ Make movie. """
 
@@ -322,6 +323,7 @@ class Plot:
                                      show_pml=show_pml,
                                      show_probes=show_probes,
                                      figsize=figsize,
+                                     xlim=xlim, ylim=ylim,
                                      logscale=logscale)
 
         with writer.saving(fig, self.path / movie_filename, dpi=dpi):
@@ -332,7 +334,9 @@ class Plot:
 
                 # StackOv : using-set-array-with-pyplot-pcolormesh-ruins-figure
                 for ax, mesh, v, j in zip(axes.ravel(), ims, var, range(len(ims))):
-                    mesh.set_array(v[:-1, :-1].T.flatten())
+                    #mesh.set_array(v[:-1, :-1].T.flatten())  # with pcolormesh
+                    mesh.set_array(v[:-1, :-1].T)   # with pcolorfast / set_array deprecated; Use set_data
+
                     ax.set_title(self.titles[view[j]] + f' (n={i})')
 
                 writer.grab_frame()
@@ -410,7 +414,7 @@ class Plot:
 
     def fields(self, view=('p', 'e', 'vx', 'vz'), iteration=None, ref=None,
                show_pml=False, show_probes=True, figsize='auto',
-               midpoint=0, logscale=False):
+               xlim=None, ylim=None, midpoint=0, logscale=False):
         """ Make figure """
 
         if iteration is None:
@@ -446,7 +450,9 @@ class Plot:
 
             if logscale:
                 bins, values = _np.histogram(var[-1], bins=100)
-                thresh = max(0.03, 0.8*abs(values[bins.argmax()]))
+                thresh = 25*abs(values[bins.argmax()])
+                thresh = thresh if thresh != 0 else vmax/25
+                #thresh = max(0.03, 0.8*abs(values[bins.argmax()]))
                 norm.append(SymLogNorm(linthresh=thresh, linscale=1,
                                        vmin=vmin, vmax=vmax, base=10))
             else:
@@ -460,8 +466,11 @@ class Plot:
 
         for i, ax in enumerate(axes.ravel()):
             if i < len(var):
-                ims.append(ax.pcolormesh(self.x, self.z, var[i][:-1, :-1],
+                #ims.append(ax.pcolormesh(self.x, self.z, var[i][:-1, :-1],
+                #                         cmap=self.cm, norm=norm[i]))
+                ims.append(ax.pcolorfast(self.x, self.z, var[i][:-1, :-1],
                                          cmap=self.cm, norm=norm[i]))
+
                 ax.set_title(self.titles[view[i]] + f' (n={iteration})')
                 ax.set_xlabel(r'$x$ [m]')
                 ax.set_ylabel(r'$z$ [m]')
@@ -477,6 +486,10 @@ class Plot:
                 _graphics.plot_subdomains(ax, self.x, self.z, self.obstacles)
                 if show_pml:
                     _graphics.plot_pml(ax, self.x, self.z, self.bc, self.Npml)
+                if xlim:
+                    ax.set_xlim(xlim)
+                if ylim:
+                    ax.set_ylim(ylim)
             else:
                 ax.remove()
 
