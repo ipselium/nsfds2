@@ -10,6 +10,6 @@ authors:
       Mans (LAUM), UMR 6613, Institut d'Acoustique -
       Graduate School (IA-GS), CNRS, Le Mans
       Université, France 
-version: 0.17.2
+version: 0.17.3
 doi: 10.5281/zenodo.6211488
 url: "https://github.com/ipselium/nsfds2"
