@@ -35,6 +35,7 @@ import scipy.io.wavfile as _wf
 from nsfds2.utils.misc import colors as _colors
 from nsfds2.utils import DataExtractor as _DataExtractor
 
+
 def resample(file, target_rate, pad=None, write=False, force_mono=True):
     """ Resample target wave file with target_rate. """
 
